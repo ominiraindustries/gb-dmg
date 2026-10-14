@@ -110,15 +110,9 @@ void map_set(uint8_t col, uint8_t row, uint8_t mt) {
 }
 
 void map_draw_vram(void) {
-    uint8_t i, *d, *q;
     if (col_pending) {
         vram_col16(col_dst, col_buf);
         col_pending = 0;
     }
-    for (i = 0; i < blk_count; i++) {
-        d = blk_dst[i];
-        q = blk_tiles[i];
-        d[0] = q[0]; d[1] = q[1]; d[32] = q[2]; d[33] = q[3];
-    }
-    blk_count = 0;
+    if (blk_count) { vram_mt4_list(blk_dst, blk_tiles[0], blk_count); blk_count = 0; }
 }

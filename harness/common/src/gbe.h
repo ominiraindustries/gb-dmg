@@ -174,6 +174,7 @@ void sound_update(void);      // once per frame
 
 // ---------------------------------------------------------------- gbe_vram.s
 void vram_col16(uint8_t *dst, const uint8_t *src);  // 16 tiles down a BG map column (stride 32)
+void vram_mt4_list(uint8_t **dst, const uint8_t *tiles, uint8_t n);   // n metatiles (n >= 1)
 
 // ---------------------------------------------------------------- gbe_selftest.c
 // Equivalence of every asm routine with its C reference (gb-asm procedure). Tests call
