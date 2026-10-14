@@ -2,7 +2,7 @@
 ; Legend: one char per walls.tiles index (digits, letters, symbols, then Latin letters).
 ; Geometry per piece is fixed in fpview.GEOMETRY; '.' = transparent.
 @ tileset walls
-@ base 66
+@ base auto                ; walls base from game.json vram_order (66)
 legend:
 0 0
 1 1
