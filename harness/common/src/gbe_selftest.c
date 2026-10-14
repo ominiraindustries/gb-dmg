@@ -123,6 +123,28 @@ static void eq_pool(void) {
 }
 #endif
 
+#ifdef GBE_SELFTEST_VMAP
+// GBE_SELFTEST_VMAP = number of metatiles in the game's mt_tiles (random rows stay inside it)
+static void eq_vrow(void) {
+    uint16_t r;
+    uint8_t m[GBE_VMAP_W], ref[2 * GBE_VMAP_W], save[2 * GBE_VMAP_W], c, v;
+    memcpy(save, row_buf, sizeof(save));                       // a row may be pending
+    for (r = 0; r < 400; r++) {
+        for (c = 0; c < GBE_VMAP_W; c++) {
+            v = rnd8();
+            while (v >= GBE_SELFTEST_VMAP) v -= GBE_SELFTEST_VMAP;
+            m[c] = v;
+        }
+        gbe_vrow_tiles_c(m, r & 1);
+        memcpy(ref, row_buf, sizeof(ref));
+        gbe_vrow_tiles(m, r & 1);
+        if (memcmp(ref, row_buf, sizeof(ref))) gbe_eq_mismatch++;
+        gbe_eq_count++;
+    }
+    memcpy(row_buf, save, sizeof(save));
+}
+#endif
+
 void gbe_selftest(void) {
     gbe_eq_mismatch = gbe_eq_count = 0;
 #ifdef GBE_SELFTEST_MAP
@@ -134,6 +156,9 @@ void gbe_selftest(void) {
 #endif
 #ifdef GBE_SELFTEST_POOL
     eq_pool();
+#endif
+#ifdef GBE_SELFTEST_VMAP
+    eq_vrow();
 #endif
     gbe_eq_done = 1;
 }

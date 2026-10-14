@@ -31,8 +31,12 @@ void oam8(uint8_t nb, uint8_t ox, uint8_t y, uint8_t tile, uint8_t prop);
 
 // ---------------------------------------------------------------- gbe_video.c
 // Register shadows written by the library's VBlank handler (same moment as GBDK's OAM DMA):
-// SCX, palettes (fades) and, with the HUD cut on, the window/sprites split at line cut_line.
-extern uint8_t scx_shadow, bgp_shadow, obp0_shadow, obp1_shadow;
+// SCX/SCY, palettes (fades) and, with the HUD cut on, the window/sprites split at line cut_line.
+// shake_x/y are added to the scroll shadows; bgp_below (when bgp_below_on) is the BG palette
+// below the cut line (flash the playfield, not the HUD). SCY_REG is written every VBlank.
+extern uint8_t scx_shadow, scy_shadow, bgp_shadow, obp0_shadow, obp1_shadow;
+extern int8_t shake_x, shake_y;
+extern uint8_t bgp_below, bgp_below_on;
 extern uint8_t hud_cut;       // 1: window visible above cut_line, sprites only below it
 void video_init(uint8_t cut_line, uint8_t bgp, uint8_t obp0, uint8_t obp1);   // installs ISRs
 void set_fade(uint8_t k);     // 0 = normal palettes .. 3 = white (ui.md 1.2 formula)
@@ -82,6 +86,40 @@ uint8_t mt_at_c(uint16_t x, uint8_t y);  // C references for the equivalence tes
 uint8_t solid_at_c(uint16_t x, uint8_t y);
 void map_column(uint16_t tc);            // fill col_buf with tile column tc (asm inside)
 void map_column_c(uint16_t tc);
+
+// ---------------------------------------------------------------- gbe_vmap.c / .s
+// Vertical metatile map (shmups): GBE_VMAP_W (10) metatiles per row = the screen width, row 0 =
+// bottom, world y grows up, scroll_y = world px at the bottom screen line (SCY = 112 - scroll_y).
+// WRAM ring of 16 metatile rows, BG ring of 32 tile rows streamed 1 per frame (speed <= 8 px/f).
+// Same game tables as gbe_map: mt_tiles[][4]. Map rows past the end read as metatile 0.
+#ifndef GBE_VMAP_W
+#define GBE_VMAP_W 10
+#endif
+// OAM Y (8-bit) of the top edge of metatile row r: valid while the row is near the screen
+#define VMAP_ROW_Y(r) ((uint8_t)((uint8_t)scroll_y + 144 - ((uint8_t)(r) << 4)))
+extern uint8_t vmap_ring[], row_buf[], row_pending, scroll_sub;
+extern uint16_t vmap_rows, vmap_mrows, vmap_stop, rows_written, scroll_y;
+void vmap_load(const uint8_t *src, uint16_t rows, uint16_t scroll, uint16_t stop);   // LCD off
+void vmap_scroll(uint16_t speed);       // per frame: scroll + SCY shadow + <= 1 tile row prepared
+uint8_t vmap_get(uint8_t col, uint16_t row);           // ring cell (0 if not in the ring)
+void vmap_set(uint8_t col, uint16_t row, uint8_t mt);  // ring cell + queued redraw if drawn
+void vmap_draw_vram(void);              // VBlank: row + up to 8 queued metatiles
+void gbe_vrow_tiles(const uint8_t *m, uint8_t top);    // asm: row_buf = one half of a metatile row
+void gbe_vrow_tiles_c(const uint8_t *m, uint8_t top);  // C reference
+void vram_row20(uint8_t *dst, const uint8_t *src);     // 20 consecutive BG map bytes (asm)
+
+// ---------------------------------------------------------------- gbe_aim.c
+// Directions: 32 (11.25 deg), dir 0 = down, clockwise on screen: 8 = left, 16 = up, 24 = right.
+// dir_vx/dir_vy: 8.8 velocity at 1 px/f. Speeds: 0 = 1.0, 1 = 1.25, 2 = 1.5, 3 = 2.0 px/f.
+extern const int16_t dir_vx[32], dir_vy[32];
+uint8_t aim_dir(int8_t dx, int8_t dy);  // direction of (dx, dy) (target - origin); error <= 1
+int16_t dir_speed(int16_t v, uint8_t spd);
+// Bullets go to the pool range fire_first..+fire_n with type fire_t, tile fire_tile, prop fire_prop.
+// x, y = OAM position of the new bullet. Return the slot (0xFF if the range is full).
+extern uint8_t fire_first, fire_n, fire_t, fire_tile, fire_prop;
+uint8_t fire(uint8_t x, uint8_t y, uint8_t dir, uint8_t spd);
+// n bullets at dir + step * (k - (n - 1) / 2), k = 0..n-1; returns how many went out
+uint8_t fire_fan(uint8_t x, uint8_t y, uint8_t dir, uint8_t n, uint8_t step, uint8_t spd);
 
 // ---------------------------------------------------------------- gbe_pool.c / .s
 // Object pools in 8-bit OAM space (X = screen x + 8, Y = screen y + 16). GBE_POOL_MAX records of
@@ -135,7 +173,8 @@ void vram_col16(uint8_t *dst, const uint8_t *src);  // 16 tiles down a BG map co
 // Equivalence of every asm routine with its C reference (gb-asm procedure). Tests call
 // gb.selftest() (sets gbe_eq_request; the game calls gbe_selftest()). Which modules are checked
 // comes from gbe_config.h: GBE_SELFTEST_MAP (needs a loaded map), GBE_SELFTEST_ACTORS,
-// GBE_SELFTEST_POOL (uses the last 8 pool slots as scratch and the last 8 OAM entries).
+// GBE_SELFTEST_POOL (uses the last 8 pool slots as scratch and the last 10 OAM entries),
+// GBE_SELFTEST_VMAP <metatile count of mt_tiles>.
 extern uint8_t gbe_eq_request, gbe_eq_done;
 extern uint16_t gbe_eq_mismatch, gbe_eq_count;
 void gbe_selftest(void);

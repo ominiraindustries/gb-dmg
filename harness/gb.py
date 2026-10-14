@@ -124,6 +124,27 @@ def check_warnings(output):
     return problems
 
 
+SHADOWED_REGS = {"SCX_REG": "scx_shadow", "SCY_REG": "scy_shadow", "BGP_REG": "bgp_shadow",
+                 "OBP0_REG": "obp0_shadow", "OBP1_REG": "obp1_shadow"}
+
+
+def check_sources(gdir, cfg):
+    """Source rules that compile fine but break at run time."""
+    import re
+    problems = []
+    if "gbe_video.c" in cfg.get("common_src", []):
+        # gbe_video rewrites these registers every VBlank from its shadows: a raw write lasts one
+        # frame (platformer intro card lost its SCY when the shmup made SCY shadowed).
+        for f in sorted((gdir / "src").rglob("*.c")):
+            for n, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):
+                code = line.split("//", 1)[0]
+                for reg, shadow in SHADOWED_REGS.items():
+                    if re.search(rf"\b{reg}\s*=[^=]", code) and shadow not in code:
+                        problems.append(f"{f.name}:{n}: {reg} written directly; gbe_video overwrites "
+                                        f"it every VBlank -> set {shadow} (or both on one line)")
+    return problems
+
+
 def build(name):
     if not LCC.exists():
         die("GBDK not found, run: python harness/gb.py setup")
@@ -137,6 +158,9 @@ def build(name):
         sources.append(common_src / name)
     if not sources:
         die(f"no sources in {gdir / 'src'}")
+    problems = check_sources(gdir, cfg)
+    if problems:
+        die("build stopped:\n  " + "\n  ".join(problems))
     out = rom_path(gdir)
     out.parent.mkdir(exist_ok=True)
     gen = out.parent / "gen"

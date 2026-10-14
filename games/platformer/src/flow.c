@@ -124,7 +124,7 @@ static void build_intro(void) {
     WX_REG = 7;
     WY_REG = 0;
     SHOW_WIN;                                 // full-screen card, no cut, no sprites
-    SCY_REG = 0xF0;
+    scy_shadow = SCY_REG = 0xF0;               // gbe_video writes SCY every VBlank
     state = STATE_INTRO;
     screen_timer = 0;
     DISPLAY_ON;

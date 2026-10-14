@@ -45,7 +45,12 @@ class GB:
     # --- time ---
     def _on_vsync(self, _):
         if self._want_snap:
-            self._snap = self.pyboy.memory[WRAM_LO:WRAM_HI]
+            mem = self.pyboy.memory
+            self._snap = mem[WRAM_LO:WRAM_HI]
+            # BG maps and video registers at the same moment: what is on screen this frame
+            # (VRAM written in the last VBlank, SCX/SCY/LCDC as the VBlank ISR set them)
+            self._snap_maps = mem[0x9800:0xA000]
+            self._snap_io = mem[0xFF40:0xFF4C]
             self._want_snap = False
 
     def _tick(self, n, render):
@@ -108,6 +113,29 @@ class GB:
         a = self.addr(name)
         return [self._read(a + i) for i in range(n)]
 
+    # --- background (BG map and video registers, from the same vsync snapshot) ---
+    def io(self, addr):
+        """Video register 0xFF40-0xFF4B (LCDC STAT SCY SCX LY LYC DMA BGP OBP0 OBP1 WY WX)."""
+        if self._snap is not None:
+            return self._snap_io[addr - 0xFF40]
+        return self.pyboy.memory[addr]
+
+    def bg_map(self, window=False):
+        """32 rows of 32 tile indices of the BG map ($9800) or of the window map ($9C00)."""
+        base = 0x400 if window else 0
+        raw = self._snap_maps if self._snap is not None else self.pyboy.memory[0x9800:0xA000]
+        return [list(raw[base + r * 32:base + r * 32 + 32]) for r in range(32)]
+
+    def bg_rows(self, first_line=0, last_line=143):
+        """The BG map rows the screen shows between two lines with the current SCY: a list of
+        (bg_row, map_row_tiles) top to bottom (each row covering any of those lines once)."""
+        scy, rows, out = self.io(0xFF42), self.bg_map(), []
+        for line in range(first_line, last_line + 1):
+            r = ((scy + line) & 255) >> 3
+            if not out or out[-1][0] != r:
+                out.append((r, rows[r]))
+        return out
+
     # --- sprites (OAM) ---
     def oam(self):
         """The 40 OAM entries as (y, x, tile, prop) from the shadow OAM (what GBDK DMAs next VBlank)."""
@@ -119,7 +147,7 @@ class GB:
         10 sprites in OAM order that cover the line are drawn, the rest are not. tall=None reads the
         sprite size from LCDC bit 2 (8x8 or 8x16). Returns {line: (requested, drawn)}."""
         if tall is None:
-            tall = 16 if self.pyboy.memory[0xFF40] & 0x04 else 8
+            tall = 16 if self.io(0xFF40) & 0x04 else 8
         oam = self.oam()
         out = {}
         for line in range(first, last + 1):

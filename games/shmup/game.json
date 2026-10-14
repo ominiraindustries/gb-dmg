@@ -1,6 +1,110 @@
 {
-  "title": "SHMUP",
-  "common_res": ["font"],
-  "common_src": ["gbe_frame.c", "gbe_oam.c", "gbe_video.c", "gbe_sfx.c"],
-  "lcc_flags": []
+  "title": "GRIFO",
+  "common_res": [
+    "font"
+  ],
+  "common_src": [
+    "bcd.s",
+    "gbe_frame.c",
+    "gbe_oam.c",
+    "gbe_video.c",
+    "gbe_sfx.c",
+    "gbe_screen.c",
+    "gbe_pool.c",
+    "gbe_pool.s",
+    "gbe_spr.c",
+    "gbe_vmap.c",
+    "gbe_vmap.s",
+    "gbe_aim.c",
+    "gbe_selftest.c"
+  ],
+  "lcc_flags": [
+    "-Wm-yt0x19",
+    "-Wm-yo4"
+  ],
+  "screens": [
+    "title",
+    "continuar",
+    "clear",
+    "gameover"
+  ],
+  "vram_order": [
+    "ui",
+    "font",
+    "uiscreens"
+  ],
+  "levels": {
+    "order": "rows",
+    "width": 10,
+    "include": "game.h",
+    "cells": {
+      "`": "MT_FOG",
+      ",": "MT_GRASS",
+      ".": "MT_GRASS2",
+      "*": "MT_FLOWERS",
+      "b": "MT_BUSH",
+      ":": "MT_PATH",
+      "T": "MT_TREE",
+      "F": "MT_FOREST",
+      "n": "MT_FOREST_N",
+      "u": "MT_FOREST_S",
+      "(": "MT_FOREST_W",
+      ")": "MT_FOREST_E",
+      "1": "MT_FOREST_NW",
+      "2": "MT_FOREST_NE",
+      "3": "MT_FOREST_SW",
+      "4": "MT_FOREST_SE",
+      "~": "MT_WATER",
+      "[": "MT_SHORE_W",
+      "]": "MT_SHORE_E",
+      "-": "MT_SHORE_N",
+      "_": "MT_SHORE_S",
+      "5": "MT_SHORE_NW",
+      "6": "MT_SHORE_NE",
+      "7": "MT_SHORE_SW",
+      "8": "MT_SHORE_SE",
+      "{": "MT_BRIDGE_W",
+      "=": "MT_BRIDGE",
+      "}": "MT_BRIDGE_E",
+      "c": "MT_COBBLE",
+      "M": "MT_WALL_TOP",
+      "W": "MT_WALL_FACE",
+      "G": "MT_GATE",
+      "|": "MT_WALL_V",
+      "r": "MT_ROOF_W",
+      "R": "MT_ROOF_E",
+      "q": "MT_TOWER_NW",
+      "p": "MT_TOWER_NE",
+      "d": "MT_TOWER_SW",
+      "k": "MT_TOWER_SE",
+      "A": "MT_CONE",
+      "%": "MT_FOG_LO",
+      "^": "MT_FOG_HI",
+      "B": "MT_BOSS_0",
+      "C": "MT_BOSS_1",
+      "D": "MT_BOSS_2",
+      "E": "MT_BOSS_3",
+      "H": "MT_BOSS_4",
+      "I": "MT_BOSS_5",
+      "J": "MT_BOSS_6",
+      "K": "MT_BOSS_7",
+      "L": "MT_BOSS_8",
+      "N": "MT_BOSS_9",
+      "O": "MT_BOSS_10",
+      "P": "MT_BOSS_11"
+    },
+    "objects": {
+      "d": "OBJ_DART",
+      "w": "OBJ_WAVE",
+      "f": "OBJ_WAVE_F",
+      "s": "OBJ_SWOOP",
+      "g": "OBJ_SWOOP_G",
+      "c": "OBJ_CARRIER_P",
+      "e": "OBJ_CARRIER_B",
+      "t": "OBJ_TURRET"
+    },
+    "object_cells": {
+      "t": "MT_TURRET_D"
+    }
+  }
 }
