@@ -30,6 +30,7 @@ uint8_t wev_sx = 0xFF, wev_sy = 0xFF;    // sector whose objects are in wev[] (g
 uint8_t wosx, wosy;                  // sector of 3x3 position 0 (focus sector - 1; may be 0xFF)
 uint8_t wfocus_sx, wfocus_sy;
 uint8_t world_loaded_slot;           // slot loaded this frame (0xFF = none): scan its events
+uint8_t world_loaded_sx, world_loaded_sy;   // and its sector
 int16_t cam_x, cam_y;                // world px at the screen's top-left
 uint8_t reg_x, reg_y;                // top-left cell of the drawn region
 uint8_t world_edge_budget = 3;
@@ -108,6 +109,8 @@ static uint8_t load_step(void) {
         gslot[wload_g] = wload_slot;
         wslot[wload_pos] = wload_slot;
         world_loaded_slot = wload_slot;
+        world_loaded_sx = wosx + pos_x[wload_pos];
+        world_loaded_sy = wosy + pos_y[wload_pos];
         wload_pos = 0xFF;
         wmissing--;
         return 1;

@@ -335,6 +335,34 @@ _gact_draw::
     add a, #4
     jr  35$
 33$:
+    bit 6, a
+    jr  z, 34$
+    ld  a, (#_gd_dir)           ; GACT_ANIMF: down 0, up 4, side 8 (+4 stepping); down/up step = flip X
+    cp  a, #2
+    jr  c, 38$
+    ld  a, (#_gd_mov)
+    and a, b
+    ld  a, c
+    jr  z, 39$
+    add a, #4
+39$:
+    add a, #8
+    jr  35$
+38$:
+    ld  e, a                    ; dir 0 / 1
+    ld  a, (#_gd_mov)
+    and a, b
+    jr  z, 40$
+    ld  a, (#_gd_prop)
+    xor a, #0x20                ; S_FLIPX on the stepping frame
+    ld  (#_gd_prop), a
+40$:
+    ld  a, e
+    add a, a
+    add a, a
+    add a, c
+    jr  35$
+34$:
     ld  a, (#_gd_dir)           ; NPC: tile + npc_frame[dir] + (moving && anim ? 4 : 0)
     add a, #<_gact_npc_frame
     ld  l, a

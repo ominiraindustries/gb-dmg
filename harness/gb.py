@@ -283,7 +283,8 @@ def build(name):
     if (gdir / "res" / "scripts").is_dir():                              # event scripts (script.py)
         import script
         try:
-            sources += script.convert(gdir / "res" / "scripts", gen, table_syms)
+            import world
+            sources += script.convert(gdir / "res" / "scripts", gen, {**table_syms, **world.map_ids(gdir)})
         except ValueError as e:
             die(str(e))
     map_files = sorted((gdir / "res" / "maps").glob("*.map"))

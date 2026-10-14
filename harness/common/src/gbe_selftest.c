@@ -314,7 +314,10 @@ void gact_draw_c(uint8_t first) {
         prop = a->prop | a->prio;
         if (a->dir == 2) prop |= S_FLIPX;
         if (a->type & GACT_ANIM2) tile = a->tile + (a->anim ? 4 : 0);
-        else tile = a->tile + gact_npc_frame[a->dir] + ((a->moving && a->anim) ? 4 : 0);
+        else if (a->type & GACT_ANIMF) {          // down 0, up 4, side 8/12; down/up step = flip X
+            if (a->dir >= 2) tile = a->tile + 8 + ((a->moving && a->anim) ? 4 : 0);
+            else { tile = a->tile + (a->dir << 2); if (a->moving && a->anim) prop ^= S_FLIPX; }
+        } else tile = a->tile + gact_npc_frame[a->dir] + ((a->moving && a->anim) ? 4 : 0);
         oam16(first + (i << 1), (uint8_t)sx + 8, (uint8_t)sy + 16, tile, prop);
     }
 }

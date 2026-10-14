@@ -288,6 +288,7 @@ extern uint8_t wmt_tiles[GBE_WORLD_MT][4], wmt_attr[GBE_WORLD_MT];
 extern int16_t cam_x, cam_y;            // world px of the screen's top-left
 extern uint8_t reg_x, reg_y;            // top-left cell of the drawn 13x12 region
 extern uint8_t wcache_sector[9], world_loaded_slot, world_edge_budget, edge_pending;
+extern uint8_t world_loaded_sx, world_loaded_sy;   // sector completed this frame (world_loaded_slot != 0xFF)
 extern uint16_t world_lost;             // edge-queue overflows (must stay 0)
 void world_metatiles(uint8_t bank, const uint8_t *tiles, const uint8_t *attr, uint8_t n);
 void world_load(uint8_t bank, const world_map_t *map, uint8_t fx, uint8_t fy, int16_t cx, int16_t cy);
@@ -312,7 +313,8 @@ world_ev_t *world_event_at(uint8_t x, uint8_t y);   // object on a cell (0 = non
 #ifndef GBE_GACT_MAX
 #define GBE_GACT_MAX 12
 #endif
-#define GACT_ANIM2 0x80
+#define GACT_ANIM2 0x80                  // 2 frames 0/4 facing right (creatures)
+#define GACT_ANIMF 0x40                  // down 0, up 4, side 8 + step 12; down/up step = flip X (faro NPCs)
 #define GACT_PRIO_DIRTY 0xFF
 enum { GACT_STILL, GACT_LOOK, GACT_WANDER, GACT_CHASE, GACT_FLEE, GACT_HOME, GACT_FOLLOW };
 typedef struct {                       // 24 bytes; offsets 0-15 are fixed in gbe_gact.s
