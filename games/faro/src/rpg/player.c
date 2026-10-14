@@ -129,3 +129,34 @@ uint8_t look_tile(uint8_t look) BANKED {
     bank_memcpy(BANK(tbl_looks), &r, &tbl_looks[look], sizeof(r));
     return r.spr;
 }
+
+// ---------------------------------------------------------------- script ops helpers
+// give: silent (the scripts narrate it); weapons and clothes get equipped if there is room
+uint8_t ops_give(uint8_t id, uint8_t n) BANKED {
+    items_t it;
+    uint8_t got = inv_add(id, n), k;
+    item_row(id, &it);
+    if (it.cat == ITEMS_CAT_ARMA) {
+        for (k = 0; k < 3 && weapons[k] != id; k++) ;
+        if (k == 3) for (k = 0; k < 3; k++) if (weapons[k] == 0xFF) { weapons[k] = id; break; }
+    } else if (it.cat == ITEMS_CAT_ROPA && armor == 0xFF) {
+        armor = id;
+        player_stats();
+    }
+    return got == n;
+}
+
+// clinic = 1: also the wake-up point after fainting (GDD 2.9)
+void ops_heal(uint8_t clinic) BANKED {
+    pv = pv_max;
+    en = en_max;
+    p_st = 0xFF;
+    p_st_t = 0;
+    if (clinic) { last_clinic_map = wmap_id; last_clinic_x = px; last_clinic_y = py; }
+}
+
+uint8_t ops_reg_count(void) BANKED {
+    uint8_t k, n = 0, b;
+    for (k = 0; k < 6; k++) for (b = reg_caught[k]; b; b >>= 1) n += b & 1;
+    return n;
+}

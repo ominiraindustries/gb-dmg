@@ -21,7 +21,7 @@ uint8_t state, field_sub, cheat_flags;   // cheat_flags: written by tests only
 // tests drive the battle core directly (tests/test_battle.py vs tests/battle_model.py):
 // bt_cmd 1 = battle_begin(a, b, c), 2 = battle_turn(a, b, c), 3 = battle_open_turn(), 4 = player_new(),
 // 5 = player_stats()
-uint8_t bt_cmd, bt_a, bt_b, bt_c;
+uint8_t bt_cmd, bt_a, bt_b, bt_c, save_req;   // save_req: tests save from the field
 
 static void test_hook(void) {
     if (bt_cmd == 1) battle_begin(bt_a, bt_b, bt_c);
@@ -113,6 +113,7 @@ void init(void) {
     video_init(0, 0xE4, 0xE4, 0xD8);          // ui.md: BGP/OBP0 0xE4
     sound_init();
     ui_init();
+    vq_budget = 32;                             // 48 + tiles + world overran VBlank (vram_late)
     show_screen_now(ST_TITLE);
 }
 
@@ -122,18 +123,23 @@ void main(void) {
     vram_late = 0;
     while (1) {
         vsync();
-        world_draw_vram();
-        vq_draw_vram();
+        world_draw_vram();                      // fixed-size copies first,
         tiles_draw_vram();
+        vq_draw_vram();                         // the queue last: it stops by itself at the end of VBlank
         WY_REG = tbox_visible ? 96 : 144;
         frame_vram_check();
         frame_begin();
         if (gbe_eq_request) { gbe_eq_request = 0; gbe_selftest(); skip_measure = 1; }
         if (bt_cmd) test_hook();
+        if (save_req) { save_req = 0; game_save(); }
         if (!transition_update()) {
             switch (state) {
             case ST_TITLE:
-                if (title_update() == TITLE_NEW) { new_game(); warp_pending = 1; transition(ST_FIELD); }
+                {
+                    uint8_t c = title_update();
+                    if (c == TITLE_NEW) { new_game(); warp_pending = 1; transition(ST_FIELD); }
+                    else if (c == TITLE_CONTINUE && game_load()) { warp_pending = 1; transition(ST_FIELD); }
+                }
                 break;
             case ST_FIELD:
                 if (tbox_visible || script_active) { tbox_update(); script_update(); }

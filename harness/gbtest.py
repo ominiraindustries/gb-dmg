@@ -319,7 +319,10 @@ class GB:
 
 
 def _bank(addr):
-    return 0 if addr < 0x4000 else 1  # no-MBC ROMs; banked code would need the active bank
+    """.noi addresses of banked symbols are bank << 16 | address (games/faro); flat ROMs: 0 / 1."""
+    if addr >> 16:
+        return addr >> 16
+    return 0 if addr < 0x4000 else 1
 
 
 class Profiler:
@@ -336,9 +339,10 @@ class Profiler:
         self.pending = {}      # return address -> list of (func, start cycles, context)
         self.ret_hooks = set()
         self.context_var = context_var or ("state" if "state" in gb.syms else None)
+        self.cur_bank = gb.syms.get("_current_bank")   # GBDK's copy of the mapped ROM bank
         for f in funcs:
             addr = gb.addr(f)
-            self.pb.hook_register(_bank(addr), addr, self._on_entry, f)
+            self.pb.hook_register(_bank(addr), addr & 0xFFFF, self._on_entry, f)
 
     def _ctx(self):
         return self.gb.u8(self.context_var) if self.context_var else None
@@ -350,9 +354,14 @@ class Profiler:
         if func not in self.stats:
             return
         self.pending.setdefault(ret, []).append((func, pb._cycles(), self._ctx()))
-        if ret not in self.ret_hooks:
-            self.ret_hooks.add(ret)
-            pb.hook_register(_bank(ret), ret, self._on_return, ret)
+        # a return into 0x4000-0x7FFF belongs to the bank mapped now (the caller's)
+        bank = 0 if ret < 0x4000 else (pb.memory[self.cur_bank] if self.cur_bank and ret < 0x8000 else 1)
+        key = (bank << 16) | ret
+        if ret >= 0x8000:
+            return                                  # code in RAM (no hook possible)
+        if key not in self.ret_hooks:
+            self.ret_hooks.add(key)
+            pb.hook_register(bank, ret, self._on_return, ret)
 
     def _on_return(self, ret):
         stack = self.pending.get(ret)
@@ -369,9 +378,9 @@ class Profiler:
     def stop(self):
         for f in self.stats:
             addr = self.gb.addr(f)
-            self.pb.hook_deregister(_bank(addr), addr)
-        for ret in self.ret_hooks:
-            self.pb.hook_deregister(_bank(ret), ret)
+            self.pb.hook_deregister(_bank(addr), addr & 0xFFFF)
+        for key in self.ret_hooks:
+            self.pb.hook_deregister(key >> 16, key & 0xFFFF)
         self.ret_hooks.clear()
 
     def report(self):

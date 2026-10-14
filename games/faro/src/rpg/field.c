@@ -14,6 +14,9 @@ uint16_t act_script[GBE_GACT_MAX];
 uint8_t act_obj_x[GBE_GACT_MAX], act_obj_y[GBE_GACT_MAX];
 uint8_t warp_map, warp_x, warp_y, warp_dir, warp_pending;
 uint8_t focus_sx, focus_sy, field_set = 0xFF;   // field_set: metatile set in VRAM
+uint8_t script_actor = 0xFF;                      // the NPC whose script runs (face_player, walk)
+uint8_t auto_dir, auto_n, npc_dir, npc_n, npc_walking, emote_who, emote_e, emote_t, was_script;
+uint8_t demo_end_request;
 
 #define TURN_FRAMES 6            // a tap shorter than this only turns (GDD 2.1)
 #define BUMP_FRAMES 16
@@ -79,6 +82,45 @@ static void sector_loaded(uint8_t sx, uint8_t sy) {
     creatures_sector(sx, sy);
 }
 
+// Patch objects of the loaded 3x3 again (after a script: it may have set their flags)
+static void refresh_patches(void) {
+    uint8_t sx, sy, k;
+    world_ev_t *e;
+    for (sy = focus_sy - 1; sy != (uint8_t)(focus_sy + 2); sy++)
+        for (sx = focus_sx - 1; sx != (uint8_t)(focus_sx + 2); sx++) {
+            if (sx >= wmap.w || sy >= wmap.h) continue;
+            world_events(sx, sy);
+            for (k = 0, e = wev; k < wev_n; k++, e++)
+                if (e->type == OBJ_PATCH && flag_get(EV_U16(e, 0))) world_set_cell(e->x, e->y, e->d[2]);
+        }
+}
+
+// ---------------------------------------------------------------- script ops support
+void field_face_player(void) {
+    if (script_actor != 0xFF && !gact[script_actor].moving) gact[script_actor].dir = pdir ^ 1;
+}
+
+uint8_t field_npc_walk(uint8_t dir, uint8_t n) {
+    if (script_actor == 0xFF || !n) return 0;
+    npc_dir = dir;
+    npc_n = n;
+    npc_walking = 1;
+    return 1;
+}
+
+uint8_t field_auto_walk(uint8_t dir, uint8_t n) {
+    if (!n) return 0;
+    auto_dir = dir;
+    auto_n = n;
+    return 1;
+}
+
+void field_emote(uint8_t who, uint8_t e) {
+    emote_who = who;
+    emote_e = e > 2 ? 1 : e;                      // ! ? Zz (heart: '?' until it is drawn)
+    emote_t = 40;
+}
+
 // Actors whose sector left the 3x3 cache go away (they come back when it loads again)
 static void despawn_far(void) {
     uint8_t i, s;
@@ -129,6 +171,7 @@ static void use_front(void) {
         switch (ACT_KIND(gact[a].type)) {
         case ACT_NPC:
             if (!gact[a].moving) gact[a].dir = pdir ^ 1;      // face Leo (0<->1, 2<->3)
+            script_actor = a;
             script_run_id(act_script[a]);
             return;
         case ACT_ITEM:
@@ -146,6 +189,7 @@ static void use_front(void) {
     }
     e = world_event_at(fx, fy);
     if (!e) return;
+    script_actor = 0xFF;
     if (e->type == OBJ_SIGN) script_run_id(EV_U16(e, 0));
     else if (e->type == OBJ_FORAGE) forage(e->d[0], fx, fy);
 }
@@ -190,6 +234,10 @@ static void step_done(void) {
     pmoving = pstep_px = 0;
     steps++;
     survival_step();
+    if (auto_n) {                                   // a scripted walk: no triggers, no chaining
+        if (!--auto_n) script_resume();
+        return;
+    }
     e = world_event_at(px, py);
     if (e) {
         if (e->type == OBJ_WARP) { warp_to(e); return; }
@@ -209,8 +257,13 @@ void field_update(void) {
         if (pressed & J_A) { use_front(); camera(); return; }
         try_walk(0);
     }
+    if (!pmoving && auto_n) {                       // scripted walk (op pwalk)
+        pdir = auto_dir;
+        if (blocked(px + dir_dx[pdir], py + dir_dy[pdir])) { auto_n = 0; script_resume(); }
+        else { pmoving = 1; pstep_px = 0; psub = 0; }
+    }
     if (pmoving) {
-        psneak = (keys & J_B) ? 1 : 0;
+        psneak = (keys & J_B) && !auto_n ? 1 : 0;
         if (!psneak || (psub ^= 1)) pstep_px++;           // sneaking: 0.5 px/f (GDD 2.1)
         if ((pstep_px & 7) == 0) panim ^= 1;
         if (pstep_px >= 16) step_done();
@@ -225,6 +278,14 @@ void field_vblank(void) {
     if (sx != focus_sx || sy != focus_sy) { focus_sx = sx; focus_sy = sy; despawn_far(); }
     if (world_loaded_slot != 0xFF) sector_loaded(world_loaded_sx, world_loaded_sy);
     if (!script_active) { gact_update(); creatures_update(); }
+    else gact_move_all();                           // scripted NPC walks still move
+    if (npc_walking && !gact[script_actor].moving) {
+        if (npc_n && gact_try_move(script_actor, npc_dir)) npc_n--;
+        else { npc_walking = 0; script_resume(); }
+    }
+    if (was_script && !script_active) refresh_patches();   // flags a script set (a lit lens...)
+    was_script = script_active;
+    if (emote_t) emote_t--;
 }
 
 // Leo: down 0 / up 8 / side 16 (+4 stepping; down/up alternate steps flipped), left = side flipped
@@ -240,4 +301,9 @@ void field_draw(void) {
     if (wattr_at(px, py) & ATTR_PRIO) prop |= S_PRIORITY;
     oam16(OAM_LEO, 64 + 8, 64 + 16, tile, prop);
     gact_draw(OAM_ACTORS);
+    if (emote_t) {                                  // above Leo or the speaking NPC
+        int16_t ex = 64, ey = 64;
+        if (emote_who == 0 && script_actor != 0xFF) { ex = gact_wx(script_actor) - cam_x; ey = gact_wy(script_actor) - cam_y; }
+        oam8(OAM_FX, (uint8_t)ex + 4 + 8, (uint8_t)ey - 16 + 16, SPR_FX + (emote_e << 1), 0);
+    } else shadow_OAM[OAM_FX].y = 0;
 }

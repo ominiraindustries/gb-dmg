@@ -136,3 +136,17 @@ extern species_t b_sp;
 void battle_begin(uint8_t species, uint8_t lvl, uint8_t free) BANKED;
 void battle_open_turn(void) BANKED;
 void battle_turn(uint8_t kind, uint8_t id, uint8_t weapon) BANKED;
+
+// ---------------------------------------------------------------- script ops support
+uint8_t ops_give(uint8_t id, uint8_t n) BANKED;
+void ops_heal(uint8_t clinic) BANKED;
+uint8_t ops_reg_count(void) BANKED;
+void field_face_player(void);
+uint8_t field_npc_walk(uint8_t dir, uint8_t n);     // 1 = busy (resumes the script when done)
+uint8_t field_auto_walk(uint8_t dir, uint8_t n);
+void field_emote(uint8_t who, uint8_t e);
+extern uint8_t demo_end_request, script_actor;
+
+// ---------------------------------------------------------------- save (src/rpg/save.c, GDD 8.7)
+void game_save(void) BANKED;
+uint8_t game_load(void) BANKED;                     // 1 = loaded (warp_* = where to appear)
