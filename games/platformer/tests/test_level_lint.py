@@ -7,13 +7,19 @@ import pytest
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "harness"))
 import levels  # noqa: E402
+import physics  # noqa: E402
 
 GAME = Path(__file__).resolve().parents[1]
 LEVELS = sorted((GAME / "res").glob("*.lvl"))
 SOLID = set("#BH?PU[]{}")           # solid map cells (U only from below, but blocks paths too)
 ENEMIES = set("wsph")
-MAX_PIT = 3                         # metatiles, walking jump (GDD §2.2); running allows 5
-MAX_STEP_UP = 3                     # metatiles: the measured running jump is 62 px (< 4 * 16)
+# Limits come from the jump simulator (checked against the ROM in test_physics_model.py),
+# never from hand-written numbers: the GDD said 64 px, the real running jump is 62 (QA, M1).
+_P = physics.GAMES["platformer"]
+_RUN = physics.simulate_jump(_P["jump_v_run"], _P["grav_hold"], _P["grav"], _P["fall_max"], _P["run"])
+_WALK = physics.simulate_jump(_P["jump_v"], _P["grav_hold"], _P["grav"], _P["fall_max"], _P["walk"])
+MAX_PIT = physics.max_gap(_WALK["distance"])          # pits must be jumpable without running
+MAX_STEP_UP = physics.max_step_up(_RUN["height"])     # blocks a running jump climbs
 ENEMY_WINDOW = 11                   # 176 px / 16
 
 

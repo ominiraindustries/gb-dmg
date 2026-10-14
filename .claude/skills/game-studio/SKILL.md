@@ -48,6 +48,8 @@ approval** before the next phase. Commit after each phase (CLAUDE.md rule).
 - Route feedback: feel/difficulty -> parameters in the GDD + code; looks -> pixel-artist;
   layout/menus -> ui-designer; bugs -> you + a regression test. Iterate.
 
-## Phase 6 - Wrap up
-- Update the GDD to match what was built. Add reusable lessons to CLAUDE.md or the skills
-  (new gotchas, measured costs, feel values that worked). Commit.
+## Phase 6 - Retrospective (always, before the next milestone or game)
+The games exist to improve the harness. Go through `retro.md` in this skill's folder: what was
+learned, what moves into `harness/common/` (engine code, assets), which mistakes become automatic
+checks (build checks, lint rules, tests), what changes in skills/agents/templates. Update the GDD
+to match what was built. Commit each part.

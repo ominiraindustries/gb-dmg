@@ -72,6 +72,10 @@ Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `
   VRAM. Bucle C de copia ~76 T/tile; asm desenrollado 20 T/tile (`games/tetris/src/vram.s`).
 - Guardia obligatoria: contador `vram_late` (LY < 144 al acabar `draw_vram()`) y un test que exige 0;
   los tiles escritos fuera de VBlank se pierden en silencio.
+- Herramientas del arnés para tests: `gb.run_bot(step, progress, frames, on_stuck)` (bot que debe
+  avanzar; devuelve peor frame y vram_late), `gb.selftest()` (asm de gbe == referencias C),
+  `python harness/physics.py --game <juego>` (saltos/fosos/escalones exactos en 8.8, verificado
+  contra la ROM: el diseño y el lint de niveles salen de ahí).
 - Medir antes de optimizar: `p = gb.profile(["update", "draw_vram", ...])` en un test/script y
   `print(p.report())` da T-cycles máximos/medios por función (1 frame = 70224 T, 1 línea = 456 T).
 - Trampas medidas de SDCC: indexar con `int8_t` (`board[row_off[r] + i]`) ~466 T por acceso → usar

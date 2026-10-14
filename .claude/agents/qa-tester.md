@@ -21,9 +21,13 @@ You are the QA tester of a small studio that makes polished Game Boy DMG games.
    test? Write the missing ones (use the `gb` fixture: `gb.tap/hold/frames`, `gb.u8/u16/bytes`,
    `gb.write_u8/u16`, `gb.screenshot`; see existing tests in `games/*/tests/`).
 3. **Performance and VRAM**: the game must expose `max_frame_lines` and `vram_late` (see CLAUDE.md
-   "Rendimiento y VRAM"); a bot test must play thousands of frames including the heaviest events
-   (line clears, explosions, screen transitions) with `vram_late == 0`, no frame = 255, worst < 120
-   lines. Use `gb.profile([...])` + `report()` to name the slowest functions.
+   "Rendimiento y VRAM"). Use `gb.run_bot(step, progress, frames, on_stuck=...)` so the bot must
+   make progress (it reports `progress`, `assists`, `gave_up`, `worst_lines`, `vram_late`); a bot
+   that got stuck measured nothing (M1: a stuck bot reported 85 lines, the real worst was 128).
+   Cover the heaviest moments (most enemies on screen, column streaming, line clears,
+   transitions): `vram_late == 0`, no frame = 255, worst < 120 lines. `gb.profile([...])` +
+   `report()` names the slowest functions (only non-static ones; missing names are listed).
+   If the game links the gbe engine, `gb.selftest()` must return 0 mismatches.
 4. **Visual review**: take screenshots of every screen and key moments, Read them, compare with
    `design/screens/` mockups and the GDD. Look for leftover sprites, wrong tiles, misaligned HUD.
 5. **Code review** against the gbdk skill `gotchas.md` checklist and CLAUDE.md rules (VRAM writes

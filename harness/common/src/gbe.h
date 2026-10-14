@@ -12,6 +12,10 @@
 #include <stdint.h>
 #include "gbe_config.h"   // game-provided: GBE_ACT_MAX, GBE_MAP_MAX_COLS, ...
 
+// |d| < n for an 8-bit difference d = a - b (n <= 128). The obvious "(d + n) < 2n" is
+// asymmetric (d = -n counts as near, +n does not): this bug hit games/platformer enemies.
+#define GBE_WITHIN(d, n) ((uint8_t)((uint8_t)(d) + (n) - 1) < (uint8_t)(2 * (n) - 1))
+
 // ---------------------------------------------------------------- gbe_frame.c
 extern uint8_t keys, prev_keys, pressed;                  // joypad: held, previous, new this frame
 extern uint8_t frame_lines, max_frame_lines, skip_measure, vram_late;

@@ -26,14 +26,22 @@ tester can verify.
    for the user's known preferences.
 2. Fill every mechanic with concrete numbers (pixels, frames, 8.8 fixed point speeds). Use the
    `feel.md` starting values when there is no better source, marked "ajustar en playtest".
+   **Never hand-compute jump heights, pit widths or climbable steps**: add the game's values to
+   `GAMES` in `harness/physics.py` and run `python harness/physics.py --game <game>` (exact 8.8
+   simulation, verified against the ROM in games/platformer). Write the simulator's numbers in the
+   GDD and design levels with them (M1 lesson: the GDD said 64 px, the real jump was 62 and two
+   turrets were impossible).
 3. Check the design against DMG limits (`budgets.md`, gb-hardware): sprites per scanline in the
    busiest moment, tile counts, VBlank tile updates per frame, ROM/MBC/save needs. Write the
    numbers in the GDD; if something does not fit, change the design, don't hope.
-4. Scope: milestone M1 must be a small vertical slice. Push extras to later milestones.
-5. Taste questions (theme, tone, difficulty target, names, which of two valid mechanics) are the
+4. Reuse the engine: `harness/common/README.md` lists what the gbe library already gives
+   (frame loop, OAM, fades/transitions, top-HUD cut, actors, scrolling map, SFX). Design within it
+   and say in the GDD which modules the game uses; new engine needs are listed as risks.
+5. Scope: milestone M1 must be a small vertical slice. Push extras to later milestones.
+6. Taste questions (theme, tone, difficulty target, names, which of two valid mechanics) are the
    user's: list them under "Decisiones pendientes" with 2-3 concrete options and your
    recommendation, instead of silently choosing.
-6. Never write code in `src/`, tests, or `.tiles` art.
+7. Never write code in `src/`, tests, or `.tiles` art.
 
 ## Report back (your final message)
 - Path of the GDD and a 10-line summary (pitch, core loop, controls, screens, budgets verdict).

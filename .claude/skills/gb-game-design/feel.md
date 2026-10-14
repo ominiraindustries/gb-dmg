@@ -4,6 +4,11 @@ Starting points from common practice in commercial GB/NES-era games. Every value
 parameter in a table or `#define`, tuned by the user in playtest. Use 8.8 fixed point for
 sub-pixel speeds (`uint16_t`, 0x0100 = 1 px/frame).
 
+**Verify, don't estimate:** add the values to `harness/physics.py` (`GAMES`) and run
+`python harness/physics.py --game <game>`: exact 8.8 simulation of the frame order the games use,
+giving height, air time, distance, climbable blocks and jumpable gaps (matched against the ROM
+in games/platformer/tests/test_physics_model.py). Level lints should import it.
+
 ## Platformer movement (16x16 hero)
 | Parameter | Start value | Notes |
 |---|---|---|

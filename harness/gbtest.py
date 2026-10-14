@@ -108,6 +108,37 @@ class GB:
         a = self.addr(name)
         return [self._read(a + i) for i in range(n)]
 
+    # --- bots ---
+    def run_bot(self, step, progress, frames, stuck_limit=240, on_stuck=None, done=None):
+        """Play up to `frames` frames. Each frame: step(gb, f) presses/releases buttons, then one
+        frame runs. progress(gb) -> number that should grow (player x, distance, lines cleared).
+        When it has not grown for stuck_limit frames, on_stuck(gb) may help (counted as an
+        assist) or the bot gives up. done(gb) -> True ends early (level clear).
+        Returns a dict: frames, progress, assists, gave_up, worst_lines, vram_late.
+        Budget numbers from a bot that did not move mean nothing: assert on 'progress' too."""
+        self.write_u8("max_frame_lines", 0) if "max_frame_lines" in self.syms else None
+        best, last_gain, assists, gave_up, f = progress(self), 0, 0, False, 0
+        for f in range(frames):
+            step(self, f)
+            self.frames(1)
+            p = progress(self)
+            if p > best:
+                best, last_gain = p, f
+            elif f - last_gain >= stuck_limit:
+                if on_stuck is None:
+                    gave_up = True
+                    break
+                on_stuck(self)
+                assists += 1
+                last_gain = f
+            if done is not None and done(self):
+                break
+        for b in ("up", "down", "left", "right", "a", "b", "start", "select"):
+            self.pyboy.button_release(b)
+        return {"frames": f + 1, "progress": best, "assists": assists, "gave_up": gave_up,
+                "worst_lines": self.u8("max_frame_lines") if "max_frame_lines" in self.syms else None,
+                "vram_late": self.u8("vram_late") if "vram_late" in self.syms else None}
+
     # --- gbe engine selftest ---
     def selftest(self, max_frames=60000):
         """Run the gbe library's asm-vs-C equivalence checks inside the ROM (gbe_selftest.c; the

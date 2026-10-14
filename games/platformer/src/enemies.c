@@ -198,9 +198,8 @@ void enemy_vs_enemy(uint8_t k) {
     uint8_t rx = enemy_rx[k], y = act_y[i];
     for (m = k + 1, j = i + 1; m < ENEMY_COUNT; m++, j++) {
         if (!pair_active(j)) continue;
-        // |d| < 12 on both axes: (d + 11) < 23 is symmetric ((d + 12) < 24 was not: -12 hit, +12 missed)
-        if ((uint8_t)(enemy_rx[m] - rx + 11) >= 23) continue;
-        if ((uint8_t)(act_y[j] - y + 11) >= 23) continue;
+        if (!GBE_WITHIN(enemy_rx[m] - rx, 12)) continue;   // 12x12 boxes, |d| < 12 on both axes
+        if (!GBE_WITHIN(act_y[j] - y, 12)) continue;
         si = act_state[i];
         sj = act_state[j];
         if (si == E_BALL_MOVE && sj != E_BALL_MOVE) ball_kills(i, j);
