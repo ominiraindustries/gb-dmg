@@ -1,6 +1,6 @@
 # GRIFO (título provisional) — Documento de diseño
 
-Estado: borrador (2026-10-14)    Versión: 0.1    Autor: game-designer
+Estado: aprobado (2026-10-14)    Versión: 1.0    Autor: game-designer
 
 > Carpeta `games/shmup`. Shoot'em up de scroll vertical para DMG. **Doble objetivo:** un juego pequeño
 > y pulido, y **estresar y ampliar el arnés** (`harness/common`, gbe): scroll vertical con streaming de
@@ -646,33 +646,17 @@ en el jefe) y `done` = `state == CLEAR`; un bot que no avanza no vale como medid
 
 ---
 
-## 12. Decisiones pendientes (para el usuario)
+## 12. Decisiones tomadas (2026-10-14)
 
-1. **Tema y título**
-   - a) **GRIFO** — caballero a lomos de un grifo contra las criaturas de un dragón (murciélagos,
-     fuegos fatuos, gárgolas, globos goblin, balistas; jefe: dragón de la torre). Sigue el mundo de
-     fantasía de CABALLERITO y da terreno variado (bosque, río, murallas) que estresa el streaming.
-   - b) **ESTELA** — caza espacial sobre una luna minera (drones, minas, torretas; jefe: nave nodriza).
-     El clásico del género, siluetas muy legibles, pero fondo más vacío.
-   - c) **AVISPA** — una avispa defiende un jardín (moscas, escarabajos, flores-torreta; jefe: araña).
-     Tono simpático.
-   - **Recomendación: a) GRIFO.**
-2. **HUD**: a) **1 fila arriba con el corte LYC** (recomendado: 136 px de juego, enemigos que salen de
-   debajo del HUD, reutiliza gbe_video); b) 2 filas arriba como CABALLERITO (128 px de juego);
-   c) panel lateral derecho sin interrupción (128x144, pero hay que impedir que los sprites entren en él).
-3. **Al morir, el arma**: a) **baja 1 nivel** (recomendado, suave); b) vuelve a nivel 1 (clásico duro);
-   c) se conserva.
-4. **Continuaciones**: a) **3, en el sitio, puntuación a 0** (recomendado); b) infinitas; c) ninguna
-   (arcade puro: game over = título).
-5. **Bomba**: a) **sí, 2 por vida, máx. 4** (recomendado); b) sin bomba, con escudo de 1 golpe al coger
-   un ítem; c) bomba que se recarga sola cada 30 s.
-6. **Récord guardado en SRAM** (M2): a) **sí** (recomendado; MBC5 + RAM + batería desde M1);
-   b) no (MBC5 sin RAM).
-7. **Puntuación con cadena** (M3): a) **no, puntuación simple** (recomendado para M1); b) bonus por
-   destruir una oleada entera (x2 al último); c) multiplicador que sube matando sin fallar disparos.
-8. **Velocidad de scroll**: a) **0.5 px/f** (recomendado, terreno legible, fase de 107 s);
-   b) 0.75 px/f (fase de 300 filas para la misma duración: más mapa y ROM); c) 1.0 px/f (más
-   sensación de velocidad, 400 filas).
-9. **Después de M1**: a) vuelta 2 más difícil (barato); b) **fase 2 nueva** con tileset y jefe propios
-   (recomendado si el motor sale bien: es lo que más estresa el arnés: `gbe_tiles`, bancos);
-   c) satélites/opciones para el jugador.
+El usuario eligió todas las recomendaciones:
+1. **Tema y título:** GRIFO (caballero sobre un grifo, mundo de CABALLERITO).
+2. **HUD:** 1 fila arriba con el corte LYC de `gbe_video` (136 px de juego).
+3. **Arma al morir:** baja 1 nivel.
+4. **Continuaciones:** 3, se sigue en el sitio, la puntuación vuelve a 0.
+5. **Bomba:** sí, 2 por vida, máximo 4.
+6. **Récord en SRAM:** sí, en M2 (MBC5 + RAM + batería).
+7. **Cadenas de puntuación:** no, puntuación simple.
+8. **Velocidad de scroll:** 0,5 px/f.
+9. **Tras M1:** fase 2 nueva con su tileset y jefe.
+
+(Opciones descartadas: ver historial de git, versión 0.1.)
