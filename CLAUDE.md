@@ -72,6 +72,9 @@ Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `
 - Jugar: `python harness/gb.py run <juego>` (ventana PyBoy)
 - Las capturas de los tests van a `games/<juego>/build/shots/*.png`: mirarlas con Read
   para comprobar visualmente los cambios, no fiarse solo de los asserts.
+- Texto en tests: leer **lo que se ve** (`gb.screen_tiles()`: BG + ventana según LCDC/WX/WY), no el
+  mapa en VRAM. `gb.bg_map(window=True)` exige que la ventana esté en pantalla (games/faro: el cuadro
+  de diálogo nunca se vio en el campo por un `HIDE_WIN` y todos los tests pasaban leyendo su mapa).
 - Presupuesto de frame: el juego expone `max_frame_lines` (scanlines usadas tras `vsync()`) y un
   test con bot juega miles de frames y comprueba que no se pasa (ver `games/breakout`, `games/tetris`).
 - Cada mecánica nueva lleva un test: estado inicial → entrada → assert sobre variables.
@@ -95,7 +98,12 @@ Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `
 - `set_bkg_tiles` es lento (~520 T/tile y espera STAT fuera de VBlank); en VBlank escribir directo a
   VRAM. Bucle C de copia ~76 T/tile; asm desenrollado 20 T/tile (`games/tetris/src/vram.s`).
 - Guardia obligatoria: contador `vram_late` (LY < 144 al acabar `draw_vram()`) y un test que exige 0;
-  los tiles escritos fuera de VBlank se pierden en silencio.
+  los tiles escritos fuera de VBlank se pierden en silencio. Para saber por qué: el juego pone
+  `frame_vsync_ly = LY_REG` tras `vsync()` y gbe guarda `vram_late_ly0` (dónde empezaron las copias) y
+  `vram_late_ly` (dónde acabaron). Instrumentar con más código cambia el timing y el fallo desaparece.
+- Cola de VRAM (`vq`): cada entrada cuesta ~90 T además de ~20 T/tile: filas enteras, nunca columnas
+  de 1 tile (faro: 18 entradas por frame perdían tiles). Para en LY 150 (con 152, 32 tiles acababan en
+  la línea 1).
 - Herramientas del arnés para tests: `gb.run_bot(step, progress, frames, on_stuck)` (bot que debe
   avanzar; devuelve peor frame y vram_late), `gb.selftest()` (asm de gbe == referencias C),
   `python harness/physics.py --game <juego>` (saltos/fosos/escalones exactos en 8.8, verificado

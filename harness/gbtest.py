@@ -135,8 +135,30 @@ class GB:
             return self._snap_io[addr - 0xFF40]
         return self.pyboy.memory[addr]
 
+    def window_on(self):
+        """The window is really on screen: LCDC bit 5 on, WY < 144 and WX < 167. With gbe's HUD cut
+        (hud_cut != 0) the VBlank ISR turns the window on and the LYC line turns it off, so the
+        end-of-frame snapshot has bit 5 off while the top of the screen shows it: that counts as on."""
+        win = self.io(0xFF40) & 0x20 or ("hud_cut" in self.syms and self.u8("hud_cut"))
+        return bool(win) and self.io(0xFF4A) < 144 and self.io(0xFF4B) < 167
+
+    def screen_tiles(self):
+        """The 18 x 20 tiles the player sees: the BG map of LCDC bit 3 scrolled by SCX/SCY (rounded
+        to tiles) with the window (LCDC bits 5 and 6, WX/WY) on top. Sprites are not included."""
+        lcdc, scy, scx = self.io(0xFF40), self.io(0xFF42), self.io(0xFF43)
+        bg = self.bg_map(map=1 if lcdc & 0x08 else 0)
+        win = self.bg_map(map=1 if lcdc & 0x40 else 0)
+        on, wy, wx = self.window_on(), self.io(0xFF4A), self.io(0xFF4B) - 7
+        return [[win[(r * 8 - wy) >> 3][(c * 8 - wx) >> 3] if on and r * 8 >= wy and c * 8 >= wx
+                 else bg[((scy + r * 8) >> 3) & 31][((scx + c * 8) >> 3) & 31] for c in range(20)]
+                for r in range(18)]
+
     def bg_map(self, window=False, map=None):
-        """32 rows of 32 tile indices: map=0 $9800, map=1 $9C00 (window=True is map 1)."""
+        """32 rows of 32 tile indices: map=0 $9800, map=1 $9C00. window=True = map 1 AND asserts the
+        window is on screen (games/faro: a text box written to a disabled window passed every test
+        that read its map; use map=1 for the raw map of a hidden window)."""
+        if window:
+            assert self.window_on(), "window map read while the window is not on screen (LCDC bit 5 / WY / WX)"
         base = 0x400 if (window or map == 1) else 0
         raw = self._snap_maps if self._snap is not None else self.pyboy.memory[0x9800:0xA000]
         return [list(raw[base + r * 32:base + r * 32 + 32]) for r in range(32)]

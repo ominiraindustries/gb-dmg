@@ -26,6 +26,7 @@
 // ---------------------------------------------------------------- gbe_frame.c
 extern uint8_t keys, prev_keys, pressed;                  // joypad: held, previous, new this frame
 extern uint8_t frame_lines, max_frame_lines, skip_measure, vram_late;
+extern uint8_t frame_vsync_ly, vram_late_ly, vram_late_ly0;   // the game sets frame_vsync_ly = LY_REG after vsync()
 void frame_begin(void);       // right after vsync(): input + frame start time
 void frame_vram_check(void);  // right after the VBlank copies: counts writes that ran past VBlank
 void frame_end(void);         // last thing in the loop: scanlines used (255 = missed a frame)

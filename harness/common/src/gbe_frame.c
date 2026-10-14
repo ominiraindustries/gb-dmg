@@ -3,6 +3,7 @@
 
 uint8_t keys, prev_keys, pressed;
 uint8_t frame_start, frame_lines, max_frame_lines, skip_measure, vram_late;
+uint8_t vram_late_ly, vram_late_ly0;     // tests: LY when the copies ended late / when vsync() returned
 
 void frame_begin(void) {
     frame_start = (uint8_t)sys_time;
@@ -12,8 +13,9 @@ void frame_begin(void) {
 }
 
 // VBlank copies must finish before LY wraps to 0: writes in mode 3 are silently lost
+uint8_t frame_vsync_ly;
 void frame_vram_check(void) {
-    if (LY_REG < 144) vram_late++;
+    if (LY_REG < 144) { vram_late++; vram_late_ly = LY_REG; vram_late_ly0 = frame_vsync_ly; }
 }
 
 // Scanlines used since vsync() returned (VBlank starts at LY 144). 255 = missed a frame.

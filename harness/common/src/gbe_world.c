@@ -252,20 +252,24 @@ void world_load(uint8_t bank, const world_map_t *map, uint8_t fx, uint8_t fy, in
 world_ev_t wev[GBE_WORLD_EV_MAX];
 uint8_t wev_n, wmap_id;
 
-// Copy the objects of sector (sx, sy) of the current map to wev[] (outside the map: none)
-uint8_t world_events(uint8_t sx, uint8_t sy) {
+// Copy the objects of sector (sx, sy) of the current map to dst (outside the map: none)
+static uint8_t copy_events(world_ev_t *dst, uint8_t sx, uint8_t sy) {
     uint16_t idx[2];
-    uint8_t g;
-    wev_sx = sx;
-    wev_sy = sy;
-    wev_n = 0;
+    uint8_t g, n;
     if (sx >= wmap.w || sy >= wmap.h || !wmap.evidx) return 0;
     g = sy * wmap.w + sx;
     bank_memcpy(wmap_bank, idx, wmap.evidx + g, 4);
-    wev_n = (uint8_t)(idx[1] - idx[0]);
-    if (wev_n > GBE_WORLD_EV_MAX) wev_n = GBE_WORLD_EV_MAX;
-    if (wev_n) bank_memcpy(wmap_bank, wev, wmap.events + (idx[0] << 3), (uint16_t)wev_n << 3);
-    return wev_n;
+    n = (uint8_t)(idx[1] - idx[0]);
+    if (n > GBE_WORLD_EV_MAX) n = GBE_WORLD_EV_MAX;
+    if (n) bank_memcpy(wmap_bank, dst, wmap.events + (idx[0] << 3), (uint16_t)n << 3);
+    return n;
+}
+
+// The objects of sector (sx, sy) -> wev[], wev_n
+uint8_t world_events(uint8_t sx, uint8_t sy) {
+    wev_sx = sx;
+    wev_sy = sy;
+    return wev_n = copy_events(wev, sx, sy);
 }
 
 // Its own copy of one sector (wevq): world_events() for loading sectors overwrote the shared buffer,
@@ -277,9 +281,8 @@ world_ev_t *world_event_at(uint8_t x, uint8_t y) {
     uint8_t k, sx = x >> 4, sy = y >> 4;
     world_ev_t *e;
     if (sx != wevq_sx || sy != wevq_sy) {
-        world_events(sx, sy);
-        memcpy(wevq, wev, (uint16_t)wev_n << 3);
-        wevq_n = wev_n; wevq_sx = sx; wevq_sy = sy;
+        wevq_n = copy_events(wevq, sx, sy);     // straight into its own copy (no second memcpy)
+        wevq_sx = sx; wevq_sy = sy;
     }
     for (k = 0, e = wevq; k < wevq_n; k++, e++)
         if (e->x == x && e->y == y) return e;

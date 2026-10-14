@@ -22,8 +22,9 @@ _vq_draw_vram::
     ldh a, (0x44)
     cp  a, #144
     ret c
-    cp  a, #152                 ; < 2 lines (~900 T) of VBlank left: an entry (<= ~500 T) could
-    ret nc                      ; spill into line 0
+    cp  a, #150                 ; < 4 lines of VBlank left: stop. An entry is up to vq_budget
+    ret nc                      ; tiles + header (32 tiles ~730 T = 1.6 lines); with 152 a battle
+                                ; screen's queue still ended in line 1 (games/faro, vram_late_ly)
 11$:
     ld  a, (_vq_rd)
     ld  b, a

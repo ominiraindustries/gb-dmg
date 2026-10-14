@@ -206,6 +206,7 @@ def convert(folder, out_dir):
         for c in t.cols:
             if c["kind"] == "enum":
                 defs += [f"#define {tn}_{c['name'].upper()}_{v} {i}" for i, v in enumerate(c["values"])]
+                defs.append(f"#define {tn}_{c['name'].upper()}_COUNT {len(c['values'])}")   # array sizes
             elif c["kind"] == "flags":
                 defs += [f"#define {tn}_{c['name'].upper()}_{v} 0x{1 << i:X}" for i, v in enumerate(c["values"])]
         for d in defs:                              # a clash would silently redefine a value
