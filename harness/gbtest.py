@@ -2,12 +2,18 @@
 
 Lets tests press buttons, advance frames, read game variables by their C name
 and save screenshots that Claude (or you) can look at.
+
+Consistent reads: a PyBoy tick ends at LY 0, which can fall in the middle of the game's update()
+(the frame's work starts at LY ~146 after vsync()). So the driver hooks the game's vsync() entry -
+the point where a frame's logic is complete - and during the last frame of each frames() call
+snapshots WRAM there. u8/u16/bytes read WRAM from that snapshot; writes go to both.
 """
 from pathlib import Path
 
 from pyboy import PyBoy
 
 BOOT_FRAMES = 180  # PyBoy's boot animation + game init
+WRAM_LO, WRAM_HI = 0xC000, 0xE000
 
 
 def load_noi(path):
@@ -28,14 +34,29 @@ class GB:
         self.pyboy.set_emulation_speed(0)
         self.syms = load_noi(rom.with_suffix(".noi"))
         self.shots_dir = Path(shots_dir or rom.parent / "shots")
+        self._snap, self._want_snap = None, False
+        if "vsync" in self.syms:
+            self.pyboy.hook_register(0, self.syms["vsync"], self._on_vsync, None)
         self.frames(BOOT_FRAMES)
 
     def close(self):
         self.pyboy.stop(save=False)
 
     # --- time ---
+    def _on_vsync(self, _):
+        if self._want_snap:
+            self._snap = self.pyboy.memory[WRAM_LO:WRAM_HI]
+            self._want_snap = False
+
+    def _tick(self, n, render):
+        if n > 1:
+            self.pyboy.tick(n - 1, False)
+        self._snap, self._want_snap = None, True   # no vsync this frame -> live reads
+        self.pyboy.tick(1, render)
+        self._want_snap = False
+
     def frames(self, n=1):
-        self.pyboy.tick(n, False)
+        self._tick(n, False)
 
     # --- input --- buttons: up down left right a b start select
     def hold(self, button, n):
@@ -54,28 +75,38 @@ class GB:
             raise KeyError(f"symbol '{name}' not found (is it a non-static global?)")
         return self.syms[name]
 
+    def _read(self, a):
+        if self._snap is not None and WRAM_LO <= a < WRAM_HI:
+            return self._snap[a - WRAM_LO]
+        return self.pyboy.memory[a]
+
+    def _write(self, a, v):
+        self.pyboy.memory[a] = v
+        if self._snap is not None and WRAM_LO <= a < WRAM_HI:
+            self._snap[a - WRAM_LO] = v
+
     def u8(self, name):
-        return self.pyboy.memory[self.addr(name)]
+        return self._read(self.addr(name))
 
     def s8(self, name):
         v = self.u8(name)
         return v - 256 if v > 127 else v
 
     def write_u8(self, name, value):
-        self.pyboy.memory[self.addr(name)] = value & 0xFF
+        self._write(self.addr(name), value & 0xFF)
 
     def u16(self, name):
         a = self.addr(name)
-        return self.pyboy.memory[a] | (self.pyboy.memory[a + 1] << 8)
+        return self._read(a) | (self._read(a + 1) << 8)
 
     def write_u16(self, name, value):
         a = self.addr(name)
-        self.pyboy.memory[a] = value & 0xFF
-        self.pyboy.memory[a + 1] = (value >> 8) & 0xFF
+        self._write(a, value & 0xFF)
+        self._write(a + 1, (value >> 8) & 0xFF)
 
     def bytes(self, name, n):
         a = self.addr(name)
-        return [self.pyboy.memory[a + i] for i in range(n)]
+        return [self._read(a + i) for i in range(n)]
 
     # --- profiling ---
     def profile(self, funcs):
@@ -87,7 +118,7 @@ class GB:
     # --- screen ---
     def screenshot(self, name):
         """Render the current frame and save it as shots/<name>.png. Returns the path."""
-        self.pyboy.tick(1, True)
+        self._tick(1, True)
         self.shots_dir.mkdir(parents=True, exist_ok=True)
         path = self.shots_dir / f"{name}.png"
         self.pyboy.screen.image.save(path)

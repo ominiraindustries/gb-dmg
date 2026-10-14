@@ -1,4 +1,5 @@
 #include <gb/gb.h>
+#include <gb/metasprites.h>  // hide_sprites_range, metasprites (not included by gb.h)
 #include <stdint.h>
 
 // 2bpp tiles: 2 bytes per row (low plane, high plane)

@@ -119,6 +119,7 @@ def build(name):
     cmd = [
         str(LCC),
         f"-I{gen}",  # generated asset headers
+        f"-I{gdir / 'src'}",  # game headers, also for generated level files
         "-Wl-m",  # .map file (memory usage)
         "-Wl-j",  # .noi file (symbols, used by tests)
         "-Wm-yS",  # .sym file (symbols for Emulicious/BGB)

@@ -1,0 +1,54 @@
+#include "metatiles.h"
+#include "bg.h"
+
+// Tile table from the metatile table in res/bg.tiles (pixel-artist contract)
+#define MT4(n) { BG_##n##_TL, BG_##n##_TR, BG_##n##_BL, BG_##n##_BR }
+
+const uint8_t mt_tiles[MT_COUNT][4] = {
+    [MT_SKY]            = { BG_BLANK, BG_BLANK, BG_BLANK, BG_BLANK },
+    [MT_GROUND]         = MT4(GROUND),
+    [MT_BRICK]          = MT4(BRICK),
+    [MT_Q_COIN]         = MT4(RUNE),
+    [MT_Q_POWER]        = MT4(RUNE),
+    [MT_HIDDEN_1UP]     = { BG_BLANK, BG_BLANK, BG_BLANK, BG_BLANK },
+    [MT_USED]           = MT4(USED),
+    [MT_HARD]           = MT4(HARD),
+    [MT_TURRET_TOP_L]   = { BG_TURRET_TOP_L_TL, BG_TURRET_MOUTH, BG_TURRET_TOP_L_BL, BG_TURRET_TOP_L_BR },
+    [MT_TURRET_TOP_R]   = { BG_TURRET_MOUTH, BG_TURRET_TOP_R_TR, BG_TURRET_TOP_R_BL, BG_TURRET_TOP_R_BR },
+    [MT_TURRET_L]       = { BG_TURRET_L_TL, BG_TURRET_L_TR, BG_TURRET_L_TL, BG_TURRET_L_TR },
+    [MT_TURRET_R]       = { BG_TURRET_R_TL, BG_TURRET_R_TR, BG_TURRET_R_TL, BG_TURRET_R_TR },
+    [MT_COIN]           = MT4(COIN),
+    [MT_SPEAR]          = MT4(SPEAR),
+    [MT_POLE]           = { BG_POLE_TL, BG_POLE_TR, BG_POLE_TL, BG_POLE_TR },
+    [MT_CLOUD_L]        = MT4(CLOUD_L),
+    [MT_CLOUD_R]        = MT4(CLOUD_R),
+    [MT_BUSH_L]         = MT4(BUSH_L),
+    [MT_BUSH_R]         = MT4(BUSH_R),
+    [MT_HILL_TOP_L]     = { BG_BLANK, BG_BLANK, BG_BLANK, BG_HILL_TOP_L_BR },
+    [MT_HILL_TOP]       = { BG_BLANK, BG_BLANK, BG_HILL_TOP_BL, BG_HILL_TOP_BR },
+    [MT_HILL_TOP_R]     = { BG_BLANK, BG_BLANK, BG_HILL_TOP_R_BL, BG_BLANK },
+    [MT_HILL_L]         = { BG_HILL_L_TL, BG_HILL_FILL, BG_HILL_L_BL, BG_HILL_FILL },
+    [MT_HILL_MID]       = { BG_HILL_FILL, BG_HILL_FILL, BG_HILL_FILL, BG_HILL_FILL },
+    [MT_HILL_R]         = { BG_HILL_FILL, BG_HILL_R_TR, BG_HILL_FILL, BG_HILL_R_BR },
+    [MT_CASTLE_TOP]     = { BG_CASTLE_TOP_TL, BG_CASTLE_TOP_TR, BG_CASTLE_WALL_FILL, BG_CASTLE_WALL_FILL },
+    [MT_CASTLE_WALL]    = { BG_CASTLE_WALL_FILL, BG_CASTLE_WALL_FILL, BG_CASTLE_WALL_FILL, BG_CASTLE_WALL_FILL },
+    [MT_CASTLE_WINDOW]  = { BG_CASTLE_WINDOW_TL, BG_CASTLE_WINDOW_TR, BG_CASTLE_WALL_FILL, BG_CASTLE_WALL_FILL },
+    [MT_CASTLE_DOOR_TOP] = { BG_CASTLE_WALL_FILL, BG_CASTLE_WALL_FILL, BG_CASTLE_DOOR_TOP_BL, BG_CASTLE_DOOR_TOP_BR },
+    [MT_CASTLE_DOOR]    = { BG_CASTLE_DOOR_TL, BG_CASTLE_DOOR_TR, BG_CASTLE_DOOR_TL, BG_CASTLE_DOOR_TR },
+    [MT_CASTLE_PENNANT] = { BG_CASTLE_PENNANT_TL, BG_CASTLE_PENNANT_TR, BG_CASTLE_PENNANT_BL, BG_BLANK },
+    [MT_RUNE_GLOW]      = MT4(RUNE_GLOW),
+    [MT_GROUND_FILL]    = { BG_GROUND_BL, BG_GROUND_BR, BG_GROUND_BL, BG_GROUND_BR },
+};
+
+#define S ATTR_SOLID
+const uint8_t mt_attr[MT_COUNT] = {
+    [MT_SKY] = CLS_EMPTY,           [MT_GROUND] = S | CLS_SOLID,      [MT_BRICK] = S | CLS_BRICK,
+    [MT_Q_COIN] = S | CLS_Q_COIN,   [MT_Q_POWER] = S | CLS_Q_POWER,
+    [MT_HIDDEN_1UP] = CLS_HIDDEN_1UP,   // solid only when hit from below (player.c)
+    [MT_USED] = S | CLS_SOLID,      [MT_HARD] = S | CLS_SOLID,
+    [MT_TURRET_TOP_L] = S | CLS_SOLID, [MT_TURRET_TOP_R] = S | CLS_SOLID,
+    [MT_TURRET_L] = S | CLS_SOLID,  [MT_TURRET_R] = S | CLS_SOLID,
+    [MT_COIN] = CLS_COIN,           [MT_SPEAR] = CLS_POLE,            [MT_POLE] = CLS_POLE,
+    [MT_RUNE_GLOW] = S | CLS_Q_COIN, [MT_GROUND_FILL] = S | CLS_SOLID,
+    // decorations default to 0 = CLS_EMPTY
+};

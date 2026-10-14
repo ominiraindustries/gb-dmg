@@ -44,9 +44,11 @@ Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `
   test con bot juega miles de frames y comprueba que no se pasa (ver `games/breakout`, `games/tetris`).
 - Cada mecánica nueva lleva un test: estado inicial → entrada → assert sobre variables.
   Los tests leen globales **no static** por nombre (`gb.u8("player_x")`), vía el fichero .noi.
-- Ojo en tests: `gb.frames()` (tick de PyBoy) vuelve en LY 0, que puede caer a mitad del `update()`
-  del juego si el frame es pesado; un test puede leer estado a medias. Leer tras un frame tranquilo
-  o tolerar ±1 frame en mediciones frame a frame.
+- Lecturas coherentes en tests: el tick de PyBoy acaba en LY 0, a mitad del `update()` del juego.
+  `gbtest` lo resuelve con un hook en `vsync()` que fotografía la WRAM en el último frame de cada
+  `frames()`: `gb.u8/u16/bytes` leen esa foto (estado completo del frame). Leer WRAM con
+  `gb.pyboy.memory` directamente salta esa protección. Hay 1 frame de latencia de entrada: un botón
+  pulsado antes de `frames(1)` se procesa en la lógica que termina en el frame siguiente.
 - No dar algo por "fino" sin que el usuario lo haya probado (el feel y el hardware real no se testean aquí).
 
 ## Rendimiento y VRAM (aprendido en games/tetris, medido)

@@ -303,8 +303,10 @@ def test_soft_drop_rate_and_points(gb):
     gb.pyboy.button_release("down")
     gb.frames(1)
     rows = ys[-1]
-    assert rows == 10, f"1 row every 2 frames, got y per frame {ys}"
-    assert num(gb, "score", 6) - s0 == rows, "+1 point per soft dropped row"
+    # 1 row every 2 frames (the phase of the gravity timer decides 9 or 10 after 20 frames)
+    assert rows in (9, 10), f"1 row every 2 frames, got y per frame {ys}"
+    assert all(ys[i + 2] - ys[i] == 1 for i in range(len(ys) - 2)), ys
+    assert num(gb, "score", 6) - s0 == gb.s8("piece_y"), "+1 point per soft dropped row"
 
 
 def test_soft_drop_must_be_repressed_for_next_piece(gb):

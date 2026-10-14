@@ -1,4 +1,23 @@
 {
-  "title": "PLATFORMER",
-  "lcc_flags": []
+  "title": "CABALLERITO",
+  "common_res": ["font"],
+  "lcc_flags": ["-Wm-yt0x1B", "-Wm-yo4", "-Wm-ya1"],
+  "levels": {
+    "height": 8,
+    "include": "metatiles.h",
+    "object_cell": ".",
+    "cells": {
+      ".": "MT_SKY", "#": "MT_GROUND", "B": "MT_BRICK", "?": "MT_Q_COIN", "P": "MT_Q_POWER",
+      "U": "MT_HIDDEN_1UP", "H": "MT_HARD", "$": "MT_COIN",
+      "[": "MT_TURRET_TOP_L", "]": "MT_TURRET_TOP_R", "{": "MT_TURRET_L", "}": "MT_TURRET_R",
+      "^": "MT_SPEAR", "|": "MT_POLE",
+      "(": "MT_CLOUD_L", ")": "MT_CLOUD_R", "<": "MT_BUSH_L", ">": "MT_BUSH_R",
+      "J": "MT_HILL_TOP_L", "A": "MT_HILL_TOP", "K": "MT_HILL_TOP_R",
+      "/": "MT_HILL_L", "M": "MT_HILL_MID", "\\": "MT_HILL_R",
+      "T": "MT_CASTLE_TOP", "W": "MT_CASTLE_WALL", "N": "MT_CASTLE_WINDOW",
+      "D": "MT_CASTLE_DOOR_TOP", "O": "MT_CASTLE_DOOR", "F": "MT_CASTLE_PENNANT"
+    },
+    "objects": {"x": "OBJ_START", "w": "OBJ_WALKER", "s": "OBJ_SHELL", "k": "OBJ_CHECKPOINT",
+                "p": "OBJ_PLANT", "h": "OBJ_HOPPER"}
+  }
 }
