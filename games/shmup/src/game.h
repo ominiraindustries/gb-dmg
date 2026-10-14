@@ -2,7 +2,7 @@
 #pragma once
 #include "gbe.h"
 #include "bcd.h"
-#include "metatiles.h"
+#include "metatiles.h"         // generated from res/metatiles.mt
 #include "bg.h"
 #include "spr.h"
 #include "ui.h"
@@ -14,7 +14,7 @@
 #define T_DIGIT0    (TILE_FONT + FONT_DIGIT0)
 #define T_LETTER_A  (TILE_FONT + FONT_LETTER_A)
 #define T_BLANK     (TILE_UI + UI_BLANK)
-// BG_BASE (65) in metatiles.h: stage tiles
+#define BG_BASE     MT_BASE   // stage tiles (65), from res/metatiles.mt
 
 // ---------------------------------------------------------------- level objects (stage1.lvl)
 enum {

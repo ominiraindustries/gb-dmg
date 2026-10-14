@@ -19,6 +19,7 @@ from pathlib import Path
 
 import asciitiles
 import levels
+import metatiles
 
 ROOT = Path(__file__).resolve().parent.parent
 GBDK_VERSION = "4.5.0"
@@ -145,6 +146,21 @@ def check_sources(gdir, cfg):
     return problems
 
 
+def tileset_labels(gdir, mt_file):
+    """{LABEL: index} of the tileset a metatiles.mt names (game res/ first, then harness/common)."""
+    ts = None
+    for line in mt_file.read_text(encoding="utf-8").splitlines():
+        parts = line.split(";", 1)[0].split()
+        if parts[:2] == ["@", "tileset"]:
+            ts = parts[2]
+    if not ts:
+        return {}
+    for d in (gdir / "res", ROOT / "harness" / "common"):
+        if (d / f"{ts}.tiles").exists():
+            return asciitiles.parse(d / f"{ts}.tiles")[1]
+    die(f"{mt_file}: tileset '{ts}' not found")
+
+
 def build(name):
     if not LCC.exists():
         die("GBDK not found, run: python harness/gb.py setup")
@@ -180,6 +196,12 @@ def build(name):
                                                sets, cfg.get("vram_order", [])))
             except (KeyError, ValueError) as e:
                 die(str(e))
+    mt_file = gdir / "res" / "metatiles.mt"
+    if mt_file.exists():
+        try:
+            sources.append(metatiles.convert(mt_file, gen, tileset_labels(gdir, mt_file)))
+        except ValueError as e:
+            die(str(e))
     for lvl in sorted((gdir / "res").glob("*.lvl")):
         try:
             sources.append(levels.convert(lvl, gen, cfg.get("levels", {})))

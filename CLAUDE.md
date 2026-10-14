@@ -25,7 +25,10 @@ el profiling lo justifica y con una prueba de equivalencia contra la versión C.
   - `res/*.lvl`: niveles en ASCII (rejilla + `@ clave valor`), convertidos a `build/gen/<nivel>.c/.h`
     (mapa por columnas + lista de objetos). Qué significa cada carácter va en game.json `"levels"`
     con nombres simbólicos que define el C del juego (formato al principio de `harness/levels.py`;
-    `levels.parse()` sirve para tests de lint en Python puro).
+    `levels.parse()` sirve para tests de lint en Python puro). Niveles verticales (shmup):
+    `"order": "rows"` + capa de objetos al lado de la rejilla (games/shmup/res/stage1.lvl).
+  - `res/metatiles.mt`: tabla de metatiles como datos (nombre, 4 tiles, atributos) → `build/gen/metatiles.c/.h`
+    (`harness/metatiles.py`); la usan el ROM, la vista previa del nivel y los tests en Python.
 - `tools/gbdk/` — SDK, no versionado (`python harness/gb.py setup`)
 
 ## Commits
@@ -42,11 +45,15 @@ Roles (subagentes en `.claude/agents/`, cada uno con memoria propia):
 - La sesión principal hace de productor y programador (skills `gbdk`, `gb-asm`).
 Skills de diseño: `gb-game-design` (GDD, feel, UI, presupuestos, géneros), `gb-pixel-art`.
 Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `build/preview/*.png`
-(hojas de tiles y maquetas `design/screens/*.screen`; formato al principio de `harness/preview.py`).
+(hojas de tiles, maquetas `design/screens/*.screen` y, con `metatiles.mt`, el nivel vertical entero
+`level_<nivel>.png` con los objetos marcados; formato al principio de `harness/preview.py`).
 
 ## Flujo de trabajo
 - Compilar: `python harness/gb.py build <juego>` (muestra uso de ROM/RAM). El build se para a propósito
-  si hay funciones sin declarar (dice qué `#include` falta) o prototipos dentro de bloques.
+  si hay funciones sin declarar (dice qué `#include` falta), prototipos dentro de bloques, o si un juego
+  con `gbe_video` escribe `SCX/SCY/BGP/OBP*_REG` sin su sombra (la ISR de VBlank lo pisaría).
+- Helpers de tests en `games/<juego>/tests/<nombre>.py` (p. ej. `stage_model.py`): importables desde los
+  tests (conftest añade la carpeta); el nombre debe ser único entre juegos.
 - Tests: `python harness/gb.py test <juego>`. Ejecutarlos tras cada cambio de lógica.
 - Jugar: `python harness/gb.py run <juego>` (ventana PyBoy)
 - Las capturas de los tests van a `games/<juego>/build/shots/*.png`: mirarlas con Read

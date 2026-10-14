@@ -1,0 +1,64 @@
+; GRIFO stage metatiles (16x16): TL TR BL BR as res/bg.tiles indices + attributes.
+; The METATILE TABLE comment in bg.tiles explains each one; ids = line order (MT_<NAME>).
+@ tileset bg
+@ base 65                  ; VRAM: ui 0-23, font 24-64, bg from 65 (design/ui.md 0.2)
+@ attr GROUND 0x01         ; a turret may stand here (level lint)
+
+FOG          0   0   0   0
+GRASS        1   2   3   4   GROUND
+GRASS2       5   0   0   0   GROUND
+FLOWERS      6   7   8   9   GROUND
+BUSH        10  11  12  13   GROUND
+PATH        14  15  16  17   GROUND
+TREE        18  19  20  21   GROUND
+FOREST      22  23  24  25   GROUND
+FOREST_N    26  27  24  25   GROUND
+FOREST_S    28  29  30  31   GROUND
+FOREST_W    32  23  33  25   GROUND
+FOREST_E    22  34  24  35   GROUND
+FOREST_NW   36  27  33  25   GROUND
+FOREST_NE   26  37  24  35   GROUND
+FOREST_SW   38  29  39  31   GROUND
+FOREST_SE   28  40  30  41   GROUND
+WATER       42  43  43  42
+SHORE_W     44  43  45  42
+SHORE_E     42  46  43  47
+SHORE_N     48  49  43  42
+SHORE_S     42  43  50  51
+SHORE_NW    52  49  45  42
+SHORE_NE    48  53  43  47
+SHORE_SW    44  43  54  51
+SHORE_SE    42  46  50  55
+BRIDGE_W    56  57  58  59
+BRIDGE      60  57  61  59
+BRIDGE_E    60  62  61  63
+COBBLE      64  65  66  67   GROUND
+WALL_TOP    68  69  70  71   GROUND
+WALL_FACE   72  73  74  74
+GATE        75  76  77  78
+WALL_V      79  80  79  80   GROUND
+ROOF_W      81  82  83  84
+ROOF_E      85  86  87  88
+TOWER_NW    89  90  91  92
+TOWER_NE    93  94  95  96
+TOWER_SW    97  98  99 100
+TOWER_SE   101 102 103 104
+CONE       105 106 107 108
+FOG_LO     109 109 110 110   GROUND
+FOG_HI     111   0 112 112
+TURRET_L   113 114 115 116
+TURRET_D   117 118 119 120
+TURRET_R   121 122 123 124
+CRATER     125 126 127 128
+BOSS_0     129 130 131 132
+BOSS_1     133 134 135 136
+BOSS_2     137 138 139 140
+BOSS_3     141 142 143 144
+BOSS_4     145 146 147 148
+BOSS_5     149 150 151 152
+BOSS_6     153 154 155 156
+BOSS_7     157 158 159 160
+BOSS_8     161 162   0   0
+BOSS_9     163 164   0 165
+BOSS_10    166 167 168   0
+BOSS_11    169 170   0   0

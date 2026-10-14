@@ -16,10 +16,12 @@ List the files in `"common_src"`; their headers are on the include path.
 | `bcd.s` `bcd.h` | `bcd_add3`: packed BCD add with `daa`, saturating at 999999 | - | tetris: ~100 T vs ~2000 T in C |
 | `gbe_frame.c` | input edges, `frame_lines`/`max_frame_lines`, `vram_late` guard, `skip_measure` | - | tetris, platformer |
 | `gbe_oam.c` | `oam16`/`oam8`: direct shadow OAM writes | - | platformer: ~3x cheaper |
-| `gbe_video.c` | VBlank shadows (SCX, palettes), fades, top-HUD window cut (LYC ISR) | `video_init(line, bgp, obp0, obp1)` | platformer |
+| `gbe_video.c` | VBlank shadows (SCX, SCY, palettes) + `shake_x/y`, fades, top-HUD window cut (LYC ISR), `bgp_below` (BG palette under the cut) | `video_init(line, bgp, obp0, obp1)` | platformer, shmup |
 | `gbe_screen.c` | transitions: fade out -> `screen_build(which)` with LCD off -> fade in | `screen_build()` | platformer |
 | `gbe_actors.c` `gbe_actors.s` | actor arrays (struct of arrays), `act_spawn`, asm `act_move` | `GBE_ACT_MAX` | platformer: 240 T vs 1500 T |
 | `gbe_map.c` `gbe_map.s` | 8-row metatile map in WRAM, asm `mt_at`/`solid_at`, camera follow, column streaming, queued cell redraws | `GBE_MAP_MAX_COLS`, `mt_tiles[][4]`, `mt_attr[]` | platformer |
+| `gbe_vmap.c` `gbe_vmap.s` | vertical metatile map (shmups): 10-wide rows, WRAM ring of 16 rows, 1 tile row/frame streamed (<= 8 px/f), `vmap_set` + queue, scroll stop, `VMAP_ROW_Y(r)` | `mt_tiles[][4]`, `GBE_VMAP_W` | shmup: row build ~1000 T asm, copy 24 T/tile |
+| `gbe_aim.c` | 32 directions (`dir_vx/dir_vy`), `aim_dir(dx, dy)` (error <= 1, tested vs atan2), `fire`/`fire_fan` into a pool range | `fire_first/n/t/tile/prop` | shmup |
 | `gbe_sfx.c` | register SFX with per-channel priority | `sfx_table[]` | platformer |
 | `gbe_vram.s` | `vram_col16`: 16 tiles down a BG column | - | platformer: 32 T/tile |
 | `gbe_pool.c` `gbe_pool.s` | many-object pools (bullets, shots, enemies) in 8-bit OAM coords: `pool_alloc`, asm `pool_move` (free on exit), asm `hit_first` (box vs range) | `GBE_POOL_MAX` | gbe_lab: ~130 T/object move |
@@ -31,7 +33,8 @@ Header: `gbe.h` (documents every function and the rules). The game provides `src
 #define GBE_ACT_MAX      14     // actor slots
 #define GBE_MAP_MAX_COLS 255    // only if gbe_map is used
 #define GBE_POOL_MAX     32     // only if gbe_pool is used
-#define GBE_SELFTEST_MAP 1      // which selftest sections to build: _MAP, _ACTORS, _POOL
+#define GBE_SELFTEST_MAP 1      // which selftest sections to build: _MAP, _ACTORS, _POOL,
+#define GBE_SELFTEST_VMAP 58    //   _VMAP <metatile count>
 ```
 `games/gbe_lab` is the library test bench: a synthetic worst case (shmup peak, 26 objects) with a
 frame-budget test and the selftest. Measure library changes there before touching a game.

@@ -154,11 +154,52 @@ def render_screen(path, sets, out, scale=3):
     screen.convert("RGB").resize((160 * scale, 144 * scale), Image.NEAREST).save(out)
 
 
+def render_level(lvl_path, cfg, mt, ts, out, strip_rows=40):
+    """Vertical level (game.json "order": "rows") drawn with its metatiles, in strips of
+    strip_rows rows side by side (bottom of the level = bottom-left), row numbers every 10 and
+    objects as boxed letters (the object layer)."""
+    import levels
+    lvl = levels.parse(lvl_path, layered=cfg["width"])
+    names = {"MT_" + n: i for n, i in mt.ids.items()}
+    obj_cells = cfg.get("object_cells", {})
+    w, h = lvl.width, lvl.height
+    strips = (h + strip_rows - 1) // strip_rows
+    sw, gap = w * 16, 34
+    img = Image.new("RGB", (strips * (sw + gap) + gap, strip_rows * 16 + 8), (230, 230, 240))
+    draw = ImageDraw.Draw(img)
+    for row in range(h):
+        line = h - 1 - row
+        s, k = divmod(row, strip_rows)
+        x0, y0 = gap + s * (sw + gap), 4 + (strip_rows - 1 - k) * 16
+        if row % 10 == 0:
+            draw.text((x0 - gap + 2, y0 + 3), str(row), fill=(0, 0, 0))
+        for col in range(w):
+            ch, ob = lvl.rows[line][col], lvl.layer[line][col]
+            name = obj_cells.get(ob) or cfg["cells"].get(ch)
+            tl = mt.tiles[names[name]] if name in names else [0, 0, 0, 0]
+            for q, t in enumerate(tl):
+                img.paste(ts.images[t], (x0 + col * 16 + (q & 1) * 8, y0 + (q >> 1) * 8))
+            if ob != "." and ob in cfg.get("objects", {}):
+                bx, by = x0 + col * 16 + 3, y0 + 2
+                draw.rectangle((bx - 1, by - 1, bx + 10, by + 11), fill=(255, 255, 255), outline=(200, 0, 0))
+                draw.text((bx + 2, by), ob, fill=(200, 0, 0))
+    img.save(out)
+
+
 def preview(gdir):
     out = gdir / "build" / "preview"
     out.mkdir(parents=True, exist_ok=True)
     sets = find_tilesets(gdir)
     written = []
+    mt_file = gdir / "res" / "metatiles.mt"
+    cfg = _config(gdir).get("levels", {})
+    if mt_file.exists() and cfg.get("order") == "rows":
+        import metatiles
+        mt = metatiles.parse(mt_file, sets[_mt_tileset(mt_file)].labels)
+        for lvl in sorted((gdir / "res").glob("*.lvl")):
+            p = out / f"level_{lvl.stem}.png"
+            render_level(lvl, cfg, mt, sets[mt.tileset], p)
+            written.append(p)
     for name, ts in sets.items():
         if (gdir / "res" / f"{name}.tiles").exists() or name in _common_used(gdir):
             p = out / f"tiles_{name}.png"
@@ -171,10 +212,22 @@ def preview(gdir):
     return written
 
 
-def _common_used(gdir):
+def _config(gdir):
     import json
     cfg = gdir / "game.json"
-    return json.loads(cfg.read_text(encoding="utf-8")).get("common_res", []) if cfg.exists() else []
+    return json.loads(cfg.read_text(encoding="utf-8")) if cfg.exists() else {}
+
+
+def _common_used(gdir):
+    return _config(gdir).get("common_res", [])
+
+
+def _mt_tileset(mt_file):
+    for line in mt_file.read_text(encoding="utf-8").splitlines():
+        parts = line.split(";", 1)[0].split()
+        if parts[:2] == ["@", "tileset"]:
+            return parts[2]
+    raise ValueError(f"{mt_file}: missing '@ tileset <name>'")
 
 
 if __name__ == "__main__":

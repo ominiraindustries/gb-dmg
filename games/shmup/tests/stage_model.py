@@ -1,25 +1,20 @@
 """Python model of the stage map for ROM tests: what each BG tile row must contain.
 
-Built from the same sources as the ROM: res/stage1.lvl + game.json (cells), src/metatiles.h
-(MT ids) and src/metatiles.c (tiles of each metatile, + BG_BASE).
+Built from the same sources as the ROM: res/stage1.lvl + game.json (cells) and res/metatiles.mt.
 """
 import json
-import re
 import sys
 from pathlib import Path
 
 GAME = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(GAME.parents[1] / "harness"))
 import levels  # noqa: E402
+import metatiles  # noqa: E402
 
 CFG = json.loads((GAME / "game.json").read_text(encoding="utf-8"))["levels"]
-H_SRC = (GAME / "src" / "metatiles.h").read_text(encoding="utf-8")
-C_SRC = (GAME / "src" / "metatiles.c").read_text(encoding="utf-8")
-
-BG_BASE = int(re.search(r"#define BG_BASE (\d+)", H_SRC).group(1))
-MT_ID = {m.group(1): int(m.group(2)) for m in re.finditer(r"(MT_\w+) = (\d+),", H_SRC)}
-MT_TILES = [[BG_BASE + int(v) for v in m.groups()]
-            for m in re.finditer(r"T\(\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+)\)", C_SRC.split("mt_attr")[0])]
+MT = metatiles.parse(GAME / "res" / "metatiles.mt")
+MT_ID = {"MT_" + n: i for n, i in MT.ids.items()}
+MT_TILES = [MT.vram_tiles(i) for i in range(len(MT.names))]
 
 LVL = levels.parse(GAME / "res" / "stage1.lvl", layered=CFG["width"])
 WIDTH, HEIGHT = LVL.width, LVL.height
