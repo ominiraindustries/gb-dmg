@@ -40,6 +40,7 @@ extern uint8_t bgp_below, bgp_below_on;
 extern uint8_t hud_cut;       // 1: window visible above cut_line, sprites only below it
 void video_init(uint8_t cut_line, uint8_t bgp, uint8_t obp0, uint8_t obp1);   // installs ISRs
 void set_fade(uint8_t k);     // 0 = normal palettes .. 3 = white (ui.md 1.2 formula)
+void set_fade_dark(uint8_t k);  // 0 = normal .. 3 = black
 
 // ---------------------------------------------------------------- gbe_screen.c
 // Transitions: fade out 16 f -> screen_build(next) with the LCD off -> fade in 16 f.
@@ -106,7 +107,6 @@ void vmap_set(uint8_t col, uint16_t row, uint8_t mt);  // ring cell + queued red
 void vmap_draw_vram(void);              // VBlank: row + up to 8 queued metatiles
 void gbe_vrow_tiles(const uint8_t *m, uint8_t top);    // asm: row_buf = one half of a metatile row
 void gbe_vrow_tiles_c(const uint8_t *m, uint8_t top);  // C reference
-void vram_row20(uint8_t *dst, const uint8_t *src);     // 20 consecutive BG map bytes (asm)
 
 // ---------------------------------------------------------------- gbe_aim.c
 // Directions: 32 (11.25 deg), dir 0 = down, clockwise on screen: 8 = left, 16 = up, 24 = right.
@@ -175,6 +175,37 @@ void sound_update(void);      // once per frame
 // ---------------------------------------------------------------- gbe_vram.s
 void vram_col16(uint8_t *dst, const uint8_t *src);  // 16 tiles down a BG map column (stride 32)
 void vram_mt4_list(uint8_t **dst, const uint8_t *tiles, uint8_t n);   // n metatiles (n >= 1)
+void vram_row20(uint8_t *dst, const uint8_t *src);  // 20 consecutive BG map bytes, 24 T/tile
+
+// ---------------------------------------------------------------- gbe_view.c / .s
+// First-person grid view (crawlers): pieces from res/view.pcs (harness/fpview.py) composed far to
+// near into view_buf (20x12 tile indices). The game defines view_cell() and links view.c.
+#define VIEW_W 20
+#define VIEW_H 12
+enum { VIEW_FREE, VIEW_WALL, VIEW_DOOR, VIEW_LOCKED, VIEW_DOWN, VIEW_UP };
+extern uint8_t view_buf[], view_bank;           // view_bank = BANK(view) if banked, else 0
+extern const uint8_t *view_map, *view_class;    // 16x16 cell types + type -> VIEW_* (asm reads them)
+extern const int8_t view_dx[4], view_dy[4];     // facing 0 N, 1 E, 2 S, 3 W
+uint8_t view_cell(uint8_t x, uint8_t y);        // provided by the game (off the map = VIEW_WALL)
+void view_compose(uint8_t x, uint8_t y, uint8_t f);      // asm core (gbe_view.s)
+void view_compose_c(uint8_t x, uint8_t y, uint8_t f);    // C reference
+void view_compose_bg(void);                     // background piece only (map margins)
+void view_blit(const uint8_t *piece);           // asm
+void view_blit_c(const uint8_t *piece);         // C reference
+
+// ---------------------------------------------------------------- gbe_bgbuf.c
+// Double buffer on the two BG maps (LCDC bit 3): copy a 20-wide WRAM canvas into the hidden map
+// bgbuf_rows_per rows per VBlank, then flip. bg_front = visible map (0 $9800, 1 $9C00).
+extern uint8_t bg_front, bgbuf_rows_left, bgbuf_rows_per, view_flips;
+void bgbuf_start(const uint8_t *src, uint8_t rows, uint8_t dst_row);
+void bgbuf_draw_vram(void);                     // VBlank
+void bgbuf_fill_both(const uint8_t *src, uint8_t rows, uint8_t dst_row);   // LCD off
+
+// ---------------------------------------------------------------- gbe_rng.c
+// 16-bit xorshift; tests predict it (gbtest.rng_next). Seed rng_state from DIV + frames on a key press.
+extern uint16_t rng_state;
+uint8_t rng_next(void);
+uint8_t rng_range(uint8_t n);          // 0 .. n-1
 
 // ---------------------------------------------------------------- gbe_bank.c
 // Banked assets: game.json "banked_res": ["walls", "level1"] puts the generated files in switchable
@@ -197,7 +228,8 @@ void save_erase(void);
 // gb.selftest() (sets gbe_eq_request; the game calls gbe_selftest()). Which modules are checked
 // comes from gbe_config.h: GBE_SELFTEST_MAP (needs a loaded map), GBE_SELFTEST_ACTORS,
 // GBE_SELFTEST_POOL (uses the last 8 pool slots as scratch and the last 10 OAM entries),
-// GBE_SELFTEST_VMAP <metatile count of mt_tiles>, GBE_SELFTEST_AIM (needs _POOL's scratch).
+// GBE_SELFTEST_VMAP <metatile count of mt_tiles>, GBE_SELFTEST_AIM (needs _POOL's scratch),
+// GBE_SELFTEST_VIEW (every piece of the game's view.pcs).
 extern uint8_t gbe_eq_request, gbe_eq_done;
 extern uint16_t gbe_eq_mismatch, gbe_eq_count;
 void gbe_selftest(void);

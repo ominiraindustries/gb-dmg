@@ -32,6 +32,10 @@ Vertical levels (shmups): "order": "rows" and "width": W in the levels config.
           ,,~~~~~~,,   ..d.......
     - Lines are split by position (W cells first): ' ' can be a cell, but editors strip trailing
       spaces, so do not give a cell the ' ' char in vertical levels.
+
+Top-down grids (crawlers, puzzles): "order": "grid" and "width": W. Same two-block lines (cells,
+then the object layer); map[y * W + x] with y = text line from the top; objects as
+<stem>_obj_x[], _obj_y[], _obj_type[] sorted by y then x; "@ key value" metadata as usual.
     - "object_cells": {"t": "MT_TURRET_D"}  per-object stored cell (a C name), e.g. a turret
       object that also draws its metatile.
 
@@ -169,9 +173,77 @@ def convert_rows(src, out_dir, cfg):
     return out_dir / f"{stem}.c"
 
 
+def grid_objects(lvl, objects):
+    """Grid level objects as (x, y, char), y = text line (top-down), sorted by y then x."""
+    out = []
+    for y in range(lvl.height):
+        for x in range(lvl.width):
+            ch = lvl.layer[y][x]
+            if ch in objects:
+                out.append((x, y, ch))
+    return out
+
+
+def convert_grid(src, out_dir, cfg):
+    """Top-down grids (crawlers, puzzles, RPG maps): map[y * W + x], y = text line from the top."""
+    src, out_dir = Path(src), Path(out_dir)
+    stem, up = src.stem, src.stem.upper()
+    cells, objects = cfg.get("cells", {}), cfg.get("objects", {})
+    obj_cells = cfg.get("object_cells", {})
+    if "width" not in cfg:
+        raise ValueError('levels: "order": "grid" needs "width" in game.json levels')
+    lvl = parse(src, cfg.get("height"), layered=cfg["width"])
+    for i, line in enumerate(lvl.layer):
+        for col, ch in enumerate(line):
+            if ch != "." and ch not in objects:
+                raise ValueError(f"{src}: object layer char {ch!r} at grid line {i}, column {col} "
+                                 f"is not in game.json levels.objects")
+    data = []
+    for y in range(lvl.height):
+        for x in range(lvl.width):
+            ch, ob = lvl.rows[y][x], lvl.layer[y][x]
+            if ob in obj_cells:
+                data.append(obj_cells[ob])
+            elif ch in cells:
+                data.append(cells[ch])
+            else:
+                raise ValueError(f"{src}: char {ch!r} at line {y}, column {x} is not in game.json levels.cells")
+    objs = [(x, y, objects[ch]) for x, y, ch in grid_objects(lvl, objects)]
+    out_dir.mkdir(parents=True, exist_ok=True)
+    include = f'#include "{cfg["include"]}"\n' if cfg.get("include") else ""
+    w = lvl.width
+    body = ",\n".join(f"    /* {y:2d} */ " + ", ".join(data[y * w:(y + 1) * w]) for y in range(lvl.height))
+
+    def arr(name, values):
+        vals = ", ".join(values) if values else "0"
+        return f"const uint8_t {stem}_{name}[] = {{ {vals} }};\n"
+
+    (out_dir / f"{stem}.c").write_text(
+        f"// Generated from {src.name} by harness/levels.py - do not edit\n"
+        f"#include <stdint.h>\n{include}\n"
+        f"// row-major from the top: map[y * {w} + x]\n"
+        f"const uint8_t {stem}_map[] = {{\n{body}\n}};\n\n"
+        + arr("obj_x", [str(o[0]) for o in objs])
+        + arr("obj_y", [str(o[1]) for o in objs])
+        + arr("obj_type", [o[2] for o in objs]),
+        encoding="utf-8")
+    meta = "\n".join(f"#define {up}_{k} {v}" for k, v in lvl.meta.items())
+    (out_dir / f"{stem}.h").write_text(
+        f"// Generated from {src.name} by harness/levels.py - do not edit\n"
+        f"#pragma once\n#include <stdint.h>\n\n"
+        f"#define {up}_WIDTH {lvl.width}\n#define {up}_HEIGHT {lvl.height}\n"
+        f"#define {up}_OBJ_COUNT {len(objs)}\n{meta}\n\n"
+        f"extern const uint8_t {stem}_map[];\n"
+        f"extern const uint8_t {stem}_obj_x[], {stem}_obj_y[], {stem}_obj_type[];\n",
+        encoding="utf-8")
+    return out_dir / f"{stem}.c"
+
+
 def convert(src, out_dir, cfg):
     if cfg.get("order") == "rows":
         return convert_rows(src, out_dir, cfg)
+    if cfg.get("order") == "grid":
+        return convert_grid(src, out_dir, cfg)
     src, out_dir = Path(src), Path(out_dir)
     stem = src.stem
     up = stem.upper()

@@ -183,6 +183,57 @@ def compose(pcs, dmap, px, py, pf):
     return view
 
 
+# Slots in painting order (the 19 view cells) and the pieces each can draw
+SLOTS = [(d, l, n, "F") for d in (3,) for l, n in FRONTS[3]]
+SLOTS += [(2, l, n, "S") for l, n in SIDES[2]] + [(2, l, n, "F") for l, n in FRONTS[2]]
+SLOTS += [(1, l, n, "S") for l, n in SIDES[1]] + [(1, l, n, "F") for l, n in FRONTS[1]]
+SLOTS += [(0, l, n, "S") for l, n in SIDES[0]]
+
+
+def _tiles(pcs, name):
+    if name not in pcs.pieces:
+        return set()
+    c, r, w, h = GEOMETRY[name]
+    return {(r + k, c + x) for k, row in enumerate(pcs.pieces[name]) for x, t in enumerate(row)
+            if t is not None}
+
+
+def _variants(slot):
+    d, l, name, kind = slot
+    if kind == "F" and l == 0:
+        return [name, f"D{d}", f"E{d}"]
+    return [name]
+
+
+def occlusion(pcs, max_set=3):
+    """For each slot: masks of LATER slots whose pieces (whatever variant: wall, door, stairs)
+    together cover every tile the slot can draw (incl. its lock). If all the slots of one mask are
+    solid, the slot is invisible and need not be drawn: exact culling (the result is identical)."""
+    from itertools import combinations
+    n = len(SLOTS)
+    draw = []                                 # tiles a slot may write (union of its variants + lock)
+    cover = []                                # tiles a slot always writes when solid (intersection)
+    for i, sl in enumerate(SLOTS):
+        vs = [_tiles(pcs, v) for v in _variants(sl)]
+        u = set().union(*vs)
+        if sl[3] == "F" and sl[1] == 0:
+            u |= _tiles(pcs, f"LK{sl[0]}")
+        draw.append(u)
+        cover.append(set.intersection(*vs) if vs else set())
+    masks = []
+    for i in range(n):
+        found = []
+        later = [j for j in range(i + 1, n) if cover[j]]
+        for k in range(1, max_set + 1):
+            for combo in combinations(later, k):
+                if any(set(f) <= set(combo) for f in found):
+                    continue                  # a subset already works: keep masks minimal
+                if draw[i] <= set().union(*(cover[j] for j in combo)):
+                    found.append(combo)
+        masks.append([sum(1 << j for j in combo) for combo in found])
+    return masks
+
+
 def to_c(pcs, out_dir):
     out_dir = Path(out_dir)
     blob, offs = [], []
@@ -202,16 +253,28 @@ def to_c(pcs, out_dir):
             blob += [c + run[0], len(run)] + [pcs.base + row[x] for x in run]
     out_dir.mkdir(parents=True, exist_ok=True)
     body = ",\n".join("    " + ", ".join(str(b) for b in blob[i:i + 20]) for i in range(0, len(blob), 20))
+    masks = occlusion(pcs)
+    occ_first, occ = [], []
+    for m in masks:
+        occ_first.append(len(occ) // 3)
+        for v in m:
+            occ += [v & 0xFF, (v >> 8) & 0xFF, (v >> 16) & 0xFF]
+    occ_first.append(len(occ) // 3)
     (out_dir / "view.c").write_text(
         "// Generated from view.pcs by harness/fpview.py - do not edit\n#include <stdint.h>\n\n"
         f"const uint8_t view_pcs[] = {{\n{body}\n}};\n"
-        f"const uint16_t view_piece[] = {{ {', '.join(map(str, offs))} }};\n", encoding="utf-8")
+        f"const uint16_t view_piece[] = {{ {', '.join(map(str, offs))} }};\n"
+        "// exact culling: slot i is hidden when every slot of one of its masks is solid\n"
+        "// (masks view_occ[view_occ_first[i]] .. view_occ[view_occ_first[i + 1] - 1], 3 bytes = 19 bits)\n"
+        f"const uint8_t view_occ_first[] = {{ {', '.join(map(str, occ_first))} }};\n"
+        f"const uint8_t view_occ[] = {{ {', '.join(map(str, occ)) or '0'} }};\n", encoding="utf-8")
     ids = "\n".join(f"    VIEW_P_{n} = {i}," for i, n in enumerate(NAMES))
     (out_dir / "view.h").write_text(
         "// Generated from view.pcs by harness/fpview.py - do not edit\n#pragma once\n#include <stdint.h>\n\n"
         f"enum {{\n{ids}\n    VIEW_P_COUNT = {len(NAMES)}\n}};\n"
         "// per piece: row0, rows, then per row: col, len, tiles[len] (one contiguous run per row)\n"
-        "extern const uint8_t view_pcs[];\nextern const uint16_t view_piece[];\n", encoding="utf-8")
+        "extern const uint8_t view_pcs[];\nextern const uint16_t view_piece[];\n"
+        "extern const uint8_t view_occ_first[], view_occ[];\n", encoding="utf-8")
     return out_dir / "view.c"
 
 

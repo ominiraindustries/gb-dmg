@@ -68,3 +68,16 @@ _vram_mt4_list::
     dec b
     jr  nz, 1$
     ret
+
+; void vram_row20(uint8_t *dst, const uint8_t *src)   dst in DE, src in BC.
+;   20 consecutive BG map bytes (one screen-wide tile row). VBlank or LCD off only.
+;   24 T per tile, ~520 T per call.
+_vram_row20::
+    ld  h, d
+    ld  l, e
+    .rept 20
+    ld  a, (bc)
+    ld  (hl+), a
+    inc bc
+    .endm
+    ret

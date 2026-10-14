@@ -168,6 +168,37 @@ static void eq_vrow(void) {
 }
 #endif
 
+#ifdef GBE_SELFTEST_VIEW
+#include "view.h"
+static uint8_t eq_tmp_view[VIEW_W * VIEW_H];
+// view_blit vs view_blit_c on every piece, over a random canvas
+static void eq_view(void) {
+    static uint8_t ref[VIEW_W * VIEW_H];
+    uint8_t id, i, saved = CURRENT_BANK;
+    if (view_bank) SWITCH_ROM(view_bank);
+    for (id = 0; id < VIEW_P_COUNT; id++) {
+        for (i = 0; i < VIEW_W * VIEW_H; i++) view_buf[i] = rnd8();
+        memcpy(ref, view_buf, sizeof(ref));
+        view_blit_c(view_pcs + view_piece[id]);
+        memcpy(eq_tmp_view, view_buf, sizeof(ref));
+        memcpy(view_buf, ref, sizeof(ref));
+        view_blit(view_pcs + view_piece[id]);
+        if (memcmp(eq_tmp_view, view_buf, sizeof(ref))) gbe_eq_mismatch++;
+        gbe_eq_count++;
+    }
+    if (view_bank) SWITCH_ROM(saved);
+    // whole composition: asm vs C at random cells and facings of the game's map
+    for (i = 0; i < 64; i++) {
+        uint8_t x = rnd8() & 15, y = rnd8() & 15, f = rnd8() & 3;
+        view_compose_c(x, y, f);
+        memcpy(eq_tmp_view, view_buf, sizeof(ref));
+        view_compose(x, y, f);
+        if (memcmp(eq_tmp_view, view_buf, sizeof(ref))) gbe_eq_mismatch++;
+        gbe_eq_count++;
+    }
+}
+#endif
+
 void gbe_selftest(void) {
     gbe_eq_mismatch = gbe_eq_count = 0;
 #ifdef GBE_SELFTEST_MAP
@@ -185,6 +216,9 @@ void gbe_selftest(void) {
 #endif
 #ifdef GBE_SELFTEST_VMAP
     eq_vrow();
+#endif
+#ifdef GBE_SELFTEST_VIEW
+    eq_view();
 #endif
     gbe_eq_done = 1;
 }

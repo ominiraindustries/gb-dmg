@@ -1,5 +1,5 @@
 {
-  "title": "DUNGEON",
+  "title": "TORRE HUNDIDA",
   "common_res": [
     "font"
   ],
@@ -8,13 +8,58 @@
     "gbe_oam.c",
     "gbe_video.c",
     "gbe_sfx.c",
-    "gbe_sfx_asm.s"
+    "gbe_sfx_asm.s",
+    "gbe_bank.c",
+    "gbe_save.c",
+    "gbe_rng.c",
+    "gbe_view.c",
+    "gbe_view.s",
+    "gbe_bgbuf.c",
+    "gbe_vram.s",
+    "gbe_selftest.c"
   ],
-  "lcc_flags": [],
+  "lcc_flags": [
+    "-autobank",
+    "-Wm-yt0x1B",
+    "-Wm-yo4",
+    "-Wm-ya1"
+  ],
   "vram_order": [
     "ui",
     "font",
     "walls",
     "uiscreens"
-  ]
+  ],
+  "banked_res": [
+    "walls",
+    "view",
+    "spr",
+    "ui",
+    "uiscreens",
+    "floor1"
+  ],
+  "levels": {
+    "order": "grid",
+    "width": 16,
+    "include": "game.h",
+    "cells": {
+      "#": "CELL_WALL",
+      ".": "CELL_FLOOR",
+      "D": "CELL_DOOR",
+      "L": "CELL_LOCKED",
+      "U": "CELL_UP",
+      "X": "CELL_DOWN"
+    },
+    "objects": {
+      "@": "OBJ_START",
+      "r": "OBJ_FAST",
+      "k": "OBJ_GUARD",
+      "K": "OBJ_GUARD_KEY",
+      "m": "OBJ_SLOW",
+      "p": "OBJ_POTION",
+      "w": "OBJ_STAFF",
+      "h": "OBJ_AMULET",
+      "l": "OBJ_KEY"
+    }
+  }
 }

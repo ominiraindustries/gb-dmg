@@ -1,57 +1,118 @@
-// New game template on the gbe engine library (harness/common/README.md).
+// TORRE HUNDIDA - first-person dungeon crawler for the DMG on the gbe library (design/gdd.md).
+// M1a demo: floor 1 loaded from its bank, walking and turning with the double-buffered view.
 // Loop rules (CLAUDE.md): vsync -> frame_begin -> VRAM copies only -> frame_vram_check ->
 // logic -> sprites -> frame_end. Globals the tests read must be non-static.
-#include "gbe.h"
-#include "bg.h"
-#include "spr.h"
-#include "font.h"
+#include <string.h>
+#include "game.h"
+#include "floor1.h"
 
-#define PLAYER_W 16
-#define PLAYER_H 16
-#define TILE_FONT BG_COUNT
-
-enum { SFX_MOVE, SFX_COUNT };
+enum { SFX_BUMP, SFX_COUNT };
 const sfx_t sfx_table[SFX_COUNT] = {
-    [SFX_MOVE] = { 2, 1, 4, { 0, 0xBC, 0x61, 0x00, 0xC6 } },
+    [SFX_BUMP] = { 4, 1, 6, { 0, 0x3A, 0x61, 0x60, 0xC0 } },
 };
 
-uint8_t player_x, player_y;
+uint8_t dmap[256];
+uint8_t px, py, pf, move_cd;
+uint8_t frame;
 
-// LCD off: tiles, an empty background, palettes, interrupts
-void init(void) {
+// GDD 2.0: cell type -> what the view draws
+const uint8_t cell_class[] = { VIEW_FREE, VIEW_WALL, VIEW_DOOR, VIEW_LOCKED, VIEW_FREE,
+                                      VIEW_UP, VIEW_DOWN };
+
+uint8_t view_cell(uint8_t x, uint8_t y) {
+    if ((x | y) & 0xF0) return VIEW_WALL;            // off the map (also -1 = 0xFF)
+    return cell_class[dmap[(y << 4) | x]];
+}
+
+static uint8_t walkable(uint8_t x, uint8_t y) {
+    uint8_t c;
+    if ((x | y) & 0xF0) return 0;
+    c = dmap[(y << 4) | x];
+    return c == CELL_FLOOR || c == CELL_DOOR_OPEN;
+}
+
+static void load_floor(void) {
+    uint8_t i;
+    bank_memcpy(BANK(floor1), dmap, floor1_map, 256);
+    for (i = 0; i < FLOOR1_OBJ_COUNT; i++) {
+        if (bank_read8(BANK(floor1), &floor1_obj_type[i]) == OBJ_START) {
+            px = bank_read8(BANK(floor1), &floor1_obj_x[i]);
+            py = bank_read8(BANK(floor1), &floor1_obj_y[i]);
+        }
+    }
+    pf = FLOOR1_FACING;
+}
+
+// Margins of the view rows (columns 20-31) = the background row, for the turn slide (GDD 2.1);
+// view_buf holds only the BG piece here (2 alternating tiles per row)
+static void fill_margins(void) {
+    uint8_t r, c, *a;
+    for (r = 0; r < VIEW_H; r++) {
+        a = (uint8_t *)0x9800u + ((uint16_t)(VIEW_ROW + r) << 5);
+        for (c = 20; c < 32; c++) a[c] = a[c + 0x400] = view_buf[r * VIEW_W + (c & 1)];
+    }
+}
+
+static void init(void) {
     DISPLAY_OFF;
-    set_bkg_data(0, BG_COUNT, bg_tiles);
-    set_bkg_data(TILE_FONT, FONT_COUNT, font_tiles);
-    set_sprite_data(0, SPR_COUNT, spr_tiles);
-    init_bkg(BG_DOT);
-    SPRITES_8x16;
-    video_init(0, 0xE4, 0xE4, 0xE4);          // no HUD cut (hud_cut stays 0)
+    LCDC_REG = LCDCF_BG8800 | LCDCF_BG9800 | LCDCF_WIN9C00 | LCDCF_OBJ16 | LCDCF_BGON | LCDCF_WINON;
+    bank_set_bkg_data(BANK(ui), VRAM_UI, UI_COUNT, ui_tiles);
+    set_bkg_data(VRAM_FONT, FONT_COUNT, font_tiles);
+    bank_set_bkg_data(BANK(walls), VRAM_WALLS, WALLS_COUNT, walls_tiles);
+    bank_set_sprite_data(BANK(spr), 0, SPR_COUNT, spr_tiles);
+    view_bank = BANK(view);
+    view_map = dmap;
+    view_class = cell_class;
+    load_floor();
+    view_compose_bg();
+    fill_margins();
+    view_compose(px, py, pf);
+    bg_front = 0;
+    bgbuf_fill_both(view_buf, VIEW_H, VIEW_ROW);
+    scy_shadow = SCY_BASE;
+    WY_REG = HUD_WY;
+    WX_REG = 7;
+    video_init(0, 0xE4, 0xE4, 0xD8);                 // no HUD cut: the window is a fixed bottom band
     sound_init();
-    player_x = (SCREENWIDTH - PLAYER_W) / 2;
-    player_y = (SCREENHEIGHT - PLAYER_H) / 2;
-    SHOW_BKG;
-    SHOW_SPRITES;
+    SHOW_BKG; SHOW_WIN; SHOW_SPRITES;
     DISPLAY_ON;
 }
 
-void update(void) {
-    if ((keys & J_LEFT) && player_x > 0) player_x--;
-    if ((keys & J_RIGHT) && player_x < SCREENWIDTH - PLAYER_W) player_x++;
-    if ((keys & J_UP) && player_y > 0) player_y--;
-    if ((keys & J_DOWN) && player_y < SCREENHEIGHT - PLAYER_H) player_y++;
-    if (pressed & (J_LEFT | J_RIGHT | J_UP | J_DOWN)) sfx(SFX_MOVE);
+// One action per press, repeat every 12 f while held (GDD 2.1)
+static void update(void) {
+    uint8_t k = keys, nx = px, ny = py, r;
+    if (bgbuf_rows_left) return;                     // the last view is still being copied
+    if (move_cd) { move_cd--; return; }
+    if (!(k & (J_UP | J_DOWN | J_LEFT | J_RIGHT))) return;
+    r = (pf + 1) & 3;
+    if (k & J_B) {                                   // B + left/right: side step, B + down: about-face
+        if (k & J_LEFT) { nx -= view_dx[r]; ny -= view_dy[r]; }
+        else if (k & J_RIGHT) { nx += view_dx[r]; ny += view_dy[r]; }
+        else if (k & J_DOWN) pf = (pf + 2) & 3;
+    } else if (k & J_UP) { nx += view_dx[pf]; ny += view_dy[pf]; }
+    else if (k & J_DOWN) { nx -= view_dx[pf]; ny -= view_dy[pf]; }
+    else if (k & J_LEFT) pf = (pf + 3) & 3;
+    else if (k & J_RIGHT) pf = r;
+    if (nx != px || ny != py) {
+        if (walkable(nx, ny)) { px = nx; py = ny; }
+        else sfx(SFX_BUMP);
+    }
+    view_compose(px, py, pf);
+    bgbuf_start(view_buf, VIEW_H, VIEW_ROW);
+    move_cd = 12;
 }
 
 void main(void) {
     init();
     while (1) {
         vsync();
+        bgbuf_draw_vram();                           // VRAM first: GBDK's VBlank ISR already
+        frame_vram_check();                          // used ~1100 T of the 4560 T of VBlank
         frame_begin();
-        // VBlank work goes here: copy buffers prepared last frame, nothing else
-        frame_vram_check();
+        if (gbe_eq_request) { gbe_eq_request = 0; gbe_selftest(); skip_measure = 1; }
         update();
-        oam16(0, player_x + 8, player_y + 16, SPR_PLAYER, 0);
         sound_update();
+        frame++;
         frame_end();
     }
 }

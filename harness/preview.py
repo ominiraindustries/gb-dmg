@@ -186,6 +186,36 @@ def render_level(lvl_path, cfg, mt, ts, out, strip_rows=40):
     img.save(out)
 
 
+GRID_COLORS = [(250, 250, 250), (60, 60, 70), (160, 100, 40), (200, 60, 40), (120, 200, 120),
+               (90, 90, 220), (40, 160, 200), (230, 200, 60)]
+
+
+def render_grid_level(lvl_path, cfg, out, cell=16):
+    """Top-down grid level: one color per cell char (legend in the image), object letters on top."""
+    import levels
+    lvl = levels.parse(lvl_path, layered=cfg["width"])
+    chars = list(cfg.get("cells", {}))
+    w, h = lvl.width, lvl.height
+    img = Image.new("RGB", (w * cell + 160, max(h * cell, 16 * len(chars)) + 8), (235, 235, 240))
+    d = ImageDraw.Draw(img)
+    for y in range(h):
+        for x in range(w):
+            ch = lvl.rows[y][x]
+            col = GRID_COLORS[chars.index(ch) % len(GRID_COLORS)] if ch in chars else (255, 0, 255)
+            d.rectangle((x * cell, y * cell, x * cell + cell - 1, y * cell + cell - 1), fill=col,
+                        outline=(200, 200, 200))
+            ob = lvl.layer[y][x]
+            if ob != ".":
+                d.text((x * cell + 4, y * cell + 2), ob, fill=(220, 0, 0))
+    for k, ch in enumerate(chars):
+        y = 4 + k * 16
+        d.rectangle((w * cell + 8, y, w * cell + 20, y + 12), fill=GRID_COLORS[k % len(GRID_COLORS)])
+        d.text((w * cell + 26, y), f"'{ch}' {cfg['cells'][ch]}", fill=(0, 0, 0))
+    for k, (ch, name) in enumerate(cfg.get("objects", {}).items()):
+        d.text((w * cell + 8, 8 + (len(chars) + k) * 16), f"{ch} = {name}", fill=(200, 0, 0))
+    img.save(out)
+
+
 def preview(gdir):
     out = gdir / "build" / "preview"
     out.mkdir(parents=True, exist_ok=True)
@@ -193,6 +223,11 @@ def preview(gdir):
     written = []
     mt_file = gdir / "res" / "metatiles.mt"
     cfg = _config(gdir).get("levels", {})
+    if cfg.get("order") == "grid":
+        for lvl in sorted((gdir / "res").glob("*.lvl")):
+            p = out / f"level_{lvl.stem}.png"
+            render_grid_level(lvl, cfg, p)
+            written.append(p)
     if mt_file.exists() and cfg.get("order") == "rows":
         import metatiles
         mt = metatiles.parse(mt_file, sets[_mt_tileset(mt_file)].labels)

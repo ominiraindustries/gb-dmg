@@ -135,11 +135,24 @@ class GB:
             return self._snap_io[addr - 0xFF40]
         return self.pyboy.memory[addr]
 
-    def bg_map(self, window=False):
-        """32 rows of 32 tile indices of the BG map ($9800) or of the window map ($9C00)."""
-        base = 0x400 if window else 0
+    def bg_map(self, window=False, map=None):
+        """32 rows of 32 tile indices: map=0 $9800, map=1 $9C00 (window=True is map 1)."""
+        base = 0x400 if (window or map == 1) else 0
         raw = self._snap_maps if self._snap is not None else self.pyboy.memory[0x9800:0xA000]
         return [list(raw[base + r * 32:base + r * 32 + 32]) for r in range(32)]
+
+    def active_bg(self):
+        """The BG map on screen (LCDC bit 3): 0 = $9800, 1 = $9C00 (double buffers)."""
+        return 1 if self.io(0xFF40) & 0x08 else 0
+
+    @staticmethod
+    def rng_next(state):
+        """gbe_rng.c xorshift16 (7, 9, 8): returns (new_state, byte) to predict the game's rolls."""
+        s = state
+        s ^= (s << 7) & 0xFFFF
+        s ^= s >> 9
+        s ^= (s << 8) & 0xFFFF
+        return s, s & 0xFF
 
     def bg_rows(self, first_line=0, last_line=143):
         """The BG map rows the screen shows between two lines with the current SCY: a list of

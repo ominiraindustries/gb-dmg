@@ -1,42 +1,68 @@
-"""Template tests: one per mechanic, plus the frame budget and VRAM guard every game needs."""
+"""TORRE HUNDIDA M1a: engine on the dungeon - view composition, double buffer, banks (GDD 11)."""
+import random
+
+from view_model import expected, shown
 
 
-def test_player_starts_centered(gb):
-    assert gb.u8("player_x") == (160 - 16) // 2
-    assert gb.u8("player_y") == (144 - 16) // 2
+def state(gb):
+    return gb.bytes("dmap", 256), gb.u8("px"), gb.u8("py"), gb.u8("pf")
+
+
+def test_engine_selftest(gb):
+    mismatch, count = gb.selftest()
+    assert count > 0 and mismatch == 0, (mismatch, count)
+
+
+def test_start_view_matches_model(gb):
+    dmap, px, py, pf = state(gb)
+    assert (px, py, pf) == (5, 2, 2)                       # floor1.lvl '@', facing S
+    assert shown(gb) == expected(dmap, px, py, pf)
     gb.screenshot("start")
 
 
-def test_player_moves_and_stays_on_screen(gb):
-    x = gb.u8("player_x")
-    gb.hold("right", 10)
-    assert gb.u8("player_x") > x
-    gb.hold("left", 300)
-    gb.hold("up", 300)
-    assert (gb.u8("player_x"), gb.u8("player_y")) == (0, 0)
-    gb.hold("right", 300)
-    gb.hold("down", 300)
-    assert (gb.u8("player_x"), gb.u8("player_y")) == (160 - 16, 144 - 16)
+def wait_flip(gb, flips0, frames=30):
+    for _ in range(frames):
+        gb.frames(1)
+        if gb.u8("view_flips") != flips0 and not gb.u8("bgbuf_rows_left"):
+            gb.frames(1)
+            return True
+    return False
 
 
-def test_frame_budget_and_vram_guard(gb):
-    """A bot that must make progress (a stuck bot measures nothing), then the budget checks."""
-    dirs = ["right", "down", "left", "up"]
-    moved = {"dist": 0, "last": None}
+def test_walk_and_turn_view_matches_model_every_step(gb):
+    """200 random actions (walk, back, turn, side step, about-face): after each map flip the
+    screen == fpview.compose of the ROM's position; no tearing (the hidden map is written)."""
+    rnd = random.Random(7)
+    actions = [("up",), ("down",), ("left",), ("right",), ("b", "left"), ("b", "right"), ("b", "down")]
+    worst = 0
+    for i in range(200):
+        act = rnd.choice(actions)
+        flips = gb.u8("view_flips")
+        for b in act:
+            gb.pyboy.button_press(b)
+        gb.frames(2)
+        for b in act:
+            gb.pyboy.button_release(b)
+        assert wait_flip(gb, flips), (i, act)
+        dmap, px, py, pf = state(gb)
+        assert shown(gb) == expected(dmap, px, py, pf), (i, act, px, py, pf)
+        worst = max(worst, gb.u8("max_frame_lines"))
+        gb.frames(12)
+    assert gb.u8("vram_late") == 0
+    print("worst frame lines", worst)
 
-    def step(g, f):                       # walk a square, one side every 60 frames
-        for d in dirs:
-            g.pyboy.button_release(d)
-        g.pyboy.button_press(dirs[(f // 60) % 4])
 
-    def progress(g):                      # total distance walked (keeps growing while moving)
-        pos = (g.u8("player_x"), g.u8("player_y"))
-        if moved["last"] is not None:
-            moved["dist"] += abs(pos[0] - moved["last"][0]) + abs(pos[1] - moved["last"][1])
-        moved["last"] = pos
-        return moved["dist"]
-
-    r = gb.run_bot(step, progress, 600)
-    assert r["progress"] >= 300 and not r["gave_up"], r
-    assert r["vram_late"] == 0, "VRAM written outside VBlank"
-    assert r["worst_lines"] < 120, "less than 20% headroom"
+def test_costs(gb):
+    """M1a measures (GDD 9.3/9.4): view_compose, the VBlank copy, the whole step frame."""
+    p = gb.profile(["view_compose", "view_blit", "bgbuf_draw_vram", "view_cell", "view_copy240", "update"])
+    for k in range(40):
+        gb.pyboy.button_press("right" if k % 3 else "up")
+        gb.frames(2)
+        gb.pyboy.button_release("right")
+        gb.pyboy.button_release("up")
+        gb.frames(14)
+    p.stop()
+    print(p.report())
+    print("max_frame_lines", gb.u8("max_frame_lines"), "vram_late", gb.u8("vram_late"))
+    assert gb.u8("vram_late") == 0
+    assert gb.u8("max_frame_lines") < 120

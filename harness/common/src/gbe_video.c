@@ -52,6 +52,22 @@ static uint8_t fade_pal(uint8_t pal, uint8_t k) {
     return out;
 }
 
+// Each 2-bit shade c becomes min(c + k, 3): k = 0 normal .. 3 all black (death fade)
+static uint8_t dark_pal(uint8_t pal, uint8_t k) {
+    uint8_t out = 0, i, c;
+    for (i = 0; i < 8; i += 2) {
+        c = ((pal >> i) & 3) + k;
+        out |= (c > 3 ? 3 : c) << i;
+    }
+    return out;
+}
+
+void set_fade_dark(uint8_t k) {
+    bgp_shadow = dark_pal(bgp_base, k);
+    obp0_shadow = dark_pal(obp0_base, k);
+    obp1_shadow = dark_pal(obp1_base, k);
+}
+
 void set_fade(uint8_t k) {
     bgp_shadow = fade_pal(bgp_base, k);
     obp0_shadow = fade_pal(obp0_base, k);
