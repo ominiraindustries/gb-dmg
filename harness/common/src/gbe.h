@@ -266,6 +266,12 @@ extern uint8_t save_slot, save_seq;
 uint8_t save_load(void *dst, uint16_t len, uint8_t version) GBE_FAR;   // 1 = newest valid save copied
 void save_store(const void *src, uint16_t len, uint8_t version) GBE_FAR;
 void save_erase(void) GBE_FAR;
+// piece by piece (no WRAM copy of the save): begin, put..., end / open, get... (same order)
+void save_begin(uint16_t len, uint8_t version) GBE_FAR;
+void save_put(const void *src, uint16_t n) GBE_FAR;
+void save_end(void) GBE_FAR;
+uint8_t save_open(uint16_t len, uint8_t version) GBE_FAR;
+void save_get(void *dst, uint16_t n) GBE_FAR;
 
 // ---------------------------------------------------------------- gbe_world.c
 // 4-way scrolling world of 16x16 metatiles in sectors of 16x16 cells (top-down RPGs). Maps come from
@@ -290,7 +296,7 @@ typedef struct {
 #endif
 typedef struct { uint8_t x, y, type, d[5]; } world_ev_t;   // d: fields in game.json world_objects order
 extern world_ev_t wev[GBE_WORLD_EV_MAX];
-extern uint8_t wev_n, wmap_id;
+extern uint8_t wev_n, wmap_id, wevq_sx;   // wevq_sx = 0xFF: forget world_event_at's sector copy
 extern world_map_t wmap;                 // header of the current map (w, h in sectors...)
 extern uint8_t wmt_tiles[GBE_WORLD_MT][4], wmt_attr[GBE_WORLD_MT];
 extern int16_t cam_x, cam_y;            // world px of the screen's top-left
@@ -333,6 +339,7 @@ typedef struct {                       // 24 bytes; offsets 0-15 are fixed in gb
 extern gact_t gact[];
 extern uint8_t gact_count, gact_npc_frame[4];
 extern uint8_t gact_px, gact_py, gact_px2, gact_py2, gact_prio_mask, gact_rng;
+extern uint8_t gact_think_every, gact_think_frame;   // 2 = think every other frame (frame parity)
 uint8_t gact_terrain_ok(uint8_t i, uint8_t x, uint8_t y);    // provided by the game
 uint8_t gact_spawn(uint8_t type, uint8_t x, uint8_t y, uint8_t tile, uint8_t beh) GBE_FAR;   // 0xFF = full
 void gact_free(uint8_t i) GBE_FAR;
@@ -367,6 +374,7 @@ void flag_clr(uint16_t f);
 enum { TB_CLOSED, TB_OPEN, TB_SAY, TB_ASK, TB_PAGE, TB_END, TB_YESNO, TB_CHOOSE, TB_CHOICE };
 extern uint8_t *tbox_win;
 extern uint8_t tbox_row, tbox_frame[9], tbox_arrow, tbox_cursor, tbox_speed, tbox_yes_col, tbox_no_col;
+extern uint8_t tbox_auto;               // > 0: the last page closes alone after that many frames (battle)
 extern char tbox_name[8], tbox_text[256], tbox_speaker[13];
 extern uint8_t tbox_state, tbox_visible, tbox_answer, tbox_nchoices;
 void tbox_start(uint8_t kind) GBE_FAR;          // shows tbox_text: TB_SAY, TB_ASK (one line), TB_CHOICE

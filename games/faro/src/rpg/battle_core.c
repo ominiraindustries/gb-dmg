@@ -20,7 +20,7 @@ uint8_t b_ev[B_EV_MAX][4], b_ev_n;
 species_t b_sp;
 moves_t b_mv[4];
 
-static uint16_t R(uint8_t id) { return rule(id); }
+static uint16_t R(uint8_t id) { return RULE(id); }
 void apply_status(uint8_t target, uint8_t st);
 void end_status(uint8_t target);
 

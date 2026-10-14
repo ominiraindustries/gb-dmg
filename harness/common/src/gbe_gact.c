@@ -36,8 +36,13 @@ static uint8_t rnd(void) {
 }
 
 // frames per cell -> 8.8 pixels per frame, rounded up (12 f: 342 * 12 >= 4096)
+// 8.8 px per frame of 1..32 frames per cell, rounded up: the 16-bit division cost ~2.8k T per spawn
+static const uint16_t gact_rate[33] = {
+    4096, 4096, 2048, 1366, 1024, 820, 683, 586, 512, 456, 410, 373, 342, 316, 293, 274,
+    256, 241, 228, 216, 205, 196, 187, 179, 171, 164, 158, 152, 147, 142, 137, 133, 128 };
+
 void gact_speed(uint8_t i, uint8_t frames) GBE_FAR {
-    uint16_t r = (4096u + frames - 1) / frames;     // once per spawn: the division is fine here
+    uint16_t r = frames <= 32 ? gact_rate[frames] : (4096u + frames - 1) / frames;
     gact[i].rate_hi = r >> 8;
     gact[i].rate_lo = (uint8_t)r;
 }
@@ -140,17 +145,28 @@ static void think(uint8_t i) {
 }
 
 // Once per frame: move every walking actor, count timers, and let one idle actor think
+// gact_think_every: 1 = a thinker every frame, 2 = every other frame (games/faro: the creatures'
+// AI thinks on the other frames). The scan walks the records with a pointer: gact[i].field with a
+// variable i recomputes i * 24 on every access (SDCC), and 12 slots x 4 fields cost ~9k T in faro.
+uint8_t gact_think_every = 1, gact_think_frame;
+
 void gact_update(void) GBE_FAR {
     uint8_t i, k;
+    gact_t *a;
     gact_move_all();
+    if (++gact_think_frame < gact_think_every) return;
+    gact_think_frame = 0;
+    i = gact_think_next;
+    a = &gact[i];
     for (k = 0; k < N; k++) {                       // one thinker per frame
-        i = gact_think_next;
-        if (++gact_think_next == N) gact_think_next = 0;
-        if (gact[i].type && !gact[i].moving && !gact[i].timer && gact[i].beh != GACT_STILL) {
+        if (a->type && !a->moving && !a->timer && a->beh != GACT_STILL) {
+            gact_think_next = i + 1 == N ? 0 : i + 1;
             think(i);
-            break;
+            return;
         }
+        if (++i == N) { i = 0; a = gact; } else a++;
     }
+    gact_think_next = i;
 }
 
 // Pixel position of an actor in world px (top-left of its 16x16)

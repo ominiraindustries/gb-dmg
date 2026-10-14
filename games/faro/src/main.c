@@ -16,11 +16,18 @@
 #include "leo.h"
 #include "npc.h"
 #include "fx.h"
+#include "battle_leo.h"
+#include "battle_pinzarro.h"
+#include "battle_dunejo.h"
+#include "battle_gavirata.h"
+#include "battle_sapoyo.h"
+#include "battle_erizal.h"
+#include "battle_polifaro.h"
 
 uint8_t state, field_sub, cheat_flags;   // cheat_flags: written by tests only
 // tests drive the battle core directly (tests/test_battle.py vs tests/battle_model.py):
 // bt_cmd 1 = battle_begin(a, b, c), 2 = battle_turn(a, b, c), 3 = battle_open_turn(), 4 = player_new(),
-// 5 = player_stats()
+// 5 = player_stats(), 6 = battle_request(a, b, c)
 uint8_t bt_cmd, bt_a, bt_b, bt_c, save_req;   // save_req: tests save from the field
 
 static void test_hook(void) {
@@ -29,6 +36,7 @@ static void test_hook(void) {
     else if (bt_cmd == 3) battle_open_turn();
     else if (bt_cmd == 4) player_new();
     else if (bt_cmd == 5) player_stats();
+    else if (bt_cmd == 6) battle_request(bt_a, bt_b, bt_c);   // a battle from the field
     bt_cmd = 0;
     skip_measure = 1;
 }
@@ -55,10 +63,24 @@ void map_gfx(uint8_t set) {
     }
 }
 
+// Battle pictures (species.pic) at BG 128, Leo's back after them (ui.md 6.1). Glue: the asset list.
+void battle_gfx(uint8_t pic) {
+    switch (pic) {
+    case 0: bank_set_bkg_data(BANK(battle_pinzarro), 128, 49, battle_pinzarro_tiles); break;
+    case 1: bank_set_bkg_data(BANK(battle_dunejo), 128, 49, battle_dunejo_tiles); break;
+    case 2: bank_set_bkg_data(BANK(battle_gavirata), 128, 49, battle_gavirata_tiles); break;
+    case 3: bank_set_bkg_data(BANK(battle_sapoyo), 128, 49, battle_sapoyo_tiles); break;
+    case 4: bank_set_bkg_data(BANK(battle_erizal), 128, 49, battle_erizal_tiles); break;
+    default: bank_set_bkg_data(BANK(battle_polifaro), 128, 49, battle_polifaro_tiles); break;
+    }
+    bank_set_bkg_data(BANK(battle_leo), 177, BATTLE_LEO_COUNT, battle_leo_tiles);
+}
+
 // gbe_screen calls this with the LCD off between a fade out and a fade in
 void screen_build(uint8_t which) {
     lcd_off_redraw_begin();
     if (which == ST_TITLE) { field_set = 0xFF; title_build(); }   // the title overwrites the set's slot
+    else if (which == ST_BATTLE) battle_enter();
     else if (which == ST_FIELD) {
         HIDE_WIN;
         field_enter(warp_map, warp_x, warp_y, warp_dir);
@@ -112,8 +134,10 @@ void init(void) {
     WY_REG = 144;
     video_init(0, 0xE4, 0xE4, 0xD8);          // ui.md: BGP/OBP0 0xE4
     sound_init();
+    rules_load();
     ui_init();
-    vq_budget = 32;                             // 48 + tiles + world overran VBlank (vram_late)
+    vq_budget = 32;
+    gact_think_every = 2;                       // NPCs think on even frames, creatures on odd ones                             // 48 + tiles + world overran VBlank (vram_late)
     show_screen_now(ST_TITLE);
 }
 
@@ -123,10 +147,11 @@ void main(void) {
     vram_late = 0;
     while (1) {
         vsync();
+        if (LY_REG < 144) vsync();               // stale: the last frame ran past VBlank
         world_draw_vram();                      // fixed-size copies first,
         tiles_draw_vram();
         vq_draw_vram();                         // the queue last: it stops by itself at the end of VBlank
-        WY_REG = tbox_visible ? 96 : 144;
+        WY_REG = (tbox_visible && state == ST_FIELD) ? 96 : 144;
         frame_vram_check();
         frame_begin();
         if (gbe_eq_request) { gbe_eq_request = 0; gbe_selftest(); skip_measure = 1; }
@@ -140,6 +165,9 @@ void main(void) {
                     if (c == TITLE_NEW) { new_game(); warp_pending = 1; transition(ST_FIELD); }
                     else if (c == TITLE_CONTINUE && game_load()) { warp_pending = 1; transition(ST_FIELD); }
                 }
+                break;
+            case ST_BATTLE:
+                battle_update();
                 break;
             case ST_FIELD:
                 if (tbox_visible || script_active) { tbox_update(); script_update(); }

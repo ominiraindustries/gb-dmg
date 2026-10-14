@@ -353,7 +353,9 @@ class Profiler:
         ret = pb.memory[sp] | (pb.memory[sp + 1] << 8)
         if func not in self.stats:
             return
-        self.pending.setdefault(ret, []).append((func, pb._cycles(), self._ctx()))
+        # the return is the 'ret' that leaves SP at sp + 2: BANKED functions all return through the
+        # same GBDK trampoline address, so the address alone paired returns of other functions
+        self.pending.setdefault(ret, []).append((func, pb._cycles(), self._ctx(), (sp + 2) & 0xFFFF))
         # a return into 0x4000-0x7FFF belongs to the bank mapped now (the caller's)
         bank = 0 if ret < 0x4000 else (pb.memory[self.cur_bank] if self.cur_bank and ret < 0x8000 else 1)
         key = (bank << 16) | ret
@@ -367,7 +369,9 @@ class Profiler:
         stack = self.pending.get(ret)
         if not stack:
             return
-        func, start, ctx = stack.pop()
+        if stack[-1][3] != self.pb.register_file.SP:
+            return                                  # another call returning through the same address
+        func, start, ctx, _ = stack.pop()
         s = self.stats[func]
         t = self.pb._cycles() - start
         s["calls"] += 1

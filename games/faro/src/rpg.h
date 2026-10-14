@@ -91,6 +91,9 @@ extern uint16_t xp, money, buff_steps, skills_known;
 extern uint8_t weapons[3], inv[INV_SLOTS], reg_seen[6], reg_caught[6], kills[SPECIES_SLOTS], recipe_known[4];
 extern uint8_t full_n, full_sp[FULL_SLOTS], full_lv[FULL_SLOTS], has_zurron;
 uint16_t rule(uint8_t id) BANKED;
+extern uint16_t rules_cache[];
+#define RULE(id) (rules_cache[id])            // rules.tbl in WRAM (rules_load at boot)
+void rules_load(void) BANKED;
 void item_row(uint8_t id, items_t *r) BANKED;
 void player_stats(void) BANKED;
 void player_new(void) BANKED;
@@ -150,3 +153,15 @@ extern uint8_t demo_end_request, script_actor;
 // ---------------------------------------------------------------- save (src/rpg/save.c, GDD 8.7)
 void game_save(void) BANKED;
 uint8_t game_load(void) BANKED;                     // 1 = loaded (warp_* = where to appear)
+
+// ---------------------------------------------------------------- battle screen (battle_ui.c) + creatures
+void battle_request(uint8_t sp, uint8_t lv, uint8_t free) BANKED;   // fades into ST_BATTLE
+void battle_enter(void) BANKED;                 // screen_build(ST_BATTLE), LCD off
+void battle_build(void) BANKED;
+void battle_update(void) BANKED;
+void battle_gfx(uint8_t pic);                   // glue (main.c): picture tiles at BG 128, Leo's back at 177
+extern int8_t shake_x, shake_y;
+void creatures_reset(void) BANKED;
+void creatures_after_battle(uint8_t result) BANKED;
+void creatures_step(void) BANKED;
+void creatures_draw(void) BANKED;

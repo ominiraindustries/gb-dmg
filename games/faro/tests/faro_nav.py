@@ -70,8 +70,9 @@ def path(m, start, goal, blocked=()):
 
 
 def actors(gb):
-    raw = gb.bytes("gact", 24 * 12)
-    return {(raw[i * 24 + 1], raw[i * 24 + 2]) for i in range(12) if raw[i * 24]}
+    n = gb.u8("gact_count")
+    raw = gb.bytes("gact", 24 * n)
+    return {(raw[i * 24 + 1], raw[i * 24 + 2]) for i in range(n) if raw[i * 24]}
 
 
 def step(gb, d):

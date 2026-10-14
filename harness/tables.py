@@ -26,7 +26,7 @@ DULCE), and every table gets
 import re
 from pathlib import Path
 
-TEXT_CHARS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 !?:-./,'¡¿")
+TEXT_CHARS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 !?:-./,'¡¿{}")   # {S} {O} {N}: placeholders the code fills
 SIZES = {"u8": 1, "s8": 1, "u16": 2, "bool": 1, "ref": 1}
 
 

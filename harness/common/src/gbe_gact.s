@@ -16,6 +16,10 @@ _gd_mov:    .ds 1
 _gd_ox:     .ds 1
 _gd_oy:     .ds 1
 _gd_prop:   .ds 1
+_gd_cx:     .ds 1
+_gd_csx:    .ds 1
+_gd_cy:     .ds 1
+_gd_csy:    .ds 1
 
     .area _CODE
 
@@ -154,6 +158,34 @@ _gact_draw::
     ld  (#_gd_oam + 1), a
     ld  a, (#_gact_count)
     ld  (#_gd_n), a
+    ld  hl, #_cam_x             ; camera cell (u8, wraps) and sub-cell, once per call
+    ld  a, (hl+)
+    ld  e, a
+    and a, #0x0F
+    ld  (#_gd_csx), a
+    ld  a, (hl+)                ; high byte of cam_x, hl = cam_y
+    swap a
+    and a, #0xF0
+    ld  d, a
+    ld  a, e
+    swap a
+    and a, #0x0F
+    or  a, d
+    ld  (#_gd_cx), a
+    ld  hl, #_cam_y
+    ld  a, (hl+)
+    ld  e, a
+    and a, #0x0F
+    ld  (#_gd_csy), a
+    ld  a, (hl)
+    swap a
+    and a, #0xF0
+    ld  d, a
+    ld  a, e
+    swap a
+    and a, #0x0F
+    or  a, d
+    ld  (#_gd_cy), a
     ld  hl, #_gact
 20$:
     ld  a, l
@@ -182,106 +214,72 @@ _gact_draw::
     jr  nz, 21$
     ld  (#_gd_step), a          ; idle: no pixel offset
 21$:
-    ; ---- x: x * 16 -+ step (left / right) - cam_x, on screen if 0 <= sx + 16 < 176
-    ld  a, (#_gd_x)
-    swap a
-    ld  c, a
-    and a, #0x0F
-    ld  b, a
-    ld  a, c
-    and a, #0xF0
-    ld  c, a
+    ; ---- 8-bit screen position: cells relative to the camera cell, wrap-around u8 OAM coordinates.
+    ;      x: rx = x - cam_cx must be -1..10, OAM x = (rx << 4) - cam_sx + 8 -+ step (left / right)
+    ;      y: ry = y - cam_cy must be -1..9,  OAM y = (ry << 4) - cam_sy + 16 -+ step (up / down)
+    ld  a, (#_gd_step)
+    ld  d, a                    ; d = step (0 when idle)
     ld  a, (#_gd_dir)
+    ld  e, a                    ; e = dir
+    ld  a, (#_gd_x)
+    ld  hl, #_gd_cx
+    sub a, (hl)
+    ld  c, a                    ; c = rx
+    inc a
+    cp  a, #12
+    jp  nc, 80$
+    ld  a, c
+    swap a
+    and a, #0xF0
+    ld  hl, #_gd_csx
+    sub a, (hl)
+    add a, #8
+    ld  c, a
+    ld  a, e
     cp  a, #2
     jr  nz, 22$
     ld  a, c
-    ld  hl, #_gd_step
-    sub a, (hl)
+    sub a, d
     ld  c, a
-    jr  nc, 24$
-    dec b
     jr  24$
 22$:
     cp  a, #3
     jr  nz, 24$
     ld  a, c
-    ld  hl, #_gd_step
-    add a, (hl)
+    add a, d
     ld  c, a
-    jr  nc, 24$
-    inc b
 24$:
-    ld  hl, #_cam_x
     ld  a, c
+    ld  (#_gd_ox), a
+    ld  a, (#_gd_y)
+    ld  hl, #_gd_cy
     sub a, (hl)
-    ld  c, a
-    inc hl
-    ld  a, b
-    sbc a, (hl)
-    ld  b, a
+    ld  c, a                    ; c = ry
+    inc a
+    cp  a, #11
+    jp  nc, 80$
     ld  a, c
+    swap a
+    and a, #0xF0
+    ld  hl, #_gd_csy
+    sub a, (hl)
     add a, #16
     ld  c, a
-    jr  nc, 25$
-    inc b
-25$:
-    ld  a, b
-    or  a, a
-    jp  nz, 80$
-    ld  a, c
-    cp  a, #176
-    jp  nc, 80$
-    sub a, #8                   ; OAM x = sx + 8
-    ld  (#_gd_ox), a
-    ; ---- y: y * 16 -+ step (up / down) - cam_y, on screen if 0 <= sy + 16 < 160
-    ld  a, (#_gd_y)
-    swap a
-    ld  c, a
-    and a, #0x0F
-    ld  b, a
-    ld  a, c
-    and a, #0xF0
-    ld  c, a
-    ld  a, (#_gd_dir)
+    ld  a, e
     cp  a, #1
     jr  nz, 26$
     ld  a, c
-    ld  hl, #_gd_step
-    sub a, (hl)
+    sub a, d
     ld  c, a
-    jr  nc, 28$
-    dec b
     jr  28$
 26$:
     or  a, a
     jr  nz, 28$
     ld  a, c
-    ld  hl, #_gd_step
-    add a, (hl)
+    add a, d
     ld  c, a
-    jr  nc, 28$
-    inc b
 28$:
-    ld  hl, #_cam_y
     ld  a, c
-    sub a, (hl)
-    ld  c, a
-    inc hl
-    ld  a, b
-    sbc a, (hl)
-    ld  b, a
-    ld  a, c
-    add a, #16
-    ld  c, a
-    jr  nc, 29$
-    inc b
-29$:
-    ld  a, b
-    or  a, a
-    jp  nz, 80$
-    ld  a, c
-    cp  a, #160
-    jp  nc, 80$
     ld  (#_gd_oy), a            ; OAM y = sy + 16
     ; ---- priority bit (tall grass), computed once per cell
     ld  hl, #_gd_base

@@ -133,7 +133,20 @@ Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `
 - `y` en u8 con sesgo: un salto alto puede pasar por debajo de 0 (0xC0-0xFF = encima de la pantalla);
   ninguna comprobación (fosos, filas) debe interpretar eso como "abajo".
 - Profiler (`gb.profile`): solo ve funciones **no static**; una función que acaba con llamada final
-  (`jp`) se atribuye a la llamada. Para perfilar el interior de un módulo, quitar `static`.
+  (`jp`) se atribuye a la llamada. Para perfilar el interior de un módulo, quitar `static`. Entiende
+  código en bancos (empareja la vuelta por SP: todas las BANKED vuelven por el mismo trampolín).
+  Ante cifras raras, la verdad son las **líneas reales con y sin cada parte** (bits de depuración que
+  apagan módulos, A/B de `frame_lines`): en games/faro el profiler viejo culpaba a quien no era.
+- Lo medido en games/faro (campo con 16 actores): un bucle de SDCC sobre 16 huecos cuesta 150-300 T por
+  vuelta **aunque el hueco esté vacío** → listas compactas de los activos (`cr_ids`), no recorrer todos;
+  una consulta a una tabla en banco por llamada BANKED ~500 T → copiar a WRAM lo que se lee cada frame;
+  un objeto que aparece y desaparece en bucle (aparición más lejos que la distancia de borrado) o dos
+  especies robándose un hueco de sprites se comen 25 líneas sin que nada se vea: comprobar que lo
+  que se crea **se crea** (contadores) antes de optimizar.
+- WRAM: la pila crece desde $E000 hacia los globales; el build para si quedan < 512 bytes. Búferes
+  grandes que solo usa una cosa (autoprueba, guardado) → zona compartida o lectura a trozos.
+- `vsync()` tras un frame largo vuelve en mitad de la pantalla: `if (LY_REG < 144) vsync();` justo
+  después (pierde un frame pero ninguna copia a VRAM sale fuera de VBlank).
 
 ## Bancos de ROM
 - `"banked_res": ["walls", "level1", "screen_title"]` en game.json mete esos assets generados en bancos

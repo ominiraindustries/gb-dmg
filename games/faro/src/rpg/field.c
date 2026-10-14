@@ -137,6 +137,7 @@ static void despawn_far(void) {
 void field_enter(uint8_t map, uint8_t x, uint8_t y, uint8_t dir) {
     uint8_t i, sx, sy;
     for (i = 0; i < GBE_GACT_MAX; i++) gact_free(i);
+    creatures_reset();
     px = x; py = y; pdir = dir;
     pmoving = pstep_px = pbump = phold = 0;
     camera();
@@ -216,9 +217,9 @@ static void try_walk(uint8_t chained) {
     pdir = d;
     nx = px + dir_dx[d];
     ny = py + dir_dy[d];
-    a = gact_at(nx, ny);
+    a = gact_at(nx, ny);                            // one gact_at per step (~2k T each)
     if (a != 0xFF && ACT_KIND(gact[a].type) == ACT_CREATURE) { creature_touch(a); return; }
-    if (blocked(nx, ny)) {
+    if (a != 0xFF || (wattr_at(nx, ny) & ATTR_SOLID)) {
         if (!pbump) { pbump = BUMP_FRAMES; sfx(SFX_BUMP); }
         return;
     }
@@ -234,6 +235,7 @@ static void step_done(void) {
     pmoving = pstep_px = 0;
     steps++;
     survival_step();
+    creatures_step();
     if (auto_n) {                                   // a scripted walk: no triggers, no chaining
         if (!--auto_n) script_resume();
         return;
@@ -272,12 +274,18 @@ void field_update(void) {
 }
 
 // After the logic: world streaming, objects of newly loaded sectors, actors, creatures
+// cheat_flags bits 0x10-0x80 switch parts off so tests can measure real frame lines with and
+// without them (the A/B that found the creature costs; the profiler alone misled)
 void field_vblank(void) {
     uint8_t sx = px >> 4, sy = py >> 4;
     world_update(px, py, cam_want_x, cam_want_y);
     if (sx != focus_sx || sy != focus_sy) { focus_sx = sx; focus_sy = sy; despawn_far(); }
     if (world_loaded_slot != 0xFF) sector_loaded(world_loaded_sx, world_loaded_sy);
-    if (!script_active) { gact_update(); creatures_update(); }
+    if (cheat_flags & 0x10) { }                      // tests: measure without the AI
+    else if (!script_active) {
+        if (!(cheat_flags & 0x40)) gact_update(); else gact_move_all();   // tests: without NPC thinking
+        if (!(cheat_flags & 0x82)) creatures_update();                    // tests: 2 = frozen creatures (GDD 8.8)
+    }
     else gact_move_all();                           // scripted NPC walks still move
     if (npc_walking && !gact[script_actor].moving) {
         if (npc_n && gact_try_move(script_actor, npc_dir)) npc_n--;
@@ -300,7 +308,8 @@ void field_draw(void) {
     }
     if (wattr_at(px, py) & ATTR_PRIO) prop |= S_PRIORITY;
     oam16(OAM_LEO, 64 + 8, 64 + 16, tile, prop);
-    gact_draw(OAM_ACTORS);
+    if (!(cheat_flags & 0x20)) gact_draw(OAM_ACTORS);   // tests: measure without the actors' sprites
+    creatures_draw();
     if (emote_t) {                                  // above Leo or the speaking NPC
         int16_t ex = 64, ey = 64;
         if (emote_who == 0 && script_actor != 0xFF) { ex = gact_wx(script_actor) - cam_x; ey = gact_wy(script_actor) - cam_y; }

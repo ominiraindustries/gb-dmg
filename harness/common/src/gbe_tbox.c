@@ -24,6 +24,7 @@ uint8_t tbox_frame[9];                      // TL T TR L blank R BL B BR
 uint8_t tbox_arrow, tbox_cursor;            // 'more' arrow tile, choice cursor tile
 uint8_t tbox_speed = 1;                     // frames per character (0 = 2 characters per frame)
 uint8_t tbox_yes_col = 3, tbox_no_col = 9;
+uint8_t tbox_auto;                         // frames before the last page closes alone (0 = wait for A)
 char tbox_name[8];                          // player name ({N}), zero-terminated
 char tbox_text[TB_TEXT];                    // current text (copied in by gbe_script)
 char tbox_speaker[13];
@@ -169,8 +170,8 @@ uint8_t tbox_update(void) GBE_FAR {
         }
         if ((++tbox_timer & 15) == 0) arrow(tbox_timer & 16);
         return 1;
-    case TB_END:
-        if (pressed & (J_A | J_B)) { tbox_state = TB_OPEN; return 0; }
+    case TB_END:                             // tbox_auto > 0: closes by itself after that many frames
+        if ((pressed & (J_A | J_B)) || (tbox_auto && ++tbox_timer >= tbox_auto)) { tbox_state = TB_OPEN; return 0; }
         return 1;
     case TB_YESNO:
         if (pressed & (J_LEFT | J_RIGHT | J_UP | J_DOWN)) { tbox_answer ^= 1; tbox_draw_choices(); }

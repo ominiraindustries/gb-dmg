@@ -12,10 +12,16 @@ uint8_t recipe_known[4];
 uint8_t full_n, full_sp[FULL_SLOTS], full_lv[FULL_SLOTS];
 uint8_t has_zurron;
 
+// The balance constants of rules.tbl, copied to WRAM once (RULE(id)): reading them from their bank
+// through a BANKED call cost ~500 T each, and the creatures' AI read several per frame (11k T).
+uint16_t rules_cache[RULE_COUNT];
+
+void rules_load(void) BANKED {
+    bank_memcpy(BANK(tbl_rules), rules_cache, tbl_rules, sizeof(rules_cache));
+}
+
 uint16_t rule(uint8_t id) BANKED {
-    uint16_t v;
-    bank_memcpy(BANK(tbl_rules), &v, &tbl_rules[id].v, 2);
-    return v;
+    return rules_cache[id];
 }
 
 void item_row(uint8_t id, items_t *r) BANKED {
@@ -46,7 +52,7 @@ void player_new(void) BANKED {
     memset(weapons, 0xFF, sizeof(weapons));
     full_n = 0;
     armor = 0xFF;
-    plevel = (uint8_t)rule(RULE_START_LEVEL);
+    plevel = (uint8_t)RULE(RULE_START_LEVEL);
     xp = 0;
     {
         player_t r;                                           // XP already earned to reach the plevel
@@ -56,8 +62,8 @@ void player_new(void) BANKED {
     player_stats();
     pv = pv_max;
     en = en_max;
-    sac = (uint8_t)rule(RULE_SAC_START);
-    money = rule(RULE_START_MONEY);
+    sac = (uint8_t)RULE(RULE_SAC_START);
+    money = RULE(RULE_START_MONEY);
     buff = 0xFF; buff_steps = 0;
     p_st = 0xFF; p_st_t = 0;
     skills_known = 0;

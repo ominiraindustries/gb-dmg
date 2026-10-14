@@ -360,6 +360,13 @@ def build(name):
     usage = subprocess.run([str(ROMUSAGE), str(out.with_suffix(".map")), "-g"],
                            capture_output=True, text=True)
     print(usage.stdout.strip())
+    # the stack grows down from $E000 into whatever WRAM the globals left: with 132 bytes free
+    # (games/faro) a banked call chain with a struct on the stack corrupts the globals silently
+    for line in usage.stdout.splitlines():
+        p = line.split()
+        if p and p[0] == "WRAM_HI_0" and len(p) >= 7 and p[6].isdigit() and int(p[6]) < 512:
+            die(f"only {p[6]} bytes of WRAM left for the stack (need 512): move buffers to a shared "
+                "scratch area or read data piece by piece (gbe_save save_put/save_get)")
     return out
 
 

@@ -4,6 +4,9 @@
 // store leaves the previous save intact (CLAUDE.md: SRAM powers up with garbage).
 // Needs an MBC with RAM + battery in game.json, e.g. ["-Wm-yt0x1B", "-Wm-ya1"]. SRAM is enabled
 // only inside these functions (ENABLE_RAM / DISABLE_RAM). len <= 4000.
+// Two ways: save_store / save_load copy one contiguous buffer; save_begin + save_put... + save_end and
+// save_open + save_get... write/read the game's globals piece by piece with no WRAM copy of the save
+// (games/faro: a 400-byte save buffer left the stack 132 bytes).
 //
 // Slot layout: 'G' 'B' version seq len_lo len_hi data[len] sum1 sum2
 #include <string.h>
@@ -87,5 +90,70 @@ void save_erase(void) GBE_FAR {
     SWITCH_RAM(0);
     SLOT0[0] = SLOT0[1] = 0;
     SLOT1[0] = SLOT1[1] = 0;
+    DISABLE_RAM;
+}
+
+// ---------------------------------------------------------------- piece by piece
+static uint8_t *save_wp;                        // write / read pointer inside the slot
+static uint16_t save_len;
+
+// Start a save of len bytes (the sum of the save_put lengths)
+void save_begin(uint16_t len, uint8_t version) GBE_FAR {
+    uint8_t n, seq = 0, *s;
+    ENABLE_RAM;
+    SWITCH_RAM(0);
+    n = newest(len, version);
+    if (n != 0xFF) seq = (n ? SLOT1 : SLOT0)[3] + 1;
+    save_slot = n == 0 ? 1 : 0;
+    s = save_slot ? SLOT1 : SLOT0;
+    s[0] = 0; s[1] = 0;                         // invalid while writing
+    s[2] = version; s[3] = seq; s[4] = (uint8_t)len; s[5] = (uint8_t)(len >> 8);
+    save_seq = seq;
+    save_wp = s + HDR;
+    save_len = len;
+    DISABLE_RAM;
+}
+
+void save_put(const void *src, uint16_t n) GBE_FAR {
+    ENABLE_RAM;
+    SWITCH_RAM(0);
+    memcpy(save_wp, src, n);
+    save_wp += n;
+    DISABLE_RAM;
+}
+
+void save_end(void) GBE_FAR {
+    uint8_t *s;
+    uint16_t sum;
+    ENABLE_RAM;
+    SWITCH_RAM(0);
+    s = save_slot ? SLOT1 : SLOT0;
+    sum = fletcher16(s + HDR, save_len);
+    s[HDR + save_len] = (uint8_t)sum; s[HDR + 1 + save_len] = (uint8_t)(sum >> 8);
+    s[1] = 'B';
+    s[0] = 'G';                                 // signature last
+    DISABLE_RAM;
+}
+
+// 1 if there is a valid save of len bytes; then save_get reads it from the start
+uint8_t save_open(uint16_t len, uint8_t version) GBE_FAR {
+    uint8_t n;
+    ENABLE_RAM;
+    SWITCH_RAM(0);
+    n = newest(len, version);
+    if (n != 0xFF) {
+        save_slot = n;
+        save_seq = (n ? SLOT1 : SLOT0)[3];
+        save_wp = (n ? SLOT1 : SLOT0) + HDR;
+    }
+    DISABLE_RAM;
+    return n != 0xFF;
+}
+
+void save_get(void *dst, uint16_t n) GBE_FAR {
+    ENABLE_RAM;
+    SWITCH_RAM(0);
+    memcpy(dst, save_wp, n);
+    save_wp += n;
     DISABLE_RAM;
 }

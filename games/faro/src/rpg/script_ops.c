@@ -23,7 +23,7 @@ uint8_t script_game_op(uint8_t op) {
         return 0;
     case OP_EARN:
         v = a[0] | ((uint16_t)a[1] << 8);
-        money = (uint16_t)(money + v) > rule(RULE_MONEY_MAX) || money + v < money ? rule(RULE_MONEY_MAX) : money + v;
+        money = (uint16_t)(money + v) > RULE(RULE_MONEY_MAX) || money + v < money ? RULE(RULE_MONEY_MAX) : money + v;
         return 0;
     case OP_HEAL: ops_heal(1); return 0;
     case OP_INN: ops_heal(0); return 0;

@@ -218,6 +218,7 @@ void world_load(uint8_t bank, const world_map_t *map, uint8_t fx, uint8_t fy, in
     uint8_t r, c, x, y;
     wmap_bank = bank;
     wev_sx = 0xFF;                   // objects of the old map are stale
+    wevq_sx = 0xFF;
     bank_memcpy(bank, &wmap, map, sizeof(world_map_t));
     bank_memcpy(bank, wgrid, wmap.grid, wmap.w * wmap.h);
     memset(wcache_sector, 0xFF, 9);
@@ -267,11 +268,21 @@ uint8_t world_events(uint8_t sx, uint8_t sy) {
     return wev_n;
 }
 
+// Its own copy of one sector (wevq): world_events() for loading sectors overwrote the shared buffer,
+// so every step re-copied 128 bytes from ROM (games/faro: 6k T per step)
+world_ev_t wevq[GBE_WORLD_EV_MAX];
+uint8_t wevq_n, wevq_sx = 0xFF, wevq_sy = 0xFF;
+
 world_ev_t *world_event_at(uint8_t x, uint8_t y) {
-    uint8_t k;
-    if ((x >> 4) != wev_sx || (y >> 4) != wev_sy) world_events(x >> 4, y >> 4);
-    for (k = 0; k < wev_n; k++)
-        if (wev[k].x == x && wev[k].y == y) return &wev[k];
+    uint8_t k, sx = x >> 4, sy = y >> 4;
+    world_ev_t *e;
+    if (sx != wevq_sx || sy != wevq_sy) {
+        world_events(sx, sy);
+        memcpy(wevq, wev, (uint16_t)wev_n << 3);
+        wevq_n = wev_n; wevq_sx = sx; wevq_sy = sy;
+    }
+    for (k = 0, e = wevq; k < wevq_n; k++, e++)
+        if (e->x == x && e->y == y) return e;
     return 0;
 }
 
@@ -291,7 +302,7 @@ void world_load_id(uint8_t id, uint8_t fx, uint8_t fy, int16_t cx, int16_t cy) {
     gbe_ref_t r;
     bank_memcpy(BANK(world_maps), &r, &world_maps[id], sizeof(r));
     wmap_id = id;
-    wev_sx = 0xFF;
+    wev_sx = wevq_sx = 0xFF;
     world_load((uint8_t)(uint16_t)r.bank, (const world_map_t *)r.ptr, fx, fy, cx, cy);
 }
 

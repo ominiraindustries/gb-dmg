@@ -301,15 +301,22 @@ void gact_move_all_c(void) {
 // off-screen ones hidden (y = 0). Tile: GACT_ANIM2 = 2 frames 0/4 facing right, else the NPC
 // layout; left = the side frame flipped. PRIO cells (tall grass) set the OAM priority bit.
 void gact_draw_c(uint8_t first) {
-    uint8_t i, tile, prop;
-    int16_t sx, sy;
+    uint8_t i, tile, prop, rx, ry, ox, oy;
+    uint8_t cx = (uint8_t)((uint16_t)cam_x >> 4), sx = (uint8_t)cam_x & 15;
+    uint8_t cy = (uint8_t)((uint16_t)cam_y >> 4), sy = (uint8_t)cam_y & 15;
     gact_t *a = gact;
     OAM_item_t *o = &shadow_OAM[first];
     for (i = 0; i < N; i++, a++, o += 2) {
         if (!a->type) { o[0].y = o[1].y = 0; continue; }
-        sx = gact_wx(i) - cam_x;
-        sy = gact_wy(i) - cam_y;
-        if ((uint16_t)(sx + 16) >= 176 || (uint16_t)(sy + 16) >= 160) { o[0].y = o[1].y = 0; continue; }
+        rx = a->x - cx;                            // cells -1..10 / -1..9 around the camera; u8 OAM
+        ry = a->y - cy;                            // coordinates wrap (a sprite half off the left
+        if ((uint8_t)(rx + 1) >= 12 || (uint8_t)(ry + 1) >= 11) { o[0].y = o[1].y = 0; continue; }   // edge works)
+        ox = (uint8_t)(rx << 4) - sx + 8;
+        oy = (uint8_t)(ry << 4) - sy + 16;
+        if (a->moving) {
+            if (a->dir == 2) ox -= a->step; else if (a->dir == 3) ox += a->step;
+            else if (a->dir == 1) oy -= a->step; else oy += a->step;
+        }
         if (a->prio == GACT_PRIO_DIRTY) a->prio = (wattr_at(a->x, a->y) & gact_prio_mask) ? S_PRIORITY : 0;
         prop = a->prop | a->prio;
         if (a->dir == 2) prop |= S_FLIPX;
@@ -318,14 +325,18 @@ void gact_draw_c(uint8_t first) {
             if (a->dir >= 2) tile = a->tile + 8 + ((a->moving && a->anim) ? 4 : 0);
             else { tile = a->tile + (a->dir << 2); if (a->moving && a->anim) prop ^= S_FLIPX; }
         } else tile = a->tile + gact_npc_frame[a->dir] + ((a->moving && a->anim) ? 4 : 0);
-        oam16(first + (i << 1), (uint8_t)sx + 8, (uint8_t)sy + 16, tile, prop);
+        oam16(first + (i << 1), ox, oy, tile, prop);
     }
 }
 
 // gact_move_all / gact_draw / gact_at: random records around the camera, C vs asm on copies
 // (records and the OAM range compared); uses OAM 20-39 as scratch
-static gact_t eq_gsave[GBE_GACT_MAX], eq_gref[GBE_GACT_MAX];
-static uint8_t eq_oref[GBE_GACT_MAX * 8];
+// scratch copies in the world cache (2304 B): 900 B of WRAM only the selftest used (games/faro ran
+// out of stack). The selftest therefore leaves the world cache garbage: run it on its own.
+#define eq_gsave ((gact_t *)wcache)
+#define eq_gref ((gact_t *)(wcache + sizeof(gact_t) * GBE_GACT_MAX))
+#define eq_oref (wcache + 2 * sizeof(gact_t) * GBE_GACT_MAX)
+extern uint8_t wcache[];
 static void eq_gact_random(void) {
     uint8_t i, cx = (uint8_t)((uint16_t)cam_x >> 4), cy = (uint8_t)((uint16_t)cam_y >> 4);
     gact_t *a = gact;
@@ -352,15 +363,15 @@ static void eq_gact(void) {
     uint8_t k, x, y, first = 40 - GBE_GACT_MAX * 2;
     for (k = 0; k < 200; k++) {
         eq_gact_random();
-        memcpy(eq_gsave, gact, sizeof(eq_gsave));
+        memcpy(eq_gsave, gact, sizeof(gact_t) * GBE_GACT_MAX);
         gact_move_all_c();
         gact_draw_c(first);
-        memcpy(eq_gref, gact, sizeof(eq_gref));
-        memcpy(eq_oref, &shadow_OAM[first], sizeof(eq_oref));
-        memcpy(gact, eq_gsave, sizeof(eq_gsave));
+        memcpy(eq_gref, gact, sizeof(gact_t) * GBE_GACT_MAX);
+        memcpy(eq_oref, &shadow_OAM[first], GBE_GACT_MAX * 8);
+        memcpy(gact, eq_gsave, sizeof(gact_t) * GBE_GACT_MAX);
         gact_move_all();
         gact_draw(first);
-        if (memcmp(eq_gref, gact, sizeof(eq_gref)) || memcmp(eq_oref, &shadow_OAM[first], sizeof(eq_oref)))
+        if (memcmp(eq_gref, gact, sizeof(gact_t) * GBE_GACT_MAX) || memcmp(eq_oref, &shadow_OAM[first], GBE_GACT_MAX * 8))
             gbe_eq_mismatch++;
         for (y = 0; y < 8; y++) {
             x = gact[rnd8() % GBE_GACT_MAX].x + (rnd8() & 1);
@@ -368,7 +379,7 @@ static void eq_gact(void) {
         }
         gbe_eq_count++;
     }
-    memset(gact, 0, sizeof(eq_gsave));
+    memset(gact, 0, sizeof(gact_t) * GBE_GACT_MAX);
 }
 #endif
 
