@@ -1,7 +1,8 @@
 {
   "title": "TORRE HUNDIDA",
   "common_res": [
-    "font"
+    "font",
+    "font_lower"
   ],
   "common_src": [
     "gbe_frame.c",
@@ -32,8 +33,11 @@
   "vram_order": [
     "ui",
     "font",
-    "walls",
-    "uiscreens"
+    "font_lower",
+    [
+      "walls",
+      "uiscreens"
+    ]
   ],
   "banked_res": [
     "walls",
@@ -49,7 +53,9 @@
     "screen_estado",
     "screen_mapa",
     "screen_gameover",
-    "screen_clear"
+    "screen_clear",
+    "font",
+    "font_lower"
   ],
   "levels": {
     "order": "grid",

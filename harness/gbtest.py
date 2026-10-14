@@ -154,6 +154,22 @@ class GB:
         s ^= (s << 8) & 0xFFFF
         return s, s & 0xFF
 
+    FONT_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-!.:?/"     # harness/common/font.tiles order
+
+    @staticmethod
+    def tile_text(tiles, font, lower=None):
+        """Map tile numbers back to text: `font` = VRAM base of font.tiles, `lower` = base of
+        font_lower.tiles (a..z) or None; any other tile reads as a space."""
+        out = ""
+        for t in tiles:
+            if 0 <= t - font < len(GB.FONT_CHARS):
+                out += GB.FONT_CHARS[t - font]
+            elif lower is not None and 0 <= t - lower < 26:
+                out += chr(97 + t - lower)
+            else:
+                out += " "
+        return out
+
     def bg_rows(self, first_line=0, last_line=143):
         """The BG map rows the screen shows between two lines with the current SCY: a list of
         (bg_row, map_row_tiles) top to bottom (each row covering any of those lines once)."""

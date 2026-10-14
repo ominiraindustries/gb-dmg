@@ -1,20 +1,19 @@
 """TORRE HUNDIDA M1b: title, pause menu, OBJETOS, ESTADO, automap, save/continue, game over,
 clear (design/ui.md 3-9)."""
+from gbtest import GB
 from conftest import boot, start_play, wait_state
 from test_game import CHEAT_FROZEN, CHEAT_INVINCIBLE, CHEAT_SEEN_ALL
 from test_play import clear_monsters, place, put_monster
 from view_model import expected, shown
 
 ST_TITLE, ST_PLAY, ST_MENU, ST_MAP, ST_GAMEOVER, ST_CLEAR = range(6)
-T_A, T_0, T_UI = 24 + 10, 24, 0
+T_A, T_0, T_UI, T_LOWER = 24 + 10, 24, 0, 66
 CURSOR = 9                                                   # ui.tiles: BLANK, 8 frame pieces, CURSOR
 
 
 def text_at(rows, r, c, n):
-    out = ""
-    for t in rows[r][c:c + n]:
-        out += chr(65 + t - T_A) if T_A <= t < T_A + 26 else chr(48 + t - T_0) if T_0 <= t < T_0 + 10 else " "
-    return out
+    """Text of a map row, uppercased: the mockups' case is the ui-designer's choice."""
+    return GB.tile_text(rows[r][c:c + n], T_0, T_LOWER).upper()
 
 
 def visible(gb):
@@ -46,7 +45,7 @@ def test_pause_menu_and_estado(gb):
     gb.tap("a")                                              # ESTADO
     settle(gb)
     v = visible(gb)
-    assert text_at(v, 8 + 4, 13, 5) == "20 20"              # 20/20 (slash reads as blank here)
+    assert text_at(v, 8 + 4, 13, 5) == "20/20"
     gb.screenshot("estado")
     gb.tap("b")                                              # back to the pause box
     settle(gb)

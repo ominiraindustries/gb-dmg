@@ -6,7 +6,8 @@ from its `game.json`; nothing is linked unless listed.
 ## Assets (`*.tiles`)
 | File | Contents | game.json |
 |---|---|---|
-| `font.tiles` | 5x7 font: DIGIT0..9, LETTER_A..Z, DASH EXCLAM DOT COLON QUESTION | `"common_res": ["font"]` |
+| `font.tiles` | bold 7x7 font: DIGIT0..9, LETTER_A..Z, DASH EXCLAM DOT COLON QUESTION SLASH (42 tiles) | `"common_res": ["font"]` |
+| `font_lower.tiles` | lowercase a..z (`LOWER_A`, 26 tiles), same baseline; g j p q y drop 1 px into row 7 | `"common_res": ["font", "font_lower"]` + a `vram_order` slot + `txt_lower = VRAM_FONT_LOWER` |
 
 ## Code (`src/`)
 List the files in `"common_src"`; their headers are on the include path.
@@ -31,7 +32,7 @@ List the files in `"common_src"`; their headers are on the include path.
 | `gbe_view.c` `gbe_view.s` | first-person grid view (crawlers): pieces of `res/view.pcs` (harness/fpview.py) composed far to near, exact culling precomputed by fpview, classify + paint in asm | `view_map` (16x16), `view_class`, `view_cell()`, `view_bank`; generated `view.c` | dungeon: ~35k T per view (C: 100k), selftest asm == C at random cells |
 | `gbe_bgbuf.c` | double buffer on the two BG maps: copy a 20-wide canvas into the hidden map N rows per VBlank, flip LCDC bit 3 | - | dungeon: 4 rows = 2.6k T per VBlank, flip after 3 |
 | `gbe_vq.c` `gbe_vq.s` | VRAM write queue (byte stream) with a tile budget per VBlank | `vq_budget` (0 while another big copy runs) | dungeon: ~20 T per tile (an array-of-entries version: ~150) |
-| `gbe_text.c` | shared-font text (`txt_tiles`, `txt_u16`) and a 4-line message log typed through gbe_vq | `txt_font`, `txt_blank`, "font" in common_res | dungeon |
+| `gbe_text.c` | shared-font text (`txt_tiles`, `txt_u16`) and a 4-line message log typed through gbe_vq | `txt_font`, `txt_blank`, `txt_lower` (0 = lowercase prints as capitals), "font" in common_res | dungeon |
 | `gbe_menu.c` | vertical menu: cursor tile, repeat 16/6 f, wrap, disabled options, A / B | - | dungeon (M1b) |
 | `gbe_rng.c` | xorshift16 `rng_next` / `rng_range`; `gb.rng_next(state)` predicts it in tests | seed `rng_state` | dungeon |
 | `gbe_selftest.c` | asm-vs-C equivalence of all the above, run in the ROM | call `gbe_selftest()` when `gbe_eq_request` | test: `gb.selftest()` |

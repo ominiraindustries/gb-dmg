@@ -3,7 +3,7 @@
 ; view.pcs), rows 12-17 = HUD from play.screen. Sprites at the GDD 2.3 positions; 8x16
 ; sprites are listed as their top and bottom 8x8 tiles (spr.tiles index).
 ; map (hero at '@' facing up): ##### / ##D## / ##.## / ##@##
-tilesets: ui font walls spr
+tilesets: ui font font_lower walls spr
 legend:
 & ICON_HP
 ^ ICON_STAFF
@@ -116,7 +116,7 @@ grid:
 ....................
 ....................
 ....................
-.SUELTA UNA LLAVE...
+.Suelta una llave...
 sprites:
 spr:98 76 64
 spr:99 76 72

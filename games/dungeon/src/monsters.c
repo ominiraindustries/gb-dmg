@@ -10,7 +10,7 @@ static const uint8_t st_dmin[] = { 1, 1, 2 }, st_dmax[] = { 2, 3, 4 };
 static const uint8_t st_acc[] = { 192, 176, 160 }, st_dodge[] = { 48, 24, 0 }, st_armor[] = { 0, 1, 0 };
 static const uint8_t st_move[] = { 24, 40, 64 }, st_atk[] = { 48, 64, 80 }, st_wind[] = { 12, 16, 20 };
 static const uint8_t st_detect[] = { 4, 5, 3 }, st_forget[] = { 7, 8, 6 };
-static const char * const st_name[] = { "DIABLILLO", "ARMADURA", "OJO" };
+static const char * const st_name[] = { "Diablillo", "Armadura", "Ojo" };
 
 uint8_t mon_type[MON_MAX], mon_x[MON_MAX], mon_y[MON_MAX], mon_hp[MON_MAX], mon_state[MON_MAX];
 uint8_t mon_move_t[MON_MAX], mon_atk_t[MON_MAX], mon_wind[MON_MAX], mon_item[MON_MAX];
@@ -89,7 +89,7 @@ void attack_lands(uint8_t m) {
         dmg = st_dmin[t] + rng_range(st_dmax[t] - st_dmin[t] + 1);
         hero_damage(dmg, side_of(m));
     } else {
-        say("ESQUIVAS");
+        say("Esquivas");
     }
 }
 
@@ -162,7 +162,7 @@ void monster_hit(uint8_t m) {
     uint8_t t = mon_type[m], dmin = weapon ? 2 : 1, dmax = weapon ? 4 : 2, dmg;
     mon_state[m] |= MS_ALERT;
     if (!(cheat_flags & CHEAT_ONE_HIT) && rng_next() >= 208 - st_dodge[t]) {
-        say("FALLAS");
+        say("Fallas");
         sfx(SFX_MISS);
         return;
     }
@@ -173,7 +173,7 @@ void monster_hit(uint8_t m) {
     sfx(SFX_HIT);
     if (mon_hp[m] > dmg) {
         mon_hp[m] -= dmg;
-        say_num("GOLPE: ", dmg, "");
+        say_num("Golpe: ", dmg, "");
         return;
     }
     mon_hp[m] = 0;
@@ -183,13 +183,13 @@ void monster_hit(uint8_t m) {
     dying_count++;
     kills++;
     sfx(SFX_KILL);
-    say_num(st_name[t], 0xFF, " CAE");
+    say_num(st_name[t], 0xFF, " cae");
     if (mon_item[m] && item_count < ITEM_MAX) {        // the key falls on its cell
         item_type[item_count] = mon_item[m];
         item_x[item_count] = mon_x[m];
         item_y[item_count] = mon_y[m];
         item_count++;
         item_map[(mon_y[m] << 4) | mon_x[m]] = item_count;
-        say("SUELTA UNA LLAVE");
+        say("Suelta una llave");
     }
 }

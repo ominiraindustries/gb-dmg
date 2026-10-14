@@ -5,10 +5,12 @@
 #include "gbe.h"
 #include "font.h"
 
-uint8_t txt_font, txt_blank;
+uint8_t txt_font, txt_blank, txt_lower;   // txt_lower: VRAM base of font_lower (0 = none)
 
 uint8_t txt_char(char c) {
     if (c >= 'A' && c <= 'Z') return txt_font + FONT_LETTER_A + (c - 'A');
+    if (c >= 'a' && c <= 'z')                    // lowercase: font_lower if loaded, else uppercase
+        return txt_lower ? txt_lower + (c - 'a') : txt_font + FONT_LETTER_A + (c - 'a');
     if (c >= '0' && c <= '9') return txt_font + FONT_DIGIT0 + (c - '0');
     switch (c) {
     case '-': return txt_font + FONT_DASH;

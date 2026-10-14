@@ -211,9 +211,10 @@ uint8_t vq_pending(void);
 void vq_draw_vram(void);                        // VBlank (asm, ~20 T per tile)
 
 // ---------------------------------------------------------------- gbe_text.c
-// Shared font text (0-9 A-Z - ! . : ? /) + a 4-line message log typed through gbe_vq.
-// The game sets txt_font = VRAM_FONT, txt_blank = its blank tile; needs "font" in common_res.
-extern uint8_t txt_font, txt_blank;
+// Shared font text (0-9 A-Z - ! . : ? /, a-z with font_lower) + a 4-line message log through gbe_vq.
+// The game sets txt_font = VRAM_FONT, txt_blank = its blank tile, txt_lower = VRAM_FONT_LOWER when
+// it loads "font_lower" (common_res); without it lowercase prints as uppercase.
+extern uint8_t txt_font, txt_blank, txt_lower;
 uint8_t txt_char(char c);
 uint8_t txt_tiles(uint8_t *dst, const char *s, uint8_t n);       // pads with blanks
 void txt_u16(uint8_t *dst, uint16_t v, uint8_t width, uint8_t zero_pad);

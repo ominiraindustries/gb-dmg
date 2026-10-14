@@ -180,7 +180,7 @@ void hero_damage(uint8_t dmg, uint8_t dir) {
     hurt_t = 8;
     if (dir == 0) claw_t = 8;
     sfx(SFX_HURT);
-    say_num("TE HIERE: ", dmg, "");
+    say_num("Te hiere: ", dmg, "");
     if (cheat_flags & CHEAT_INVINCIBLE) return;
     hp = hp > dmg ? hp - dmg : 0;
     hud_dirty();
@@ -195,14 +195,14 @@ void pick_up(void) {
     if (i == 0xFF) return;
     t = item_type[i];
     if ((t == IT_KEY && key_count == 9) || (t == IT_POTION && potions == 9)) {
-        say("NO PUEDES");
-        say("LLEVAR MAS");
+        say("No puedes");
+        say("llevar mas");
         return;
     }
-    if (t == IT_KEY) { key_count++; say("COGES UNA LLAVE"); }
-    else if (t == IT_POTION) { potions++; say("COGES UNA POCION"); }
-    else if (t == IT_STAFF) { weapon = 1; staff_owned = 1; say("COGES EL BACULO"); }
-    else { amulet = 1; say("COGES EL AMULETO"); }
+    if (t == IT_KEY) { key_count++; say("Coges una llave"); }
+    else if (t == IT_POTION) { potions++; say("Coges una pocion"); }
+    else if (t == IT_STAFF) { weapon = 1; staff_owned = 1; say("Coges el baculo"); }
+    else { amulet = 1; say("Coges el amuleto"); }
     item_type[i] = IT_NONE;
     item_map[(py << 4) | px] = 0;
     items_got++;
@@ -234,11 +234,11 @@ static void act_front(void) {
     }
     if ((fx | fy) & 0xF0) return;
     c = &dmap[(fy << 4) | fx];
-    if (*c == CELL_DOOR) { *c = CELL_DOOR_OPEN; sfx(SFX_DOOR); say("ABRES LA PUERTA"); start_view(); }
+    if (*c == CELL_DOOR) { *c = CELL_DOOR_OPEN; sfx(SFX_DOOR); say("Abres la puerta"); start_view(); }
     else if (*c == CELL_LOCKED) {
-        if (key_count) { key_count--; *c = CELL_DOOR_OPEN; sfx(SFX_UNLOCK); say("USAS LA LLAVE"); hud_dirty(); start_view(); }
-        else { sfx(SFX_LOCKED); say("ESTA CERRADA"); }
-    } else if (*c == CELL_UP) { sfx(SFX_LOCKED); say("EL HUECO SE CERRO"); }
+        if (key_count) { key_count--; *c = CELL_DOOR_OPEN; sfx(SFX_UNLOCK); say("Usas la llave"); hud_dirty(); start_view(); }
+        else { sfx(SFX_LOCKED); say("Esta cerrada"); }
+    } else if (*c == CELL_UP) { sfx(SFX_LOCKED); say("El hueco se cerro"); }
     else if (!atk_cd) { atk_cd = weapon ? 28 : 20; slash_t = 8; sfx(SFX_SWING); }
 }
 
@@ -258,14 +258,14 @@ uint8_t move(uint8_t k) {
     if (nx != px || ny != py) {
         c = ((nx | ny) & 0xF0) ? CELL_WALL : dmap[(ny << 4) | nx];
         if (c == CELL_DOWN && (k & J_UP)) {
-            say("BAJAS LA ESCALERA");
+            say("Bajas la escalera");
             sfx(SFX_CLEAR);
             clear_req = 1;                          // screens.c takes it from here
             return 1;
         }
         if (!walkable(nx, ny) || mon_at(nx, ny) != 0xFF) {
             sfx(SFX_BUMP);
-            if (c == CELL_UP) say("EL HUECO SE CERRO");
+            if (c == CELL_UP) say("El hueco se cerro");
             shake_y = 1;
             bob_t = 0;
             return 1;

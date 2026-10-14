@@ -57,7 +57,7 @@ static void obj_entries(void) {
 }
 
 static void page_objetos(void) {
-    static const char * const names[] = { "POCION", "LLAVE", "DAGA", "BACULO", "AMULETO" };
+    static const char * const names[] = { "Pocion", "Llave", "Daga", "Baculo", "Amuleto" };
     uint8_t i, r0 = ROW(SCREEN_OBJETOS_AT_POCION), c = COL(SCREEN_OBJETOS_AT_POCION);
     uint8_t mc = COL(SCREEN_OBJETOS_AT_X3), *line, t[2];
     view_compose(shown_x, shown_y, shown_f);
@@ -68,8 +68,8 @@ static void page_objetos(void) {
         line = view_buf + (r0 + i) * 20;
         txt_tiles(line + c, names[obj_list[i]], 7);
         t[0] = txt_blank; t[1] = txt_blank;
-        if (obj_list[i] == E_POTION) { t[0] = txt_char('X'); t[1] = txt_char('0' + potions); }
-        else if (obj_list[i] == E_KEY) { t[0] = txt_char('X'); t[1] = txt_char('0' + key_count); }
+        if (obj_list[i] == E_POTION) { t[0] = txt_char('x'); t[1] = txt_char('0' + potions); }
+        else if (obj_list[i] == E_KEY) { t[0] = txt_char('x'); t[1] = txt_char('0' + key_count); }
         else if ((obj_list[i] == E_DAGGER && !weapon) || (obj_list[i] == E_STAFF && weapon) ||
                  obj_list[i] == E_AMULET) { t[0] = txt_char('E'); t[1] = txt_char('Q'); }
         line[mc] = t[0]; line[mc + 1] = t[1];
@@ -170,14 +170,14 @@ static void open_cursor(void) {
 static void use_object(uint8_t e) {
     uint8_t h;
     if (e == E_POTION) {
-        if (hp >= hp_max) { say("YA ESTAS SANO"); sfx(SFX_LOCKED); return; }
+        if (hp >= hp_max) { say("Ya estas sano"); sfx(SFX_LOCKED); return; }
         h = hp_max - hp > 10 ? 10 : hp_max - hp;
         hp += h;
         potions--;
-        say_num("RECUPERAS ", h, " PV");
+        say_num("Recuperas ", h, " PV");
         sfx(SFX_DRINK);
-    } else if (e == E_DAGGER && weapon) { weapon = 0; say("EQUIPAS LA DAGA"); sfx(SFX_MENU_OK); }
-    else if (e == E_STAFF && !weapon) { weapon = 1; say("EQUIPAS EL BACULO"); sfx(SFX_MENU_OK); }
+    } else if (e == E_DAGGER && weapon) { weapon = 0; say("Equipas la daga"); sfx(SFX_MENU_OK); }
+    else if (e == E_STAFF && !weapon) { weapon = 1; say("Equipas el baculo"); sfx(SFX_MENU_OK); }
     else { sfx(SFX_MENU_BACK); return; }
     hud_dirty();
     page_objetos();                                      // counts / EQ marks / list length changed

@@ -39,15 +39,16 @@ static void init(void) {
     DISPLAY_OFF;
     LCDC_REG = LCDCF_BG8800 | LCDCF_BG9800 | LCDCF_WIN9C00 | LCDCF_OBJ16 | LCDCF_BGON;
     bank_set_bkg_data(BANK(ui), VRAM_UI, UI_COUNT, ui_tiles);
-    set_bkg_data(VRAM_FONT, FONT_COUNT, font_tiles);
-    bank_set_bkg_data(BANK(walls), VRAM_WALLS, WALLS_COUNT, walls_tiles);
-    bank_set_bkg_data(BANK(uiscreens), VRAM_UISCREENS, UISCREENS_COUNT, uiscreens_tiles);
+    bank_set_bkg_data(BANK(font), VRAM_FONT, FONT_COUNT, font_tiles);
+    bank_set_bkg_data(BANK(font_lower), VRAM_FONT_LOWER, FONT_LOWER_COUNT, font_lower_tiles);
+    // walls and uiscreens share one slot (vram_order): each screen build loads the one it needs
     bank_set_sprite_data(BANK(spr), 0, SPR_COUNT, spr_tiles);
     view_bank = BANK(view);
     view_map = dmap;
     view_class = cell_class;
     txt_font = VRAM_FONT;
     txt_blank = VRAM_UI + UI_BLANK;
+    txt_lower = VRAM_FONT_LOWER;
     video_init(0, 0xE4, 0xE4, 0xD8);                 // no HUD cut: the window is a fixed bottom band
     sound_init();
     show_screen_now(ST_TITLE);

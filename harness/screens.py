@@ -28,7 +28,7 @@ from pathlib import Path
 import preview
 
 
-TEXT_CHARS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?:-/")
+TEXT_CHARS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!?:-/")
 
 
 def text_runs(path):

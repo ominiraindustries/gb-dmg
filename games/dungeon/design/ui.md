@@ -29,7 +29,9 @@ overlay mockups are context only: take HUD defines from `SCREEN_PLAY_*`.
 
 ### 1.1 Tilesets (BG, LCDC.4 = 0)
 
-`"vram_order": ["ui", "font", "walls", "uiscreens"]`
+`"vram_order": ["ui", "font", "font_lower", ["walls", "uiscreens"]]` (current game.json; the real
+bases are in the generated `vram.h`, the table below predates `font_lower` (26 tiles, right after font)
+and the shared walls/uiscreens slot)
 
 | Set | File | Tiles | BG indices (walls = 166) | Loaded |
 |---|---|---|---|---|
@@ -136,7 +138,7 @@ warning arrow 0) is hidden (Y = 0) while a menu, the map, or a full screen is sh
   (16 f fade to white → floor load with LCD off → 16 f fade in). CONTINUAR loads the save inside
   `screen_build`. B: nothing.
 - NUEVA PARTIDA with a save present does **not** erase it; it is replaced only by GUARDAR.
-- The first message of a new game in the log is `PISO 1`; after CONTINUAR, `PARTIDA CARGADA`
+- The first message of a new game in the log is `Piso 1`; after CONTINUAR, `Partida cargada`
   (new string, see 11).
 
 ## 4. PLAY: HUD in the window (`play.screen`, rows 12-17)
@@ -179,7 +181,7 @@ the code's to blank: start with 4 empty lines).
   3. then "type" line 3: **2 characters per frame** (2 tiles queued per frame; 18 chars = 9 f);
   4. when typing ends, the next pending message starts. A does not speed it up (A attacks).
 - Messages stay until pushed out (no timeout).
-- Strings longer than 18 are split by the caller into 2 messages ("NO PUEDES" / "LLEVAR MAS").
+- Strings longer than 18 are split by the caller into 2 messages ("No puedes" / "llevar mas").
 
 ### 4.3 Tiles per frame (VRAM queue, GDD 9.3)
 
@@ -206,7 +208,7 @@ Order in the queue: scroll/clear before typing (FIFO does it); the status row ca
 | OBJETOS | `menu_page = 1`: OBJETOS box painted over the canvas (it covers the pause box completely), copy 3 f |
 | ESTADO | `menu_page = 2`, same |
 | MAPA | open the automap (7), returning to this menu on close |
-| GUARDAR | save at once (`save_store`, frame marked `skip_measure`), SFX `SAVE`, log `PARTIDA GUARDADA` (or `ERROR AL GUARDAR`); the menu stays open with the cursor on GUARDAR so the log line is seen |
+| GUARDAR | save at once (`save_store`, frame marked `skip_measure`), SFX `SAVE`, log `Partida guardada` (or `Error al guardar`); the menu stays open with the cursor on GUARDAR so the log line is seen |
 | VOLVER | close |
 
 - B or Start or VOLVER → close: `view_compose()` of the current position into the canvas,
@@ -224,18 +226,18 @@ Box: frame rows 1 and 10, cols 1 and 18; title on row 2 col 3; content from row 
 - List, packed from the row of `SCREEN_OBJETOS_AT_POCION` (row 4), one entry per row, only owned
   entries, this order: POCION (if `potions > 0`), LLAVE (`keys > 0`), DAGA (always), BACULO (owned),
   AMULETO (`amulet`). Name column = `col(AT_POCION)` (4), cursor column 3.
-- Marker column = `col(SCREEN_OBJETOS_AT_X3)` (15), 2 tiles: `X<n>` for POCION and LLAVE; `EQ` on
+- Marker column = `col(SCREEN_OBJETOS_AT_X3)` (15), 2 tiles: `x<n>` (lowercase x, as in the mockup) for POCION and LLAVE; `EQ` on
   the equipped weapon and on AMULETO; blank otherwise.
 - Cursor starts on the first entry. B → back to PAUSA (recompose view + pause box, 3 f). Start →
   close all.
 
 | Entry | A |
 |---|---|
-| POCION | `hp < hp_max`: `potions - 1`, `hp = min(hp + 10, hp_max)`, SFX `DRINK`, log `RECUPERAS # PV` with the **real** amount healed. `hp == hp_max`: log `YA ESTAS SANO`, not used, SFX `LOCKED` |
-| DAGA / BACULO | equip it (`weapon` 0/1), SFX `MENU_OK`, log `EQUIPAS LA DAGA` / `EQUIPAS EL BACULO` (new strings); already equipped: nothing |
+| POCION | `hp < hp_max`: `potions - 1`, `hp = min(hp + 10, hp_max)`, SFX `DRINK`, log `Recuperas # PV` with the **real** amount healed. `hp == hp_max`: log `Ya estas sano`, not used, SFX `LOCKED` |
+| DAGA / BACULO | equip it (`weapon` 0/1), SFX `MENU_OK`, log `Equipas la daga` / `Equipas el baculo` (new strings); already equipped: nothing |
 | LLAVE / AMULETO | nothing, SFX `MENU_BACK` |
 
-- Small changes (count `X3`→`X2`, `EQ` moving: ≤ 4 tiles) go through the VRAM queue to the visible
+- Small changes (count `x3`→`x2`, `EQ` moving: ≤ 4 tiles) go through the VRAM queue to the visible
   map and the canvas. If the list changes length (last potion drunk), re-render the box into the
   canvas and copy it with bgbuf (3 f); the cursor keeps its index, clamped to the new length.
 - The HUD status row updates at the same time (hp, potions, weapon icon).
@@ -274,6 +276,8 @@ Box: frame rows 1 and 10, cols 1 and 18; title on row 2 col 3; content from row 
 
 - Title `SCREEN_MAPA_AT_MAPA_PISO_1`: floor digit at `AT + LEN - 1`.
 - `SCREEN_MAPA_AT_B_VOLVER` static.
+- The `p` of `Mapa` (row 0) drops 1 px onto the top edge of the map at row 1 (dark wall tiles in
+  explored maps): a small merge, still readable; see open question in the UI report.
 - Cell (x, y) → screen row `1 + y`, col `2 + x` (map 16x16 at rows 1-16, cols 2-17).
 
 | Cell (`dmap`) | not in `seen` | seen |
@@ -306,7 +310,7 @@ Box: frame rows 1 and 10, cols 1 and 18; title on row 2 col 3; content from row 
 
 ## 9. CLEAR (`clear.screen`)
 
-- Entering DOWN: log `BAJAS LA ESCALERA`, SFX `CLEAR`, after **30 f** (the line is typed) →
+- Entering DOWN: log `Bajas la escalera`, SFX `CLEAR`, after **30 f** (the line is typed) →
   `transition(CLEAR)`.
 - Build (LCD off): copy `screen_clear_map`, then write the values straight into VRAM (LCD is off):
 
@@ -335,20 +339,30 @@ Boot: `show_screen_now(TITLE)` (build + fade in). ui, font and uiscreens are loa
 
 ## 11. Text strings
 
-Spanish, uppercase, no accents, no Ñ; glyphs `A-Z 0-9 - ! . : ?` and `/` (E14). `#` = number.
+Spanish, **sentence case** (upper and lower case), no accents, no Ñ; glyphs `A-Z a-z 0-9 - ! . : ?`
+and `/` (E14). `#` = number. Capital only at the start of each label / menu item / log line, in
+acronyms (`PV`, `EQ`), button names (`Start`, `B:`) and the compass letters `N E S O`. The title
+`H U N D I D A` (and the `TORRE` tile logo) stay in capitals: it is the game's name, drawn as a logo.
+Lowercase comes from `harness/common/font_lower.tiles` (loaded after font; `g j p q y` drop 1 px into
+row 7 of the tile). Log strings from GDD 2.11 are written in sentence case too ("Abres la puerta").
 
-**Screens / menus** (in the mockups): `H U N D I D A`, `NUEVA PARTIDA`, `CONTINUAR`, `2026`,
-`OBJETOS`, `ESTADO`, `MAPA`, `GUARDAR`, `VOLVER`, `POCION`, `LLAVE`, `DAGA`, `BACULO`, `AMULETO`,
-`X#`, `EQ`, `APRENDIZ`, `PV`, `ATAQUE`, `DEFENSA`, `DERROTADOS`, `TIEMPO`, `PISO`, `MAPA - PISO #`,
-`B: VOLVER`, `HAS CAIDO`, `TITULO`, `PISO # SUPERADO`, `FIN DE LA DEMO`, `PULSA START`.
+- **Stacked lines** (the 4-line log in the HUD, the ESTADO list): a descender may touch the line
+  below (e.g. `Golpe: 3` over `Diablillo cae`). Accepted: it reads fine at 1x.
+- **Mockups:** lowercase letters are text, so legend keys must never be letters (the overlays use
+  `#` AM_WALL and `+` AM_UP, the map `# , + & ^ $ %`, the logo Greek letters, MERLON_DOWN `ν`).
+
+**Screens / menus** (in the mockups): `H U N D I D A`, `Nueva partida`, `Continuar`, `2026`,
+`Objetos`, `Estado`, `Mapa`, `Guardar`, `Volver`, `Pocion`, `Llave`, `Daga`, `Baculo`, `Amuleto`,
+`x#`, `EQ`, `Aprendiz`, `PV`, `Ataque`, `Defensa`, `Derrotados`, `Tiempo`, `Piso`, `Mapa - Piso #`,
+`B: Volver`, `Has caido`, `Titulo`, `Piso # superado`, `Fin de la demo`, `Pulsa Start`.
 
 **Log** (≤ 18): GDD 2.11 list, plus three new ones proposed here:
 
 | String | Len | When |
 |---|---|---|
-| `PARTIDA CARGADA` | 15 | after CONTINUAR (title or game over) |
-| `EQUIPAS LA DAGA` | 15 | OBJETOS, A on DAGA |
-| `EQUIPAS EL BACULO` | 17 | OBJETOS, A on BACULO |
+| `Partida cargada` | 15 | after CONTINUAR (title or game over) |
+| `Equipas la daga` | 15 | OBJETOS, A on DAGA |
+| `Equipas el baculo` | 17 | OBJETOS, A on BACULO |
 
 ## 12. Checks
 

@@ -12,6 +12,7 @@ el profiling lo justifica y con una prueba de equivalencia contra la versión C.
   - `res/*.tiles`: tiles en arte ASCII 8x8 (`.` `-` `+` `#` = colores 0-3, `@ NOMBRE` etiqueta el
     siguiente tile). Se convierten al compilar a `build/gen/<nombre>.c/.h` (`#include "bg.h"`).
   - Assets compartidos en `harness/common/*.tiles` (p. ej. la fuente): `"common_res": ["font"]` en game.json.
+    Texto en mayúscula y minúscula: `font_lower` (a..z) + `txt_lower`; en tests `GB.tile_text(tiles, font, lower)`.
   - Pantallas fijas (título, resultados...): las maquetas `design/screens/<nombre>.screen` del
     ui-designer se convierten al compilar en mapas de tiles (`screen_<nombre>_map[360]` + sprites) con
     `"screens": [...]` y `"vram_order": ["bg", "font", "ui"]` (bases de VRAM; `["a", "b"]` = dos tilesets

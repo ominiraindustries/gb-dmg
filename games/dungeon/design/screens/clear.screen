@@ -4,13 +4,13 @@
 ; into its copy of the map before the LCD comes back on (or with the queue after the fade-in).
 ; '/' is DASH here until the font gets SLASH (gdd E14). "FIN DE LA DEMO" only in M1.
 ; "PULSA START" blinks 30/30 f. Start (or A) -> TITLE.
-tilesets: ui uiscreens font
+tilesets: ui uiscreens font font_lower
 legend:
 % EARTH
 ( EARTH_EDGE_A
 ) EARTH_EDGE_B
 = BRICK
-v MERLON_DOWN
+ν MERLON_DOWN
 [ FRAME_TL
 _ FRAME_T
 ] FRAME_TR
@@ -26,17 +26,17 @@ grid:
 ()()()()()()()()()()
 ....................
 [__________________]
-{.PISO.1.SUPERADO..}
+{.Piso.1.superado..}
 {..................}
-{.TIEMPO.....04:12.}
+{.Tiempo.....04:12.}
 {..................}
-{.DERROTADOS...6/8.}
+{.Derrotados...6/8.}
 {..................}
-{.OBJETOS......5/6.}
+{.Objetos......5/6.}
 {..................}
-{..FIN.DE.LA.DEMO..}
+{..Fin.de.la.demo..}
 \------------------|
 ....................
-.....PULSA.START....
+.....Pulsa.Start....
 ====================
-vvvvvvvvvvvvvvvvvvvv
+νννννννννννννννννννν

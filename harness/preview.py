@@ -17,7 +17,8 @@ Screen mockup format (.screen):
     sprites:
     spr:PADDLE_L 56 132          tileset:LABEL x y [flipx] [flipy]   (screen pixels, top-left)
 
-Chars without a legend entry: letters and digits map to the font tileset (if listed); space
+Chars without a legend entry: letters and digits map to the font tileset (if listed), lowercase
+letters to font_lower (LOWER_A..; harness/common/font_lower.tiles) if listed, else to uppercase; space
 and '.' map to the tile labelled BLANK (any listed tileset), else tile 0 of the first non-font one.
 The font's punctuation has labels: DASH EXCLAM DOT COLON QUESTION SLASH (use them in the legend).
 """
@@ -114,6 +115,7 @@ def parse_screen(path, sets):
         raise KeyError(f"{path}: tile '{ref}' not found in {[t.name for t in tilesets]}")
 
     font = next((t for t in tilesets if "DIGIT0" in t.labels and "LETTER_A" in t.labels), None)
+    lower = next((t for t in tilesets if "LOWER_A" in t.labels), None)
     blank = next(((t, t.labels["BLANK"]) for t in tilesets if "BLANK" in t.labels),
                  next(((t, 0) for t in tilesets if t is not font), (tilesets[0], 0)))
     cells = []
@@ -126,6 +128,11 @@ def parse_screen(path, sets):
                 out_row.append((font, font.labels["DIGIT0"] + int(ch)))
             elif font and ch.isalpha() and ch.isupper():
                 out_row.append((font, font.labels["LETTER_A"] + ord(ch) - ord("A")))
+            elif ch.isalpha() and ch.islower() and ch.isascii() and (lower or font):
+                if lower:
+                    out_row.append((lower, lower.labels["LOWER_A"] + ord(ch) - ord("a")))
+                else:
+                    out_row.append((font, font.labels["LETTER_A"] + ord(ch) - ord("a")))
             elif ch in " .":
                 out_row.append(blank)
             else:

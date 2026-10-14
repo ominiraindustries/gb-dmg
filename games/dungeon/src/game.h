@@ -7,6 +7,7 @@
 #include "ui.h"
 #include "uiscreens.h"
 #include "font.h"
+#include "font_lower.h"
 #include "view.h"
 
 // ---------------------------------------------------------------- map (GDD 2.0)

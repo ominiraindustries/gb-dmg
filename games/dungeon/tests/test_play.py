@@ -1,22 +1,16 @@
 """TORRE HUNDIDA M1b: items, doors, keys, combat, death, seen cells, HUD (GDD 2.4-2.11)."""
+from gbtest import GB
 from test_game import CHEAT_FROZEN, CHEAT_INVINCIBLE, CHEAT_ONE_HIT
 from view_model import expected, shown
 
 CELL_FLOOR, CELL_WALL, CELL_DOOR, CELL_LOCKED, CELL_DOOR_OPEN = 0, 1, 2, 3, 4
 IT_KEY, IT_POTION, IT_STAFF, IT_AMULET = 1, 2, 3, 4
-T_A, T_0 = 24 + 10, 24
+T_A, T_0 = 24 + 10, 24                                       # vram.h: VRAM_FONT 24
+T_LOWER = 66                                                 # VRAM_FONT_LOWER
 
 
 def win_text(gb, row):
-    out = ""
-    for t in gb.bg_map(window=True)[row][:20]:
-        if T_A <= t < T_A + 26:
-            out += chr(65 + t - T_A)
-        elif T_0 <= t < T_0 + 10:
-            out += chr(48 + t - T_0)
-        else:
-            out += " "
-    return out.strip()
+    return GB.tile_text(gb.bg_map(window=True)[row][:20], T_0, T_LOWER).strip()
 
 
 def place(gb, x, y, f):
@@ -51,7 +45,7 @@ def put_monster(gb, m, hp, x, y):
 
 def test_hud_and_first_message(gb):
     gb.frames(30)
-    assert win_text(gb, 5) == "PISO 1"
+    assert win_text(gb, 5) == "Piso 1"
     row = gb.bg_map(window=True)[0]
     assert row[2:4] == [T_0 + 2, T_0 + 0] and row[5:7] == [T_0 + 2, T_0 + 0]   # 20/20
     assert row[12] == T_0 + 0 and row[15] == T_0 + 1 and row[18] == T_A + ord("S") - 65
@@ -69,7 +63,7 @@ def test_pick_up_potion_and_staff(gb):
     gb.tap("up")
     gb.frames(30)
     assert gb.u8("weapon") == 1 and gb.u8("staff_owned") == 1
-    assert win_text(gb, 5) == "COGES EL BACULO"
+    assert win_text(gb, 5) == "Coges el baculo"
 
 
 def test_door_opens_and_locked_needs_key(gb):
@@ -83,7 +77,7 @@ def test_door_opens_and_locked_needs_key(gb):
     place(gb, 12, 10, 2)                                    # LOCKED at (12, 11)
     gb.tap("a")
     gb.frames(30)
-    assert gb.bytes("dmap", 256)[11 * 16 + 12] == CELL_LOCKED and win_text(gb, 5) == "ESTA CERRADA"
+    assert gb.bytes("dmap", 256)[11 * 16 + 12] == CELL_LOCKED and win_text(gb, 5) == "Esta cerrada"
     gb.write_u8("key_count", 1)
     gb.tap("a")
     gb.frames(30)
@@ -122,7 +116,7 @@ def test_monster_winds_up_and_hits(gb):
             break
     assert seen_windup
     msgs = [win_text(gb, r) for r in range(2, 6)]
-    assert gb.u8("hp") < hp or any(t == "ESQUIVAS" for t in msgs)
+    assert gb.u8("hp") < hp or any(t == "Esquivas" for t in msgs)
     gb.screenshot("monster_d1")
 
 

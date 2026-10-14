@@ -38,7 +38,7 @@ void game_save(void) BANKED {
     memset(sv.mon_state, 0, MON_MAX);                    // no alert / wind-up across a load
     save_store(&sv, sizeof(sv), SAVE_VERSION);
     save_status = 1;
-    say("PARTIDA GUARDADA");
+    say("Partida guardada");
     sfx(SFX_SAVE);
     skip_measure = 1;
 }
@@ -74,6 +74,7 @@ static void fill_margins(void) {
 
 static void build_play(void) {
     uint8_t loaded = 0;
+    bank_set_bkg_data(BANK(walls), VRAM_WALLS, WALLS_COUNT, walls_tiles);   // over the screens' art
     play_start();                                        // floor 1 from its bank
     if (load_req) loaded = save_exists();
     if (loaded) apply_save();
@@ -89,7 +90,7 @@ static void build_play(void) {
     bgbuf_fill_both(view_buf, VIEW_H, VIEW_ROW);
     shown_x = px; shown_y = py; shown_f = pf;
     hud_dirty();
-    say(loaded ? "PARTIDA CARGADA" : "PISO 1");
+    say(loaded ? "Partida cargada" : "Piso 1");
     scy_shadow = SCY_BASE;
     scx_shadow = 0;
     WY_REG = HUD_WY;
@@ -105,6 +106,7 @@ static void build_full(uint8_t bank, const uint8_t *map) {
     scy_shadow = 0;
     bg_front = 0;
     LCDC_REG &= ~LCDCF_BG9C00;
+    bank_set_bkg_data(BANK(uiscreens), VRAM_UISCREENS, UISCREENS_COUNT, uiscreens_tiles);   // walls' slot
     for (r = 0; r < 18; r++) bank_memcpy(bank, (uint8_t *)0x9800 + ((uint16_t)r << 5), map + r * 20, 20);
     hide_sprites_range(0, 40);
     screen_t = 0;
@@ -190,7 +192,7 @@ void clear_update(void) BANKED {
     if ((t % 60) == 0) vq_push_fill(BG(SCREEN_CLEAR_AT_PULSA_START), txt_blank, SCREEN_CLEAR_LEN_PULSA_START);
     else if ((t % 60) == 30) {
         uint8_t b[16];
-        txt_tiles(b, "PULSA START", SCREEN_CLEAR_LEN_PULSA_START);
+        txt_tiles(b, "Pulsa Start", SCREEN_CLEAR_LEN_PULSA_START);
         vq_push(BG(SCREEN_CLEAR_AT_PULSA_START), b, SCREEN_CLEAR_LEN_PULSA_START);
     }
     if (t > 30 && (pressed & (J_START | J_A))) { sfx(SFX_MENU_OK); transition(ST_TITLE); }
