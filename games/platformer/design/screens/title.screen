@@ -1,0 +1,84 @@
+; TITLE - drawn with LCD off in the BG map ($9800), SCX=SCY=0, window off, no sprites.
+; Rows 2-4: logo (48 LOGO tiles). Row 5: sword. Row 10: "PULSA START" (blinks 30/30 f).
+; Row 12: "RECORD 000000". Rows 15-17: castle wall (WALL_TOP, WALL_BRICK).
+tilesets: ui font
+legend:
+a LOGO_00
+b LOGO_01
+c LOGO_02
+d LOGO_03
+e LOGO_04
+f LOGO_05
+g LOGO_06
+h LOGO_07
+i LOGO_08
+j LOGO_09
+k LOGO_10
+l LOGO_11
+m LOGO_12
+n LOGO_13
+o LOGO_14
+p LOGO_15
+q LOGO_16
+r LOGO_17
+s LOGO_18
+t LOGO_19
+u LOGO_20
+v LOGO_21
+w LOGO_22
+x LOGO_23
+y LOGO_24
+z LOGO_25
+! LOGO_26
+" LOGO_27
+$ LOGO_28
+% LOGO_29
+& LOGO_30
+' LOGO_31
+( LOGO_32
+) LOGO_33
+* LOGO_34
+, LOGO_35
+/ LOGO_36
+: LOGO_37
+? LOGO_38
+@ LOGO_39
+[ LOGO_40
+\ LOGO_41
+] LOGO_42
+^ LOGO_43
+_ LOGO_44
+` LOGO_45
+{ LOGO_46
+| LOGO_47
+< SWORD_HILT
++ SWORD_GUARD
+= SWORD_BLADE
+> SWORD_TIP
+~ WALL_TOP
+# WALL_BRICK
+grid:
+....................
+....................
+.abcdefghi.jklmnopq.
+.rstuvwxry.z!"$%&''.
+.()*,/::?@[?\]^_`{|.
+.<+===============>.
+....................
+....................
+....................
+....................
+....PULSA.START.....
+....................
+...RECORD.000000....
+....................
+....................
+~~~~~~~~~~~~~~~~~~~~
+####################
+####################
+sprites:
+; optional: Teo SMALL idle standing on the battlements (2 sprites 8x16)
+spr:TEO_SMALL_IDLE 24 105
+spr:1 24 113
+spr:2 32 105
+spr:3 32 113

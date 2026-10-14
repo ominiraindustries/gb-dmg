@@ -1,0 +1,909 @@
+; CABALLERITO - BG tileset, level 1-1 "Pradera" (exterior). Drawn by pixel-artist.
+; Generated layout: tile 0 = BLANK (sky). Level geometry = 16x16 metatiles of 4 tiles.
+; Metatile tiles are listed TL TR BL BR. Gameplay blocks (GROUND BRICK RUNE RUNE_GLOW USED HARD COIN SPEAR)
+; always have 4 own tiles NAME_TL, NAME_TR, NAME_BL, NAME_BR consecutively. Decorations reuse identical tiles
+; (BLANK, plain fills), so for those use the table below (labels/indices) for mt_tiles[].
+; DMG BG tiles cannot flip: every asymmetric half is its own tile.
+;
+; METATILE TABLE  (name: TL TR BL BR | level char | collision class)
+;   SKY             :   0   0   0   0 | . | EMPTY
+;                     (BLANK BLANK BLANK BLANK)
+;   GROUND          :   1   2   3   4 | # | SOLID
+;                     (GROUND_TL GROUND_TR GROUND_BL GROUND_BR)
+;   BRICK           :   5   6   7   8 | B | BRICK
+;                     (BRICK_TL BRICK_TR BRICK_BL BRICK_BR)
+;   RUNE            :   9  10  11  12 | ? | Q_COIN / Q_POWER (P)
+;                     (RUNE_TL RUNE_TR RUNE_BL RUNE_BR)
+;   RUNE_GLOW       :  13  14  15  16 |   | anim frame 1 of RUNE (same class)
+;                     (RUNE_GLOW_TL RUNE_GLOW_TR RUNE_GLOW_BL RUNE_GLOW_BR)
+;   USED            :  17  18  19  20 | - | SOLID (runtime: hit ?/P/U block)
+;                     (USED_TL USED_TR USED_BL USED_BR)
+;   HARD            :  21  22  23  24 | H | SOLID
+;                     (HARD_TL HARD_TR HARD_BL HARD_BR)
+;   TURRET_TOP_L    :  25  26  27  28 | [ | SOLID
+;                     (TURRET_TOP_L_TL TURRET_MOUTH TURRET_TOP_L_BL TURRET_TOP_L_BR)
+;   TURRET_TOP_R    :  26  29  30  31 | ] | SOLID
+;                     (TURRET_MOUTH TURRET_TOP_R_TR TURRET_TOP_R_BL TURRET_TOP_R_BR)
+;   TURRET_L        :  32  33  32  33 | { | SOLID
+;                     (TURRET_L_TL TURRET_L_TR TURRET_L_TL TURRET_L_TR)
+;   TURRET_R        :  34  35  34  35 | } | SOLID
+;                     (TURRET_R_TL TURRET_R_TR TURRET_R_TL TURRET_R_TR)
+;   COIN            :  36  37  38  39 | $ | COIN
+;                     (COIN_TL COIN_TR COIN_BL COIN_BR)
+;   SPEAR           :  40  41  42  43 | ^ | POLE
+;                     (SPEAR_TL SPEAR_TR SPEAR_BL SPEAR_BR)
+;   POLE            :  44  45  44  45 | | | POLE
+;                     (POLE_TL POLE_TR POLE_TL POLE_TR)
+;   CLOUD_L         :  46  47  48  49 | ( | EMPTY
+;                     (CLOUD_L_TL CLOUD_L_TR CLOUD_L_BL CLOUD_L_BR)
+;   CLOUD_R         :  50  51  52  53 | ) | EMPTY
+;                     (CLOUD_R_TL CLOUD_R_TR CLOUD_R_BL CLOUD_R_BR)
+;   BUSH_L          :  54  55  56  57 | < | EMPTY
+;                     (BUSH_L_TL BUSH_L_TR BUSH_L_BL BUSH_L_BR)
+;   BUSH_R          :  58  59  60  61 | > | EMPTY
+;                     (BUSH_R_TL BUSH_R_TR BUSH_R_BL BUSH_R_BR)
+;   HILL_TOP_L      :   0   0   0  62 | J | EMPTY
+;                     (BLANK BLANK BLANK HILL_TOP_L_BR)
+;   HILL_TOP        :   0   0  63  64 | A | EMPTY
+;                     (BLANK BLANK HILL_TOP_BL HILL_TOP_BR)
+;   HILL_TOP_R      :   0   0  65   0 | K | EMPTY
+;                     (BLANK BLANK HILL_TOP_R_BL BLANK)
+;   HILL_L          :  66  67  68  67 | / | EMPTY
+;                     (HILL_L_TL HILL_FILL HILL_L_BL HILL_FILL)
+;   HILL_MID        :  67  67  67  67 | M | EMPTY
+;                     (HILL_FILL HILL_FILL HILL_FILL HILL_FILL)
+;   HILL_R          :  67  69  67  70 | \ | EMPTY
+;                     (HILL_FILL HILL_R_TR HILL_FILL HILL_R_BR)
+;   CASTLE_TOP      :  71  72  73  73 | T | EMPTY
+;                     (CASTLE_TOP_TL CASTLE_TOP_TR CASTLE_WALL_FILL CASTLE_WALL_FILL)
+;   CASTLE_WALL     :  73  73  73  73 | W | EMPTY
+;                     (CASTLE_WALL_FILL CASTLE_WALL_FILL CASTLE_WALL_FILL CASTLE_WALL_FILL)
+;   CASTLE_WINDOW   :  74  75  73  73 | N | EMPTY
+;                     (CASTLE_WINDOW_TL CASTLE_WINDOW_TR CASTLE_WALL_FILL CASTLE_WALL_FILL)
+;   CASTLE_DOOR_TOP :  73  73  76  77 | D | EMPTY
+;                     (CASTLE_WALL_FILL CASTLE_WALL_FILL CASTLE_DOOR_TOP_BL CASTLE_DOOR_TOP_BR)
+;   CASTLE_DOOR     :  78  79  78  79 | O | EMPTY
+;                     (CASTLE_DOOR_TL CASTLE_DOOR_TR CASTLE_DOOR_TL CASTLE_DOOR_TR)
+;   CASTLE_PENNANT  :  80  81  82   0 | F | EMPTY
+;                     (CASTLE_PENNANT_TL CASTLE_PENNANT_TR CASTLE_PENNANT_BL BLANK)
+;
+; RUNE / RUNE_GLOW are the 2 animation frames of the rune (?) block: either swap the
+; metatile tiles, or (M4 plan) rewrite the 4 RUNE_* tiles in VRAM with RUNE_GLOW_* data.
+; USED = rune switched off (hit block). HIDDEN_1UP uses SKY tiles until hit, then USED.
+; GROUND fill (if a level ever needs ground 2 metatiles deep): GROUND_BL GROUND_BR GROUND_BL GROUND_BR.
+; Hill (3 wide x 2 tall) = HILL_TOP_L HILL_TOP HILL_TOP_R over HILL_L HILL_MID HILL_R.
+; Level chars above are proposals for decorations (uppercase/symbols, objects stay lowercase).
+; Cloud = CLOUD_L CLOUD_R. Bush = BUSH_L BUSH_R (sits on the ground row).
+; Turret (torreon) = TURRET_TOP_L/R on top of any number of TURRET_L/R rows.
+; Castle kit: CASTLE_TOP (merlons) over CASTLE_WALL / CASTLE_WINDOW; door = CASTLE_DOOR_TOP
+;   over CASTLE_DOOR; CASTLE_PENNANT goes on top of a CASTLE_TOP.
+
+@ BLANK
+........
+........
+........
+........
+........
+........
+........
+........
+
+@ GROUND_TL
+########
+--+-----
+-+-+----
+--------
+++++++++
+--------
+---++---
+--+--+--
+
+@ GROUND_TR
+########
+--+-----
+-+-+--+-
+--------
+++++++++
+--------
+---++---
+--+--+--
+
+@ GROUND_BL
+--------
+--------
++-------
+-+-----+
+--------
+--------
+-----++-
+----+--+
+
+@ GROUND_BR
+--------
+--------
+++------
+--+----+
+--------
+--------
+------+-
+-----+-+
+
+@ BRICK_TL
+########
+---#----
+---#----
++++#++++
+########
+-------#
+-------#
++++++++#
+
+@ BRICK_TR
+########
+---#----
+---#----
++++#++++
+########
+-------#
+-------#
++++++++#
+
+@ BRICK_BL
+########
+---#----
+---#----
++++#++++
+########
+-------#
+-------#
++++++++#
+
+@ BRICK_BR
+########
+---#----
+---#----
++++#++++
+########
+-------#
+-------#
++++++++#
+
+@ RUNE_TL
+########
+#-------
+#-+.....
+#-......
+#-.....#
+#-....##
+#-...##.
+#-..##.#
+
+@ RUNE_TR
+########
+------+#
+.....++#
+......+#
+#.....+#
+##....+#
+.##...+#
+#.##..+#
+
+@ RUNE_BL
+#-..#..#
+#-.....#
+#-.....#
+#-.....#
+#-......
+#-+.....
+#+++++++
+########
+
+@ RUNE_BR
+#..#..+#
+#.....+#
+#.....+#
+#.....+#
+......+#
+.....++#
++++++++#
+########
+
+@ RUNE_GLOW_TL
+########
+#-------
+#--.....
+#-.....-
+#-....-#
+#-...-##
+#-..-##-
+#-.-##-#
+
+@ RUNE_GLOW_TR
+########
+------+#
+.....-+#
+-.....+#
+#-....+#
+##-...+#
+-##-..+#
+#-##-.+#
+
+@ RUNE_GLOW_BL
+#-.-#--#
+#-..-.-#
+#-....-#
+#-....-#
+#-.....-
+#--.....
+#+++++++
+########
+
+@ RUNE_GLOW_BR
+#--#-.+#
+#-.-..+#
+#-....+#
+#-....+#
+-.....+#
+.....-+#
++++++++#
+########
+
+@ USED_TL
+########
+#-------
+#-+-----
+#-------
+#------+
+#-----++
+#----++-
+#---++-+
+
+@ USED_TR
+########
+------+#
+-----++#
+------+#
++-----+#
+++----+#
+-++---+#
++-++--+#
+
+@ USED_BL
+#---+--+
+#------+
+#------+
+#------+
+#-------
+#-+-----
+#+++++++
+########
+
+@ USED_BR
++--+--+#
++-----+#
++-----+#
++-----+#
+------+#
+-----++#
++++++++#
+########
+
+@ HARD_TL
+--------
+-.------
+--++++++
+--++++++
+--++-+++
+--++++++
+--++++++
+--++++++
+
+@ HARD_TR
+-------#
+------+#
+++++++##
++++++###
++++++###
++++++###
++++++###
++++++###
+
+@ HARD_BL
+--++++++
+--++++++
+--++++++
+--++++++
+--++++++
+--++++++
+-+######
+########
+
+@ HARD_BR
++++++###
++++++###
++++++###
+++-++###
++++++###
++++++###
+########
+########
+
+@ TURRET_TOP_L_TL
+#######.
+#.---+#.
+#----+#.
+#----+##
+#----+##
+#----+##
+#.------
+#-------
+
+@ TURRET_MOUTH
+........
+........
+........
+########
+########
+########
+--------
+--------
+
+@ TURRET_TOP_L_BL
+#-------
+#+++++++
+########
+..#-.---
+..#-.---
+..#-.---
+..#-.---
+..#+++++
+
+@ TURRET_TOP_L_BR
+--------
+++++++++
+########
+---+----
+---+----
+---+----
+---+----
+++++++++
+
+@ TURRET_TOP_R_TR
+.#######
+.#.---+#
+.#----+#
+##----+#
+##----+#
+##----+#
+------+#
+----+++#
+
+@ TURRET_TOP_R_BL
+--------
+++++++++
+########
+----+---
+----+---
+----+---
+----+---
+++++++++
+
+@ TURRET_TOP_R_BR
+----+++#
++++++++#
+########
+---++#..
+---++#..
+---++#..
+---++#..
++++++#..
+
+@ TURRET_L_TL
+..#-.---
+..#-.---
+..#-.---
+..#-.---
+..#-.---
+..#-.---
+..#-.---
+..#+++++
+
+@ TURRET_L_TR
+---+----
+---+----
+---+----
+---+----
+---+----
+---+----
+---+----
+++++++++
+
+@ TURRET_R_TL
+----+---
+----+---
+----+---
+----+---
+----+---
+----+---
+----+---
+++++++++
+
+@ TURRET_R_TR
+---++#..
+---++#..
+---++#..
+---++#..
+---++#..
+---++#..
+---++#..
++++++#..
+
+@ COIN_TL
+........
+........
+........
+......##
+.....#--
+....#--+
+....#-+-
+....#-+-
+
+@ COIN_TR
+........
+........
+........
+##......
+--#.....
++--#....
+-+-#....
+-+-#....
+
+@ COIN_BL
+....#-+-
+....#-+-
+....#-+-
+....#--+
+.....#--
+......##
+........
+........
+
+@ COIN_BR
+-+-#....
+-+-#....
+-+-#....
++--#....
+--#.....
+##......
+........
+........
+
+@ SPEAR_TL
+........
+.......#
+......#-
+......#-
+.....#--
+.....#--
+....#---
+....#---
+
+@ SPEAR_TR
+........
+#.......
+-#......
++#......
+++#.....
+++#.....
++++#....
++++#....
+
+@ SPEAR_BL
+....#---
+.....#--
+......#-
+...#####
+...#----
+...#####
+......#-
+......#-
+
+@ SPEAR_BR
++++#....
+++#.....
++#......
+#####...
+----#...
+#####...
++#......
++#......
+
+@ POLE_TL
+......#-
+......#-
+......#-
+......#-
+......#-
+......#-
+......#-
+......#-
+
+@ POLE_TR
++#......
++#......
++#......
++#......
++#......
++#......
++#......
++#......
+
+@ CLOUD_L_TL
+........
+........
+........
+........
+......--
+.....-..
+....-...
+....-...
+
+@ CLOUD_L_TR
+........
+.....---
+...--...
+--.-....
+..-.....
+........
+........
+........
+
+@ CLOUD_L_BL
+...-....
+...-....
+....-...
+....-...
+....-...
+....----
+........
+........
+
+@ CLOUD_L_BR
+........
+........
+........
+........
+........
+..------
+--......
+........
+
+@ CLOUD_R_TL
+........
+---.....
+...--...
+....-.--
+.....-..
+........
+........
+........
+
+@ CLOUD_R_TR
+........
+........
+........
+........
+--......
+..-.....
+...-....
+...-....
+
+@ CLOUD_R_BL
+........
+........
+........
+........
+........
+------..
+......--
+........
+
+@ CLOUD_R_BR
+....-...
+....-...
+...-....
+...-....
+...-....
+----....
+........
+........
+
+@ BUSH_L_TL
+........
+........
+........
+........
+......++
+....++--
+...+---.
+...+--.-
+
+@ BUSH_L_TR
+........
+.....+++
+....+---
+...+----
++++---..
+-----.--
+--------
+--------
+
+@ BUSH_L_BL
+..+-----
+..+-----
+..+-----
+..+-----
+..+-----
+..+-----
+..+-----
+..+-----
+
+@ BUSH_L_BR
+--------
+--------
+--------
+--------
+--+-----
+--------
+--------
+--------
+
+@ BUSH_R_TL
+........
++++.....
+---+....
+----+...
+-----+++
+--------
+-------.
+------.-
+
+@ BUSH_R_TR
+........
+........
+........
+........
+++......
+--++....
+----+...
+----+...
+
+@ BUSH_R_BL
+--------
+--------
+--------
+---+----
+--------
+--------
+--------
+--------
+
+@ BUSH_R_BR
+-----+..
+-----+..
+-----+..
+-----+..
+-----+..
+-+---+..
+-----+..
+-----+..
+
+@ HILL_TOP_L_BR
+........
+........
+........
+.......+
+.....++-
+...++---
+..+-----
+++------
+
+@ HILL_TOP_BL
+........
+........
+...+++++
++++-----
+---..---
+--.-----
+-.------
+.-------
+
+@ HILL_TOP_BR
+........
+........
++++++...
+-----+++
+--------
+--------
+--------
+--------
+
+@ HILL_TOP_R_BL
+........
+........
+........
++.......
+-++.....
+---++...
+-----+..
+------++
+
+@ HILL_L_TL
+.......+
+......+-
+.....+--
+.....+--
+....+---
+...+----
+...+----
+..+-----
+
+@ HILL_FILL
+--------
+--------
+--------
+--------
+--------
+--------
+--------
+--------
+
+@ HILL_L_BL
+..+-----
+.+------
+.+------
+.+------
++-------
++-------
++-------
++-------
+
+@ HILL_R_TR
++.......
+-+......
+--+.....
+--+.....
+---+....
+----+...
+----+...
+-----+..
+
+@ HILL_R_BR
+-----+..
+------+.
+------+.
+------+.
+-------+
+-------+
+-------+
+-------+
+
+@ CASTLE_TOP_TL
++++++++.
++-----+.
++-----+.
++-----+.
++-----++
++.......
+++++++++
+--------
+
+@ CASTLE_TOP_TR
+........
+........
+........
+........
+++++++++
+........
+++++++++
+--------
+
+@ CASTLE_WALL_FILL
+--------
+...-....
+...-....
+...-....
+--------
+.......-
+.......-
+.......-
+
+@ CASTLE_WINDOW_TL
+--------
+......+#
+......##
+......##
+------##
+......##
+......+#
+.......+
+
+@ CASTLE_WINDOW_TR
+--------
+#+......
+##......
+##......
+##------
+##......
+#+......
++......-
+
+@ CASTLE_DOOR_TOP_BL
+--------
+.....+##
+...+####
+..+#####
+--+#####
+..+#####
+..+#####
+..+#####
+
+@ CASTLE_DOOR_TOP_BR
+--------
+##+.....
+####+...
+#####+..
+#####+--
+#####+..
+#####+..
+#####+..
+
+@ CASTLE_DOOR_TL
+--+#####
+..+#####
+..+#####
+..+#####
+--+#####
+..+#####
+..+#####
+..+#####
+
+@ CASTLE_DOOR_TR
+#####+--
+#####+..
+#####+..
+#####+..
+#####+--
+#####+..
+#####+..
+#####+..
+
+@ CASTLE_PENNANT_TL
+......#.
+......##
+......#+
+......#+
+......#+
+......##
+......#.
+......#.
+
+@ CASTLE_PENNANT_TR
+........
+###.....
+--+###..
+-----+##
+--+###..
+###.....
+........
+........
+
+@ CASTLE_PENNANT_BL
+......#.
+......#.
+......#.
+......#.
+......#.
+......#.
+......#.
+......#.

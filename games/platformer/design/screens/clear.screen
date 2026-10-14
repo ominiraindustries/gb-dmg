@@ -1,0 +1,36 @@
+; CLEAR - LCD-off redraw in the BG map ($9800), SCX=SCY=0, window off, no sprites.
+; Box rows 2-13 cols 1-18. Row 4 "NIVEL COMPLETADO", row 6 "MUNDO 1-1", rows 8/10 score
+; and record, row 12 "NUEVO RECORD!" (only if beaten, blinks 30/30 f). Wall rows 15-17.
+tilesets: ui font
+legend:
+[ FRAME_TL
+_ FRAME_T
+] FRAME_TR
+( FRAME_L
+) FRAME_R
+{ FRAME_BL
+= FRAME_B
+} FRAME_BR
+~ WALL_TOP
+# WALL_BRICK
+! EXCLAM
+- DASH
+grid:
+....................
+....................
+.[________________].
+.(................).
+.(NIVEL.COMPLETADO).
+.(................).
+.(....MUNDO.1-1...).
+.(................).
+.(.PUNTOS..000000.).
+.(................).
+.(.RECORD..000000.).
+.(................).
+.(..NUEVO.RECORD!.).
+.{================}.
+....................
+~~~~~~~~~~~~~~~~~~~~
+####################
+####################

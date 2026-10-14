@@ -1,0 +1,34 @@
+; GAMEOVER - LCD-off redraw in the BG map ($9800), SCX=SCY=0, window off, no sprites.
+; Box rows 5-12 cols 1-18; "FIN DEL JUEGO" row 7 col 3; final score row 10; wall rows 15-17.
+tilesets: ui font
+legend:
+[ FRAME_TL
+_ FRAME_T
+] FRAME_TR
+( FRAME_L
+) FRAME_R
+{ FRAME_BL
+= FRAME_B
+} FRAME_BR
+~ WALL_TOP
+# WALL_BRICK
+! EXCLAM
+grid:
+....................
+....................
+....................
+....................
+....................
+.[________________].
+.(................).
+.(.FIN.DEL.JUEGO..).
+.(................).
+.(................).
+.(.PUNTOS..000000.).
+.(................).
+.{================}.
+....................
+....................
+~~~~~~~~~~~~~~~~~~~~
+####################
+####################
