@@ -1,4 +1,4 @@
-// CABALLERITO - main loop, interrupts, screen setup
+// CABALLERITO - main loop, interrupts, game states
 #include "game.h"
 #include "level1_1.h"
 
@@ -8,11 +8,16 @@ uint8_t frame_start, frame_lines, max_frame_lines, skip_measure, vram_late;
 uint8_t cheat_flags;
 uint8_t hud_cut;                // 1: the LYC ISR cuts the window at line 15 (HUD on top)
 uint8_t time_tick;
-
-extern uint8_t player_dead;
+uint8_t checkpoint, checkpoint_col;
+uint8_t dying_timer;
+uint8_t death_y, death_ys;
+int16_t death_vy;
 
 #define TIME_START 300
+#define TIME_HURRY 100
 #define FRAMES_PER_TIME_UNIT 24
+#define DYING_FREEZE 30
+#define PIT_WAIT 60
 
 // Line 15 (LYC): wait for HBlank, then window off and sprites on in a single write (ui.md §2)
 void lcd_isr(void) {
@@ -33,30 +38,50 @@ void draw_vram(void) {
     if (LY_REG < 144) vram_late++;
 }
 
-// LCD off: load everything for the level and place Teo at the 'x' object
+// LCD off: load the level and place Teo at the start or at the checkpoint (map restored)
 void start_level(void) {
-    uint8_t i;
+    uint8_t i, start_col = 0, start_row = 6;
+    uint16_t cam = 0;
     DISPLAY_OFF;
     hide_sprites_range(0, 40);
-    level_load();
+    checkpoint_col = 0;
+    for (i = 0; i < LEVEL1_1_OBJ_COUNT; i++) {
+        if (level1_1_obj_type[i] == OBJ_START) {
+            start_col = level1_1_obj_col[i];
+            start_row = level1_1_obj_row[i];
+        } else if (level1_1_obj_type[i] == OBJ_CHECKPOINT) {
+            checkpoint_col = level1_1_obj_col[i];
+        }
+    }
+    if (checkpoint) {
+        start_col = checkpoint_col;
+        start_row = 6;
+        cam = ((uint16_t)start_col << 4) - 64;
+    }
+    level_load(cam);
     actors_clear();
+    enemies_reset(camera_x);
+    player_spawn((uint16_t)start_col << 4, Y_BIAS + (start_row << 4));
     time_units = TIME_START;
     time_tick = 0;
     hud_init();
-    for (i = 0; i < LEVEL1_1_OBJ_COUNT; i++) {
-        if (level1_1_obj_type[i] == OBJ_START) {
-            player_spawn((uint16_t)level1_1_obj_col[i] << 4,
-                         Y_BIAS + (level1_1_obj_row[i] << 4));
-        }
-    }
     SCY_REG = 0xF0;             // level row 0 at screen line 16, below the HUD
-    SCX_REG = 0;
+    SCX_REG = scx_shadow;
     WX_REG = 7;
     WY_REG = 0;
     hud_cut = 1;
     state = STATE_PLAY;
     skip_measure = 1;
     DISPLAY_ON;
+}
+
+void new_game(void) {
+    uint8_t i;
+    for (i = 0; i < 3; i++) score[i] = 0;
+    lives = 3;
+    coins = 0;
+    checkpoint = 0;
+    start_level();
 }
 
 void update_timer(void) {
@@ -66,8 +91,104 @@ void update_timer(void) {
         if (time_units) {
             time_units--;
             hud_set_time(time_units);
+            if (time_units == TIME_HURRY) sfx(SFX_HURRY);
+            if (time_units == 0) player_kill();
         }
     }
+}
+
+void start_dying(void) {
+    state = STATE_DYING;
+    sfx(SFX_DEATH);
+    if (player_dead == 1) {                       // pit: no animation, just wait
+        dying_timer = PIT_WAIT;
+        hide_sprites_range(0, 4);
+    } else {
+        dying_timer = DYING_FREEZE + 90;
+        death_y = player_y + (player_form == FORM_SMALL ? 0 : 16);
+        death_ys = 0;
+        death_vy = -0x0400;
+    }
+}
+
+void update_dying(void) {
+    uint8_t ox;
+    if (player_dead == 2 && dying_timer <= 90) {  // after the freeze: jump up and fall off
+        uint16_t t = (uint16_t)death_ys + (uint8_t)death_vy;
+        death_ys = (uint8_t)t;
+        death_y += (int8_t)(death_vy >> 8) + (t >> 8);
+        death_vy += 0x0040;
+    }
+    if (player_dead == 2) {
+        ox = (uint8_t)(player_x - camera_x) + 8;
+        if (death_y > 200 && death_vy > 0) {
+            hide_sprites_range(0, 4);
+        } else {
+            set_sprite_tile(0, SPR_TEO_SMALL_DEATH); set_sprite_prop(0, 0);
+            set_sprite_tile(1, SPR_TEO_SMALL_DEATH + 2); set_sprite_prop(1, 0);
+            move_sprite(0, ox, death_y);
+            move_sprite(1, ox + 8, death_y);
+            hide_sprite(2); hide_sprite(3);
+        }
+    }
+    if (--dying_timer == 0) {
+        lives--;
+        if (lives == 0) {
+            state = STATE_GAMEOVER;               // screen comes in step 3b
+            hide_sprites_range(0, 40);
+        } else {
+            start_level();
+        }
+    }
+}
+
+// Equivalence test asm vs C (gb-asm skill): tests set eq_request = 1, read eq_mismatch / eq_done.
+// Exhaustive over every x of the level (+64 past the end) and every y.
+uint8_t eq_request, eq_done;
+uint16_t eq_mismatch, eq_count;
+uint8_t mt_at_c(uint16_t x, uint8_t y);
+uint8_t solid_at_c(uint16_t x, uint8_t y);
+void act_move_c(uint8_t i);
+extern uint16_t level_px_w;
+extern uint8_t act_xs[], act_ys[];
+
+// act_move asm vs C on a scratch slot: signed velocities, sub-pixel carries, 16-bit x wrap
+static void eq_act_move(void) {
+    uint8_t s = ACT_MAX - 1, k, xs0, ys0, y0, xs1, ys1, y1;
+    uint16_t x0, x1;
+    int16_t v;
+    for (v = -0x0480; v <= 0x0480; v += 0x0013) {
+        for (k = 0; k < 10; k++) {
+            xs0 = k * 25;
+            x0 = 0xFF80 + (uint16_t)k * 75;
+            y0 = 250 - k * 25;
+            ys0 = xs0 ^ 0x5A;
+            act_x[s] = x0; act_xs[s] = xs0; act_y[s] = y0; act_ys[s] = ys0;
+            act_vx[s] = v; act_vy[s] = -v;
+            act_move(s);
+            x1 = act_x[s]; xs1 = act_xs[s]; y1 = act_y[s]; ys1 = act_ys[s];
+            act_x[s] = x0; act_xs[s] = xs0; act_y[s] = y0; act_ys[s] = ys0;
+            act_move_c(s);
+            if (act_x[s] != x1 || act_xs[s] != xs1 || act_y[s] != y1 || act_ys[s] != ys1) eq_mismatch++;
+            eq_count++;
+        }
+    }
+    act_type[s] = T_NONE;
+}
+
+void eq_run(void) {
+    uint16_t x;
+    uint8_t y;
+    eq_mismatch = eq_count = 0;
+    for (x = 0; x < level_px_w + 64; x++) {
+        y = 0;
+        do {
+            if (mt_at(x, y) != mt_at_c(x, y) || solid_at(x, y) != solid_at_c(x, y)) eq_mismatch++;
+            eq_count++;
+        } while (++y);
+    }
+    eq_act_move();
+    eq_done = 1;
 }
 
 // Scanlines used since vsync() returned (VBlank starts at LY 144). 255 = missed a frame.
@@ -89,7 +210,7 @@ void init(void) {
     OBP1_REG = 0xD8;            // SHOT form: shades 1 and 2 swapped (spr.tiles notes)
     set_bkg_data(0, BG_COUNT, bg_tiles);
     set_bkg_data(TILE_FONT, FONT_COUNT, font_tiles);
-    set_bkg_data(TILE_UI, UI_ICON_TIMES + 1, ui_tiles);   // HUD group only during play
+    set_bkg_data(TILE_UI, UI_COUNT, ui_tiles);    // tiles >= 128 live in the shared $8800 area
     set_sprite_data(0, SPR_COUNT, spr_tiles);
     SPRITES_8x16;
     SHOW_BKG;
@@ -105,13 +226,11 @@ void init(void) {
     sound_init();
     world = 1;
     stage = 1;
-    lives = 3;
-    coins = 0;
 }
 
 void main(void) {
     init();
-    start_level();
+    new_game();
     while (1) {
         vsync();
         frame_start = (uint8_t)sys_time;
@@ -119,20 +238,33 @@ void main(void) {
         prev_keys = keys;
         keys = joypad();
         pressed = keys & ~prev_keys;
+        if (eq_request) {
+            eq_request = 0;
+            eq_run();
+            skip_measure = 1;
+        }
         if (state == STATE_PLAY) {
             if (player_freeze) {
                 player_update();            // power-up / damage animation: everything else waits
             } else {
                 player_update();
+                enemies_update();
                 actors_update();
                 level_update_camera();
                 update_timer();
+                if (!checkpoint && checkpoint_col && player_x >= ((uint16_t)checkpoint_col << 4))
+                    checkpoint = 1;
             }
-            if (player_dead) start_level();   // DYING/lives come in step 3
+            if (player_dead) start_dying();
+            else player_draw();
+            enemies_draw();
+            actors_draw();
+        } else if (state == STATE_DYING) {
+            update_dying();
+        } else if (state == STATE_GAMEOVER) {
+            if (pressed & J_START) new_game();
         }
         sound_update();
-        player_draw();
-        actors_draw();
         measure_frame();
     }
 }

@@ -1,5 +1,6 @@
 // Moving objects other than Teo: items, projectiles, brick debris, coins out of blocks
 // (enemies use the same arrays from step 3). GDD §2.4, §2.7, §2.9.
+#include <string.h>
 #include "game.h"
 
 uint8_t act_type[ACT_MAX], act_xs[ACT_MAX], act_y[ACT_MAX], act_ys[ACT_MAX];
@@ -27,7 +28,8 @@ void actors_clear(void) {
     for (i = 0; i < ACT_MAX; i++) act_type[i] = T_NONE;
 }
 
-static void act_move(uint8_t i) {
+// Reference C version of act_move (the game uses the asm one in vram.s)
+void act_move_c(uint8_t i) {
     uint16_t t = (uint16_t)act_xs[i] + (uint8_t)act_vx[i];
     act_xs[i] = (uint8_t)t;
     act_x[i] += (int8_t)(act_vx[i] >> 8) + (t >> 8);
@@ -36,7 +38,7 @@ static void act_move(uint8_t i) {
     act_y[i] += (int8_t)(act_vy[i] >> 8) + (t >> 8);
 }
 
-static void act_spawn(uint8_t i, uint8_t type, uint16_t x, uint8_t y) {
+void act_spawn(uint8_t i, uint8_t type, uint16_t x, uint8_t y) {
     act_type[i] = type;
     act_x[i] = x;
     act_y[i] = y;
@@ -53,17 +55,17 @@ void spawn_item(uint8_t type, uint8_t col, uint8_t row) {
     act_timer[A_ITEM] = ITEM_RISE_FRAMES;          // state 0: rising out of the block
 }
 
+// Unrolled with constant slots: constant indices compile to fixed addresses
+// (the loop version with act_vx[A_DEBRIS0 + i] measured ~8900 T, a frame-time spike)
+#define DEBRIS(k, dx, dy, vx, vy)     act_spawn(A_DEBRIS0 + k, T_DEBRIS, x + dx, y + dy);     act_vx[A_DEBRIS0 + k] = vx; act_vy[A_DEBRIS0 + k] = vy; act_timer[A_DEBRIS0 + k] = DEBRIS_LIFE;
+
 void spawn_debris(uint8_t col, uint8_t row) {
-    static const int16_t vx[4] = { -0x0100, 0x0100, -0x0100, 0x0100 };
-    static const int16_t vy[4] = { -0x0400, -0x0400, -0x0280, -0x0280 };
     uint16_t x = (uint16_t)col << 4;
-    uint8_t y = Y_BIAS + (row << 4), i;
-    for (i = 0; i < 4; i++) {
-        act_spawn(A_DEBRIS0 + i, T_DEBRIS, x + ((i & 1) << 3), y + ((i & 2) << 2));
-        act_vx[A_DEBRIS0 + i] = vx[i];
-        act_vy[A_DEBRIS0 + i] = vy[i];
-        act_timer[A_DEBRIS0 + i] = DEBRIS_LIFE;
-    }
+    uint8_t y = Y_BIAS + (row << 4);
+    DEBRIS(0, 0, 0, -0x0100, -0x0400)
+    DEBRIS(1, 8, 0,  0x0100, -0x0400)
+    DEBRIS(2, 0, 8, -0x0100, -0x0280)
+    DEBRIS(3, 8, 8,  0x0100, -0x0280)
 }
 
 void spawn_coinpop(uint8_t col, uint8_t row) {
@@ -87,6 +89,7 @@ uint8_t spawn_shot(uint16_t x, uint8_t y, uint8_t left) {
 void bump_actors_on_block(uint8_t col, uint8_t row) {
     uint8_t top = Y_BIAS + (row << 4);
     uint16_t x = (uint16_t)col << 4;
+    bump_enemies_on_block(x, top);
     if (act_type[A_ITEM] == T_ITEM_GROW || act_type[A_ITEM] == T_ITEM_1UP) {
         if (act_state[A_ITEM] && (uint8_t)(act_y[A_ITEM] + 16) == top
             && act_x[A_ITEM] + 16 > x && act_x[A_ITEM] < x + 16) {
@@ -98,7 +101,7 @@ void bump_actors_on_block(uint8_t col, uint8_t row) {
 
 // ---------------------------------------------------------------- per type
 
-static uint8_t player_touches(uint8_t i, uint8_t ox, uint8_t oy, uint8_t w, uint8_t h) {
+uint8_t player_touches(uint8_t i, uint8_t ox, uint8_t oy, uint8_t w, uint8_t h) {
     uint16_t ax = act_x[i] + ox, px = player_x + HB_X;
     uint8_t ay = act_y[i] + oy, py = player_y + hb_y;
     return ax < px + HB_W && px < ax + w && ay < py + hb_h && py < ay + h;
@@ -142,18 +145,25 @@ static void update_item(uint8_t i) {
     }
 }
 
+// Axes separately (like Teo): moving diagonally into the ground used to look like a wall hit
 static void update_shot(uint8_t i) {
+    uint16_t t = (uint16_t)act_xs[i] + (uint8_t)act_vx[i];
     uint8_t feet;
-    act_vy[i] += SHOT_GRAV;
-    act_move(i);
+    act_xs[i] = (uint8_t)t;
+    act_x[i] += (int8_t)(act_vx[i] >> 8) + (t >> 8);
     if (solid_at(act_x[i] + (act_vx[i] > 0 ? 6 : 1), act_y[i] + 3)) {
         act_type[i] = T_PUF;                       // hit a wall
         act_timer[i] = PUF_FRAMES;
         return;
     }
+    act_vy[i] += SHOT_GRAV;
+    t = (uint16_t)act_ys[i] + (uint8_t)act_vy[i];
+    act_ys[i] = (uint8_t)t;
+    act_y[i] += (int8_t)(act_vy[i] >> 8) + (t >> 8);
     feet = act_y[i] + 6;
     if (act_vy[i] > 0 && solid_at(act_x[i] + 3, feet)) {
         act_y[i] = (((feet - Y_BIAS) & 0xF0) + Y_BIAS) - 7;
+        act_ys[i] = 0;
         act_vy[i] = SHOT_BOUNCE;
     }
     act_flip[i]++;
@@ -194,33 +204,29 @@ void actors_update(void) {
 
 // ---------------------------------------------------------------- drawing
 
-static void draw16(uint8_t s, uint8_t tile, uint8_t ox, uint8_t y, uint8_t prop) {
-    if (prop & S_FLIPX) {
-        set_sprite_tile(s, tile + 2); set_sprite_tile(s + 1, tile);
-    } else {
-        set_sprite_tile(s, tile); set_sprite_tile(s + 1, tile + 2);
-    }
-    set_sprite_prop(s, prop); set_sprite_prop(s + 1, prop);
-    move_sprite(s, ox, y);
-    move_sprite(s + 1, ox + 8, y);
+// Direct shadow OAM writes: ~3x cheaper than set_sprite_tile/prop + move_sprite per sprite.
+// A 16x16 object = two 8x16 sprites (tile, tile + 2); with S_FLIPX the halves swap.
+void oam16(uint8_t nb, uint8_t ox, uint8_t y, uint8_t tile, uint8_t prop) {
+    OAM_item_t *o = &shadow_OAM[nb];
+    uint8_t t2 = tile + 2;
+    if (prop & S_FLIPX) { t2 = tile; tile += 2; }
+    o->y = y; o->x = ox; o->tile = tile; o->prop = prop;
+    o++;
+    o->y = y; o->x = ox + 8; o->tile = t2; o->prop = prop;
 }
 
-static void draw8(uint8_t s, uint8_t tile, uint8_t ox, uint8_t y, uint8_t prop) {
-    set_sprite_tile(s, tile);
-    set_sprite_prop(s, prop);
-    move_sprite(s, ox, y);
+static void oam8(uint8_t nb, uint8_t ox, uint8_t y, uint8_t tile, uint8_t prop) {
+    OAM_item_t *o = &shadow_OAM[nb];
+    o->y = y; o->x = ox; o->tile = tile; o->prop = prop;
 }
 
 void actors_draw(void) {
     static const uint8_t spin_tile[4] = { SPR_COIN_SPIN0, SPR_COIN_SPIN1, SPR_COIN_SPIN2, SPR_COIN_SPIN1 };
     uint8_t i, s, ox, f;
+    memset(&shadow_OAM[14], 0, 10 * sizeof(OAM_item_t));       // hide sprites 14-23 at once
     for (i = A_ITEM; i < ACT_MAX; i++) {
+        if (act_type[i] == T_NONE || act_x[i] + 16 < camera_x || act_x[i] > camera_x + 168) continue;
         s = act_spr[i];
-        if (act_type[i] == T_NONE || act_x[i] + 16 < camera_x || act_x[i] > camera_x + 168) {
-            hide_sprite(s);
-            if (i == A_ITEM) hide_sprite(s + 1);
-            continue;
-        }
         ox = (uint8_t)(act_x[i] - camera_x) + 8;
         f = act_flip[i];
         switch (act_type[i]) {
@@ -230,15 +236,15 @@ void actors_draw(void) {
             uint8_t tile = act_type[i] == T_ITEM_GROW ? SPR_ITEM_YELMO
                          : act_type[i] == T_ITEM_SHOT ? SPR_ITEM_PERGAMINO : SPR_ITEM_POCION;
             // behind the block while rising out of it
-            draw16(s, tile, ox, act_y[i], act_state[i] ? 0 : S_PRIORITY);
+            oam16(s, ox, act_y[i], tile, act_state[i] ? 0 : S_PRIORITY);
             break;
         }
-        case T_SHOT:   draw8(s, SPR_CHISPA, ox, act_y[i], (f & 4) ? S_FLIPX | S_FLIPY : 0); break;
-        case T_PUF:    draw8(s, SPR_PUF, ox, act_y[i], 0); break;
-        case T_DEBRIS: draw8(s, SPR_DEBRIS, ox, act_y[i], (f & 8) ? S_FLIPX : ((f & 4) ? S_FLIPY : 0)); break;
+        case T_SHOT:   oam8(s, ox, act_y[i], SPR_CHISPA, (f & 4) ? S_FLIPX | S_FLIPY : 0); break;
+        case T_PUF:    oam8(s, ox, act_y[i], SPR_PUF, 0); break;
+        case T_DEBRIS: oam8(s, ox, act_y[i], SPR_DEBRIS, (f & 8) ? S_FLIPX : ((f & 4) ? S_FLIPY : 0)); break;
         case T_COINPOP: {
             uint8_t k = (f >> 2) & 3;
-            draw8(s, spin_tile[k], ox, act_y[i], k == 3 ? S_FLIPX : 0);
+            oam8(s, ox, act_y[i], spin_tile[k], k == 3 ? S_FLIPX : 0);
             break;
         }
         }

@@ -168,6 +168,7 @@ def test_camera_never_goes_back_and_left_edge_blocks(gb):
 def walk_camera(gb, step, check_every=1):
     """Fly Teo over the level at `step` px/frame and compare VRAM with the map each frame."""
     start_play(gb)
+    gb.write_u8("cheat_flags", 3)
     level, tiles, ncols = level_map(gb), mt_tiles(gb), level_cols(gb)
     x = gb.u16("player_x")
     mismatches = []
@@ -204,11 +205,14 @@ def test_streaming_stress_8px(gb):
     bad = walk_camera(gb, 8)
     assert not bad, bad[:5]
     assert gb.u8("vram_late") == 0
-    assert gb.u8("max_frame_lines") < 120
+    # 8 px/f is 4x the max game speed (enemies spawn every frame): only require no dropped frame;
+    # the gameplay budget (< 120 lines) is checked by the bot test in test_enemies.py
+    assert gb.u8("max_frame_lines") < 154
 
 
 def test_camera_stops_at_level_end(gb):
     start_play(gb)
+    gb.write_u8("cheat_flags", 3)
     for x in range(100, 200 * 16, 8):
         teleport(gb, x)
         gb.frames(1)
@@ -228,9 +232,14 @@ def test_hud_shows_labels_and_values(gb):
     gb.screenshot("hud")
 
 
-def test_fall_in_pit_restarts(gb):
+def test_fall_in_pit_costs_a_life_and_restarts(gb):
     start_play(gb)
+    lives = gb.u8("lives")
     teleport(gb, 69 * 16 + 4, SMALL_Y_ON_GROUND)
     gb.write_u16("camera_x", 60 * 16)
-    gb.frames(60)
-    assert gb.u16("player_x") == 2 * 16   # step 1 behaviour: restart at the start
+    gb.frames(20)
+    assert gb.u8("state") == 4                    # DYING
+    gb.frames(80)
+    assert gb.u8("state") == 2
+    assert gb.u8("lives") == lives - 1
+    assert gb.u16("player_x") == 2 * 16           # no checkpoint yet: back to the start

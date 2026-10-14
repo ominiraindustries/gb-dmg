@@ -69,6 +69,17 @@ Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `
 - Trampas medidas de SDCC: indexar con `int8_t` (`board[row_off[r] + i]`) ~466 T por acceso → usar
   punteros/`memcpy`; recalcular datos de una forma en cada llamada → cachear; `memcpy`/`memset` de
   GBDK son asm y rápidos.
+- Objetos con arrays (struct of arrays), medido en games/platformer:
+  - `arr[i]` con `i` variable recalcula la dirección en cada acceso (16 bits); con índice constante
+    es una dirección fija. Bucles cortos sobre huecos fijos → desenrollar (spawn de 4 trozos: 8900 → 5300 T).
+  - La suma posición += velocidad 8.8 en C cuesta ~1500 T; en asm ~240 T (`act_move` en
+    `games/platformer/src/vram.s`, reutilizable). Igual para consultas al mapa (`mt_at`/`solid_at`).
+  - Enemigos lentos: física a medio ritmo (mitad de ellos cada frame, paso doble); colisiones con el
+    jugador sí cada frame. Como mucho 1 aparición de enemigo por frame (evita picos al reaparecer).
+  - Sprites: escribir directo en `shadow_OAM` (`oam16`) y vaciar rangos con `memset`, no
+    `set_sprite_tile/prop + move_sprite` por sprite.
+- Profiler (`gb.profile`): solo ve funciones **no static**; una función que acaba con llamada final
+  (`jp`) se atribuye a la llamada. Para perfilar el interior de un módulo, quitar `static`.
 
 ## Reglas de hardware DMG
 Detalle completo: skill `gb-hardware`. Lo imprescindible:

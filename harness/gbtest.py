@@ -136,6 +136,7 @@ class Profiler:
 
     def __init__(self, gb, funcs, context_var=None):
         self.gb, self.pb = gb, gb.pyboy
+        funcs = list(dict.fromkeys(funcs))   # one hook per address: ignore repeated names
         self.stats = {f: {"calls": 0, "total": 0, "max": 0, "ctx": None} for f in funcs}
         self.pending = {}      # return address -> list of (func, start cycles, context)
         self.ret_hooks = set()

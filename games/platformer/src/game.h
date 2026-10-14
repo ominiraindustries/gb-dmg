@@ -37,7 +37,7 @@ extern uint8_t level_cols;                         // N metatile columns
 extern uint16_t camera_x;
 extern uint8_t scx_shadow;
 extern uint16_t cols_written;                      // next tile column to stream
-void level_load(void);                             // LCD must be off
+void level_load(uint16_t cam);                     // LCD must be off; camera starts at cam
 void level_update_camera(void);
 uint8_t mt_at(uint16_t x, uint8_t y);              // metatile id at a world pixel (pits/walls handled)
 uint8_t solid_at(uint16_t x, uint8_t y);
@@ -74,6 +74,9 @@ void player_update(void);
 void player_draw(void);
 void player_power_up(uint8_t item_type);
 void player_hurt(void);
+void player_bounce(void);                          // after a stomp
+void player_kill(void);                            // time over
+extern uint8_t player_dead;                        // 1 = pit, 2 = killed
 
 // --- actors.c  (struct of arrays, fixed slot ranges = fixed OAM ranges, GDD §7.3)
 #define A_ENEMY0  0                                // 5 enemies (step 3)
@@ -95,6 +98,13 @@ void spawn_debris(uint8_t col, uint8_t row);
 void spawn_coinpop(uint8_t col, uint8_t row);
 uint8_t spawn_shot(uint16_t x, uint8_t y, uint8_t left);
 void bump_actors_on_block(uint8_t col, uint8_t row);
+void oam16(uint8_t nb, uint8_t ox, uint8_t y, uint8_t tile, uint8_t prop);  // 16x16 = 2 sprites
+void act_move(uint8_t i);                          // asm (vram.s): position += velocity, 8.8
+// enemies.c
+void enemies_reset(uint16_t from_x);               // spawn list restarts at the first object >= x
+void enemies_update(void);
+void enemies_draw(void);
+void bump_enemies_on_block(uint16_t x, uint8_t top);
 
 // --- sound.c
 enum { SFX_JUMP_SMALL, SFX_JUMP_BIG, SFX_COIN, SFX_STOMP, SFX_BUMP, SFX_BREAK, SFX_POWER_APPEAR,

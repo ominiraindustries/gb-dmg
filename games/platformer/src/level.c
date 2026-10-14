@@ -20,7 +20,9 @@ extern uint8_t blk_count;                     // metatile redraw queue (below)
 #define CAMERA_LEAD   64                      // player stays <= 64 px from the left edge
 #define STREAM_AHEAD  21                      // visible tile columns are cam_tile .. cam_tile + 20
 
-uint8_t mt_at(uint16_t x, uint8_t y) {
+// Reference C versions of mt_at / solid_at (the game uses the asm ones in vram.s).
+// Kept as the specification for the equivalence test (eq_run in main.c).
+uint8_t mt_at_c(uint16_t x, uint8_t y) {
     uint8_t row;
     if (y < Y_BIAS) return MT_SKY;            // above the level
     row = (uint8_t)(y - Y_BIAS) >> 4;
@@ -29,8 +31,8 @@ uint8_t mt_at(uint16_t x, uint8_t y) {
     return level[((x >> 4) << 3) | row];
 }
 
-uint8_t solid_at(uint16_t x, uint8_t y) {
-    return mt_attr[mt_at(x, y)] & ATTR_SOLID;
+uint8_t solid_at_c(uint16_t x, uint8_t y) {
+    return mt_attr[mt_at_c(x, y)] & ATTR_SOLID;
 }
 
 // Fills col_buf with world tile column tc and sets its VRAM destination (ring of 32 columns)
@@ -53,19 +55,21 @@ void prepare_column(uint16_t tc) {
 }
 
 // LCD off: copy the map to WRAM and draw the first 22 tile columns
-void level_load(void) {
-    uint8_t c;
+void level_load(uint16_t cam) {
+    uint16_t c, first;
     level_cols = LEVEL1_1_WIDTH;
     level_px_w = (uint16_t)level_cols << 4;
     camera_max = level_px_w - 160;
     memcpy(level, level1_1_map, (uint16_t)level_cols * LEVEL_ROWS);
-    camera_x = 0;
-    scx_shadow = 0;
-    for (c = 0; c <= STREAM_AHEAD; c++) {
+    if (cam > camera_max) cam = camera_max;
+    camera_x = cam;
+    scx_shadow = (uint8_t)cam;
+    first = cam >> 3;
+    for (c = first; c <= first + STREAM_AHEAD; c++) {
         prepare_column(c);
         vram_col16(col_dst, col_buf);
     }
-    cols_written = STREAM_AHEAD + 1;
+    cols_written = first + STREAM_AHEAD + 1;
     col_pending = 0;
     blk_count = 0;
     // BG rows 30-31 show behind the window HUD (SCY = 0xF0): keep them blank

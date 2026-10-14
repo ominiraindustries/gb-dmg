@@ -149,3 +149,13 @@ compile the file separately with `-c`/`-S` to keep them.
   The PyBoy tests can read the global by name and assert a budget.
 - Compare two C versions with `-S` instruction counts and `.lst` cycle counts before porting to asm
   (CLAUDE.md: asm only with an equivalence test).
+
+## Measured in games/platformer (actors, physics, sprites)
+| Pattern | Cost | Better |
+|---|---|---|
+| `act_x[i] += ...` with variable `i` across 6 parallel arrays (8.8 pos += vel) | ~1500 T | asm `act_move` (~240 T), see games/platformer/src/vram.s |
+| Map lookup `level[((x >> 4) << 3) | row]` + attr in C | ~372 T | asm `solid_at` (~190 T); trick: `(x >> 4) << 3 == (x >> 1) & ~7` |
+| Loop over 4 fixed slots with `arr[BASE + i]` | ~8900 T | unrolled with constant indices ~5300 T |
+| `set_sprite_tile` + `set_sprite_prop` + `move_sprite` per sprite | ~300 T | write `shadow_OAM[n]` fields through a pointer; `memset` ranges to hide |
+| Enemy physics every frame (5 enemies) | 5 x 3300 T | half rate (alternate halves, double step); player collision every frame |
+

@@ -39,10 +39,12 @@ uint8_t player_freeze, player_freeze_kind, player_inv;
 uint8_t player_shot_cd, player_throw;
 uint8_t player_dead;            // 1 = fell in a pit, 2 = killed (main.c handles it)
 uint8_t hb_y, hb_h;             // hitbox y offset and height for the current form/pose
+uint16_t coin_x;                // last position checked for map coins
+uint8_t coin_y;
 
 static int16_t abs16(int16_t v) { return v < 0 ? -v : v; }
 
-static void set_hitbox(void) {
+void set_hitbox(void) {
     if (player_form == FORM_SMALL) { hb_y = 2; hb_h = 14; }
     else if (player_crouch) { hb_y = 18; hb_h = 14; }
     else { hb_y = 4; hb_h = 28; }
@@ -111,16 +113,26 @@ void player_hurt(void) {
     player_inv = INV_FRAMES;
 }
 
+void player_bounce(void) {
+    player_vy = (keys & J_A) ? -0x0380 : -0x0280;   // higher bounce with A held (GDD §2.2)
+    player_jump_hold = (keys & J_A) ? 1 : 0;
+    player_on_ground = 0;
+}
+
+void player_kill(void) {
+    player_dead = 2;
+}
+
 // ---------------------------------------------------------------- movement
 
 // Speed above the limit decays by DECEL (e.g. releasing B while running) instead of snapping
-static int16_t limit(int16_t v, int16_t max) {
+int16_t limit(int16_t v, int16_t max) {
     if (v > max) return (v - DECEL > max) ? v - DECEL : max;
     if (v < -max) return (v + DECEL < -max) ? v + DECEL : -max;
     return v;
 }
 
-static void horizontal_input(void) {
+void horizontal_input(void) {
     uint8_t dir = keys & (J_LEFT | J_RIGHT);
     int16_t vx = player_vx, max = (keys & J_B) ? RUN_MAX : WALK_MAX;
     player_skid = 0;
@@ -150,11 +162,11 @@ static void horizontal_input(void) {
     player_vx = vx;
 }
 
-static void set_air_max(void) {
+void set_air_max(void) {
     player_air_max = (abs16(player_vx) > WALK_MAX || (keys & J_B)) ? RUN_MAX : WALK_MAX;
 }
 
-static void jump_input(void) {
+void jump_input(void) {
     if (pressed & J_A) player_jump_buf = BUFFER_FRAMES;
     else if (player_jump_buf) player_jump_buf--;
     if (player_jump_buf && (player_on_ground || player_coyote)) {
@@ -168,7 +180,7 @@ static void jump_input(void) {
     if (!(keys & J_A)) player_jump_hold = 0;
 }
 
-static void crouch_and_shoot(void) {
+void crouch_and_shoot(void) {
     uint8_t c = player_form != FORM_SMALL && player_on_ground && (keys & J_DOWN);
     if (c != player_crouch) {
         player_crouch = c;
@@ -185,7 +197,7 @@ static void crouch_and_shoot(void) {
     }
 }
 
-static void move_x(void) {
+void move_x(void) {
     uint16_t t = (uint16_t)player_xs + (uint8_t)player_vx;
     uint16_t left, right;
     uint8_t top, bottom;
@@ -221,12 +233,12 @@ static void move_x(void) {
 }
 
 // Solid for the head: normal solids plus the hidden 1UP block (only solid from below)
-static uint8_t head_solid(uint16_t x, uint8_t y) {
+uint8_t head_solid(uint16_t x, uint8_t y) {
     uint8_t a = mt_attr[mt_at(x, y)];
     return (a & ATTR_SOLID) || (a & CLS_MASK) == CLS_HIDDEN_1UP;
 }
 
-static void move_y(void) {
+void move_y(void) {
     uint16_t t = (uint16_t)player_ys + (uint8_t)player_vy;
     uint16_t l = player_x + HB_X + 1, r = player_x + HB_X + HB_W - 2, cx;
     uint8_t top, bottom, ls, rs, edge;
@@ -273,7 +285,7 @@ static void move_y(void) {
 }
 
 // Stuck inside blocks after growing / standing up under a low ceiling: push 1 px/f (GDD §2.3)
-static void unstick(void) {
+void unstick(void) {
     uint16_t l = player_x + HB_X, r = l + HB_W - 1;
     uint8_t t = player_y + hb_y + 1;
     if (player_form == FORM_SMALL) return;
@@ -282,7 +294,7 @@ static void unstick(void) {
     }
 }
 
-static void animate(void) {
+void animate(void) {
     static const uint8_t walk_small[4] = {
         SPR_TEO_SMALL_WALK1, SPR_TEO_SMALL_IDLE, SPR_TEO_SMALL_WALK2, SPR_TEO_SMALL_IDLE };
     static const uint8_t walk_big[4] = {
@@ -326,7 +338,11 @@ void player_update(void) {
     move_y();
     crouch_and_shoot();
     unstick();
-    collect_coins();
+    if (player_x != coin_x || player_y != coin_y) {   // coins cannot change under a still Teo
+        coin_x = player_x;
+        coin_y = player_y;
+        collect_coins();
+    }
     if (player_on_ground) player_coyote = COYOTE_FRAMES;
     else if (player_coyote) player_coyote--;
     if ((uint8_t)(player_y + hb_y) >= PIT_Y && player_y < 0xF0) player_dead = 1;
@@ -336,15 +352,7 @@ void player_update(void) {
 // ---------------------------------------------------------------- drawing (sprites 0-3)
 
 static void draw16(uint8_t s, uint8_t tile, uint8_t ox, uint8_t y, uint8_t prop) {
-    if (player_facing) {
-        set_sprite_tile(s, tile + 2); set_sprite_tile(s + 1, tile);
-        prop |= S_FLIPX;
-    } else {
-        set_sprite_tile(s, tile); set_sprite_tile(s + 1, tile + 2);
-    }
-    set_sprite_prop(s, prop); set_sprite_prop(s + 1, prop);
-    move_sprite(s, ox, y);
-    move_sprite(s + 1, ox + 8, y);
+    oam16(s, ox, y, tile, player_facing ? prop | S_FLIPX : prop);
 }
 
 void player_draw(void) {

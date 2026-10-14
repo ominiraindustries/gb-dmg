@@ -26,7 +26,7 @@ def cell(gb, col, row):
 def stand_under(gb, col, big=False):
     """Teleport onto the ground under block column `col` and let streaming catch up."""
     start_play(gb)
-    gb.write_u8("cheat_flags", 2)                # no timer
+    gb.write_u8("cheat_flags", 3)                # invincible + no timer (enemies walk around)
     if big:
         make_big(gb)
     teleport(gb, col * 16, BIG_ON_GROUND if big else SMALL_ON_GROUND)
