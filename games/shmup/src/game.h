@@ -7,14 +7,15 @@
 #include "spr.h"
 #include "ui.h"
 #include "font.h"
+#include "vram.h"                // VRAM_<TILESET> bases from game.json vram_order
 
 // ---------------------------------------------------------------- VRAM (design/ui.md 0.2)
-#define TILE_UI     0
-#define TILE_FONT   24
+#define TILE_UI     VRAM_UI
+#define TILE_FONT   VRAM_FONT
 #define T_DIGIT0    (TILE_FONT + FONT_DIGIT0)
 #define T_LETTER_A  (TILE_FONT + FONT_LETTER_A)
 #define T_BLANK     (TILE_UI + UI_BLANK)
-#define BG_BASE     MT_BASE   // stage tiles (65), from res/metatiles.mt
+#define BG_BASE     VRAM_BG   // stage tiles; uiscreens loads into the same slot
 
 // ---------------------------------------------------------------- level objects (stage1.lvl)
 enum {

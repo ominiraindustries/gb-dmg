@@ -10,7 +10,8 @@ set of rows of whole tiles. Range 3 cells.
 Piece file res/view.pcs (drawn by the pixel-artist):
     ; comment
     @ tileset walls             tile references below are labels or indices of res/walls.tiles
-    @ base 66                   VRAM index of that tileset's tile 0 (added in the C tables)
+    @ base 66                   VRAM index of that tileset's tile 0 (added in the C tables);
+                                "@ base auto" = from game.json vram_order
     legend:
     # WALL_A                    char -> tile label or index ('.' is always transparent)
     piece BG                    then exactly H lines of W chars (size from GEOMETRY below)
@@ -64,7 +65,7 @@ class Pieces:
         self.path, self.pieces, self.tileset, self.base = Path(path), pieces, tileset, base
 
 
-def parse(path, labels=None):
+def parse(path, labels=None, bases=None):
     """{name: [[tile or None] * w] * h} with tile = index in the tileset (no base)."""
     path = Path(path)
     legend, pieces, tileset, base = {}, {}, None, 0
@@ -82,7 +83,12 @@ def parse(path, labels=None):
             if parts[1] == "tileset":
                 tileset = parts[2]
             elif parts[1] == "base":
-                base = int(parts[2], 0)
+                if parts[2] == "auto":
+                    if not bases or tileset not in bases:
+                        raise ValueError(f"{where}: '@ base auto' needs '{tileset}' in game.json vram_order")
+                    base = bases[tileset]
+                else:
+                    base = int(parts[2], 0)
             else:
                 raise ValueError(f"{where}: unknown '@ {parts[1]}'")
         elif parts[0] == "legend:":

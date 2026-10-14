@@ -12,7 +12,11 @@ import levels  # noqa: E402
 import metatiles  # noqa: E402
 
 CFG = json.loads((GAME / "game.json").read_text(encoding="utf-8"))["levels"]
-MT = metatiles.parse(GAME / "res" / "metatiles.mt")
+import preview  # noqa: E402
+import screens  # noqa: E402
+BASES = screens.vram_bases(json.loads((GAME / "game.json").read_text(encoding="utf-8"))["vram_order"],
+                           preview.find_tilesets(GAME))
+MT = metatiles.parse(GAME / "res" / "metatiles.mt", bases=BASES)
 MT_ID = {"MT_" + n: i for n, i in MT.ids.items()}
 MT_TILES = [MT.vram_tiles(i) for i in range(len(MT.names))]
 

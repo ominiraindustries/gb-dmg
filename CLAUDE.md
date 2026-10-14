@@ -14,7 +14,9 @@ el profiling lo justifica y con una prueba de equivalencia contra la versión C.
   - Assets compartidos en `harness/common/*.tiles` (p. ej. la fuente): `"common_res": ["font"]` en game.json.
   - Pantallas fijas (título, resultados...): las maquetas `design/screens/<nombre>.screen` del
     ui-designer se convierten al compilar en mapas de tiles (`screen_<nombre>_map[360]` + sprites) con
-    `"screens": [...]` y `"vram_order": ["bg", "font", "ui"]` (bases de VRAM) en game.json
+    `"screens": [...]` y `"vram_order": ["bg", "font", "ui"]` (bases de VRAM; `["a", "b"]` = dos tilesets
+    que se turnan en el mismo hueco) en game.json. El build genera `vram.h` (`VRAM_<TILESET>`) y
+    `@ base auto` en `metatiles.mt`/`view.pcs`: nada de bases escritas a mano
     (`harness/screens.py`). Lo que diseña el agente es exactamente lo que sale en el juego.
   - **Librería de motor `gbe`** (`harness/common/src/gbe*.c/.s`, ver `harness/common/README.md`):
     bucle de frame y medición, OAM directo, fundidos/transiciones, HUD con corte LYC, actores con

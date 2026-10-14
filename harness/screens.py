@@ -3,7 +3,12 @@ so what the UI agent designs is exactly what the game shows.
 
 game.json:
     "screens": ["title", "clear"],          mockups to convert (design/screens/<name>.screen)
-    "vram_order": ["bg", "font", "ui"]       BG tilesets in VRAM order: base = sum of previous counts
+    "vram_order": ["bg", "font", "ui"]       BG tilesets in VRAM order: base = sum of previous counts;
+                                             a list ["uiscreens", "bg"] = tilesets loaded in turn
+                                             into the same slot (size = the largest)
+The build also writes build/gen/vram.h: #define VRAM_<NAME> <base> for every tileset of vram_order,
+and "@ base auto" in metatiles.mt / view.pcs takes the base from there (hand-written bases broke the
+shmup's screens when the shared font grew by one glyph).
 
 Output build/gen/screen_<name>.c/.h:
     const uint8_t screen_<name>_map[18 * 20];        VRAM tile indices, row-major
@@ -23,7 +28,7 @@ from pathlib import Path
 import preview
 
 
-TEXT_CHARS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?:-")
+TEXT_CHARS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?:-/")
 
 
 def text_runs(path):
@@ -40,7 +45,7 @@ def text_runs(path):
             section = key[:-1]
         elif section == "legend" and line.strip():
             ref = line[2:].strip().upper().split(":")[-1]
-            if ref not in ("DASH", "EXCLAM", "DOT", "COLON", "QUESTION"):   # font punctuation is text
+            if ref not in ("DASH", "EXCLAM", "DOT", "COLON", "QUESTION", "SLASH"):   # font punctuation is text
                 legend.add(line[0])
         elif section == "grid" and line.strip():
             grid.append(line.ljust(20)[:20])
@@ -70,13 +75,35 @@ def text_runs(path):
     return runs
 
 
+def vram_bases(vram_order, sets):
+    """{tileset: VRAM base index} from game.json vram_order (see the module doc)."""
+    bases, base = {}, 0
+    for slot in vram_order:
+        group = slot if isinstance(slot, list) else [slot]
+        for ts_name in group:
+            if ts_name not in sets:
+                raise ValueError(f"vram_order: tileset '{ts_name}' not found")
+            bases[ts_name] = base
+        base += max(len(sets[n].tiles) for n in group)
+    if base > 256:
+        raise ValueError(f"vram_order: {base} BG tiles, more than 256")
+    return bases
+
+
+def write_vram_h(vram_order, sets, out_dir):
+    bases = vram_bases(vram_order, sets)
+    lines = "\n".join(f"#define VRAM_{n.upper()} {b}" for n, b in bases.items())
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    (Path(out_dir) / "vram.h").write_text(
+        "// Generated from game.json vram_order by harness/screens.py - do not edit\n"
+        f"#pragma once\n{lines}\n", encoding="utf-8")
+    return bases
+
+
 def convert(src, out_dir, sets, vram_order):
     src, out_dir = Path(src), Path(out_dir)
     name = src.stem
-    bases, base = {}, 0
-    for ts_name in vram_order:
-        bases[ts_name] = base
-        base += len(sets[ts_name].tiles)
+    bases = vram_bases(vram_order, sets)
     cells, sprs = preview.parse_screen(src, sets)
     tiles = []
     for row in cells:

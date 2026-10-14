@@ -4,7 +4,8 @@ One source for the ROM (mt_tiles / mt_attr), the level preview and Python tests.
 
     ; comment
     @ tileset bg              tileset the tile indices refer to (res/bg.tiles)
-    @ base 65                 VRAM index of that tileset's tile 0 (added to every tile in the C table)
+    @ base 65                 VRAM index of that tileset's tile 0 (added to every tile in the C table);
+                              "@ base auto" = from game.json vram_order (build/gen/vram.h)
     @ attr SOLID 0x80         attribute names -> bits (any number, up to 8 bits)
     @ attr GROUND 0x01
     FOG       0   0   0   0
@@ -30,7 +31,7 @@ class Metatiles:
         return attr in self.attrs[mt]
 
 
-def parse(path, labels=None):
+def parse(path, labels=None, bases=None):
     """labels: {LABEL: index} of the tileset, needed only when the table uses tile labels."""
     names, tiles, attrs, bits, tileset, base = [], [], [], {}, None, 0
     for n, raw in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), 1):
@@ -43,7 +44,12 @@ def parse(path, labels=None):
             if key == "tileset":
                 tileset = line[2]
             elif key == "base":
-                base = int(line[2], 0)
+                if line[2] == "auto":
+                    if not bases or tileset not in bases:
+                        raise ValueError(f"{where}: '@ base auto' needs '{tileset}' in game.json vram_order")
+                    base = bases[tileset]
+                else:
+                    base = int(line[2], 0)
             elif key == "attr":
                 bits[line[2].upper()] = int(line[3], 0)
             else:
@@ -72,8 +78,8 @@ def parse(path, labels=None):
     return Metatiles(path, names, tiles, attrs, bits, tileset, base)
 
 
-def convert(src, out_dir, labels=None):
-    mt = parse(src, labels)
+def convert(src, out_dir, labels=None, bases=None):
+    mt = parse(src, labels, bases)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     enum = "\n".join(f"    MT_{n} = {i}," for i, n in enumerate(mt.names))

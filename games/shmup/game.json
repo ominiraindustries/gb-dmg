@@ -34,7 +34,10 @@
   "vram_order": [
     "ui",
     "font",
-    "uiscreens"
+    [
+      "uiscreens",
+      "bg"
+    ]
   ],
   "levels": {
     "order": "rows",

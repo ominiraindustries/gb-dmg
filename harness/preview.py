@@ -19,7 +19,7 @@ Screen mockup format (.screen):
 
 Chars without a legend entry: letters and digits map to the font tileset (if listed); space
 and '.' map to the tile labelled BLANK (any listed tileset), else tile 0 of the first non-font one.
-The font's punctuation has labels: DASH EXCLAM DOT COLON QUESTION (use them in the legend).
+The font's punctuation has labels: DASH EXCLAM DOT COLON QUESTION SLASH (use them in the legend).
 """
 import sys
 from pathlib import Path

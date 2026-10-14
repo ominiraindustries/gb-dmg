@@ -1,7 +1,7 @@
 ; GRIFO stage metatiles (16x16): TL TR BL BR as res/bg.tiles indices + attributes.
 ; The METATILE TABLE comment in bg.tiles explains each one; ids = line order (MT_<NAME>).
 @ tileset bg
-@ base 65                  ; VRAM: ui 0-23, font 24-64, bg from 65 (design/ui.md 0.2)
+@ base auto                ; from game.json vram_order: ui, font, then bg (shares its slot with uiscreens)
 @ attr GROUND 0x01         ; a turret may stand here (level lint)
 
 FOG          0   0   0   0

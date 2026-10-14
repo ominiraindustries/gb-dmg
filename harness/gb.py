@@ -228,6 +228,14 @@ def build(name):
             sources.append(asciitiles.convert(tiles, gen))
         except ValueError as e:
             die(str(e))
+    bases = {}
+    if cfg.get("vram_order"):
+        import preview
+        import screens
+        try:
+            bases = screens.write_vram_h(cfg["vram_order"], preview.find_tilesets(gdir), gen)
+        except ValueError as e:
+            die(str(e))
     if cfg.get("screens"):
         import preview
         import screens
@@ -241,14 +249,14 @@ def build(name):
     mt_file = gdir / "res" / "metatiles.mt"
     if mt_file.exists():
         try:
-            sources.append(metatiles.convert(mt_file, gen, tileset_labels(gdir, mt_file)))
+            sources.append(metatiles.convert(mt_file, gen, tileset_labels(gdir, mt_file), bases))
         except ValueError as e:
             die(str(e))
     pcs_file = gdir / "res" / "view.pcs"
     if pcs_file.exists():
         import fpview
         try:
-            sources.append(fpview.to_c(fpview.parse(pcs_file, tileset_labels(gdir, pcs_file)), gen))
+            sources.append(fpview.to_c(fpview.parse(pcs_file, tileset_labels(gdir, pcs_file), bases), gen))
         except ValueError as e:
             die(str(e))
     for lvl in sorted((gdir / "res").glob("*.lvl")):
