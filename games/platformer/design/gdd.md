@@ -1,10 +1,10 @@
-# PLATFORMER (título provisional) — Documento de diseño
+# CABALLERITO — Documento de diseño
 
-Estado: borrador (2026-10-14)    Versión: 0.1    Autor: game-designer
+Estado: aprobado (2026-10-14)    Versión: 1.0    Autor: game-designer
 
-> Nombre de carpeta `games/platformer`. Título, protagonista, enemigos y objetos definitivos: ver
-> §12 "Decisiones pendientes". En este documento se usan **nombres técnicos neutros**
-> (PLAYER, WALKER, SHELL, ITEM_GROW...) y, entre paréntesis, los del concepto recomendado (A, "BROTE").
+> Carpeta `games/platformer`. Título **CABALLERITO** (alternativa: SIR TEO), tema "pequeño caballero"
+> (§1.1). En el código y los tests se usan **nombres técnicos neutros** (PLAYER, WALKER, SHELL,
+> ITEM_GROW...); entre paréntesis, el nombre del tema.
 > Copiamos **mecánicas** de Super Mario Bros / Super Mario Land; nada de nombres, personajes, gráficos
 > ni música de Nintendo.
 
@@ -18,7 +18,7 @@ Estado: borrador (2026-10-14)    Versión: 0.1    Autor: game-designer
 - **Bucle principal:** correr hacia la derecha → leer el siguiente obstáculo (hoyo, enemigo, bloque) →
   saltar en el momento justo → recoger monedas/power-ups → llegar a la meta y sumar puntos por tiempo.
 - **Qué lo hace distinto:** es el primer juego con scroll del estudio; la novedad para el jugador es el
-  tema y los personajes originales (ver §12); la mecánica es la clásica, bien afinada y fluida en DMG.
+  tema y los personajes originales (un caballerito en un reino de fantasía, §1.1); la mecánica es la clásica, bien afinada y fluida en DMG.
 - **Duración de partida objetivo:** nivel de 90-150 s; partida M1 completa 2-5 min; juego final (4
   niveles) 10-15 min.
 - **Referencias:**
@@ -28,6 +28,45 @@ Estado: borrador (2026-10-14)    Versión: 0.1    Autor: game-designer
     pantalla pequeña, enemigos de 16x16.
   - `games/tetris` (este repo): bucle `vsync → draw_vram → update`, colas de VRAM con presupuesto fijo,
     copia asm, `vram_late`, `max_frame_lines`, BCD de la puntuación (`bcd.s`).
+
+### 1.1 Tema: "pequeño caballero" (decidido)
+
+- **Título: CABALLERITO** (11 letras, cabe en la fuente A-Z y en la cabecera de 15 caracteres).
+  Alternativa de reserva: **SIR TEO**.
+- **Historia en una línea:** Teo, el escudero más bajito del reino, sale a recuperar el estandarte
+  del castillo que se han llevado las criaturas del bosque.
+
+| Técnico | Nombre en el juego | Qué es / silueta (16x16 salvo indicación) |
+|---|---|---|
+| PLAYER | **Teo** | SMALL: escudero cabezón con túnica y una pluma en la cabeza. BIG (16x32): con yelmo y coraza; la pluma sobresale por arriba |
+| ITEM_GROW | **Yelmo** | yelmo con visera; al cogerlo, Teo se pone la armadura y crece |
+| ITEM_SHOT | **Pergamino de fuego** | pergamino enrollado con sello; forma SHOT = armadura en paleta OBP1 (tonos invertidos, "armadura encantada") |
+| Proyectil | **Chispa** | bola de fuego mágico 8x8 que rebota |
+| ITEM_STAR | **Cáliz dorado** (M2) | copa brillante que bota; Teo parpadea invencible |
+| ITEM_1UP | **Poción** | frasco redondo con tapón |
+| Monedas | **Monedas de oro** | moneda 8x8 en grupos de 2x2 (metatile); HUD "MONEDAS" no cabe: icono |
+| WALKER | **Limo** | gota de limo con ojos; aplastado = charco |
+| SHELL | **Armadín** | armadillo con casco de placas; pisado se enrolla en **bola** que se patea |
+| PLANT | **Serpiente** (M2) | serpiente que asoma de la boca de un torreón |
+| HOPPER | **Armadín alado** (M2) | Armadín con alas de murciélago; pisado pierde las alas |
+| Metatile `?` (Q_*) | **Bloque de runa** | sillar con una runa brillante; usado = runa apagada (sillar liso) |
+| BRICK | **Ladrillo de muralla** | ladrillos claros; se rompen en 4 cascotes |
+| SOLID duro | **Sillar** | bloque de piedra tallada, más oscuro |
+| Tubería | **Torreón** | columna de piedra de 2 metatiles de ancho con boca oscura arriba |
+| Meta (POLE) | **Estandarte** | asta con punta de lanza y estandarte de tela que baja; castillo detrás |
+| Checkpoint | (invisible) | |
+
+Niveles: 1-1 **Pradera**, 1-2 **Mazmorra**, 1-3 **Almenas**, 1-4 **Torre**.
+
+**Dirección de arte (para pixel-artist y ui-designer):**
+- Actores con contorno oscuro (color 3) y relleno medio; fondo claro y de bajo contraste (cielo
+  color 0, colinas/nubes en color 1) para que Teo y los enemigos se lean en el LCD borroso.
+- Siluetas distintas por enemigo: Limo = redondeado y bajo; Armadín = alargado con bandas; bola =
+  círculo con bandas (que se distinga a 3 px/f); Serpiente = vertical y fina.
+- Bloques interactivos (runa, ladrillo) con más contraste y patrón reconocible que el decorado;
+  el sillar duro se ve distinto del ladrillo rompible (el jugador debe saber qué puede romper).
+- Lejos de Mario: nada de gorra, bigote, setas, flores, tuberías verdes, tortugas ni bandera con
+  bola en la punta; paleta y formas medievales (piedra, tela, metal).
 
 ---
 
@@ -101,9 +140,9 @@ Cálculos de referencia (para diseño de niveles, comprobados por el lint de niv
 | Forma | Tamaño sprite | Hitbox (offset x,y / ancho x alto) | Sprites OAM | Notas |
 |---|---|---|---|---|
 | SMALL (pequeño) | 16x16 | (3,2) / 10x14 | 2 (8x16) | no rompe ladrillos |
-| BIG (grande, ITEM_GROW "Abono") | 16x32 | (3,4) / 10x28 | 4 (2 por línea) | rompe ladrillos; puede agacharse |
+| BIG (grande, ITEM_GROW "Yelmo": caballero con armadura) | 16x32 | (3,4) / 10x28 | 4 (2 por línea) | rompe ladrillos; puede agacharse |
 | BIG agachado | 16x16 (frame CROUCH) | (3,18) / 10x14 | 2 | |
-| SHOT (disparo, ITEM_SHOT "Girasol") | 16x32 | igual que BIG | 4 | mismos tiles que BIG con **paleta OBP1**; B lanza proyectiles |
+| SHOT (disparo, ITEM_SHOT "Pergamino de fuego") | 16x32 | igual que BIG | 4 | mismos tiles que BIG con **paleta OBP1**; B lanza proyectiles |
 
 Transiciones:
 - SMALL + ITEM_GROW → BIG. Animación de crecer: **48 f**, alterna frame pequeño/grande cada 4 f,
@@ -111,14 +150,14 @@ Transiciones:
 - BIG + ITEM_SHOT → SHOT. Animación: 32 f alternando OBP0/OBP1 cada 4 f, lógica congelada.
 - SMALL + ITEM_SHOT (si cogió uno que ya estaba en pantalla) → BIG.
 - ITEM_GROW cogido siendo BIG/SHOT → solo 1000 puntos.
-- **Daño:** SHOT → (regla pendiente §12, recomendado BIG); BIG → SMALL; SMALL → muerte.
+- **Daño:** SHOT → BIG; BIG → SMALL; SMALL → muerte (decidido: dificultad suave).
   Encoger: 48 f congelado alternando grande/pequeño, luego **invulnerabilidad 90 f** (parpadeo:
   2 f visible / 2 f oculto). Durante la invulnerabilidad el contacto lateral con enemigos se ignora;
   pisar sigue funcionando.
 - **Atascado tras crecer** (techo de 1 metatile encima): si la hitbox grande solapa sólido, el
   jugador se empuja 1 px/f hacia donde mira hasta quedar libre; sin daño.
 
-### 2.4 Proyectil (forma SHOT, "pipas")
+### 2.4 Proyectil (forma SHOT, "chispas" de fuego mágico)
 
 | Parámetro | Valor | Unidad | Notas |
 |---|---|---|---|
@@ -133,7 +172,7 @@ Transiciones:
 | Hitbox | 6x6 | px | sprite 8x8 visual |
 | Destrucción | choca con pared, sale de cámara, toca enemigo | | al chocar: "puf" 8 f (1 sprite) |
 
-### 2.5 Cámara y scroll (recomendación: sin volver atrás, como SMB — ver §12)
+### 2.5 Cámara y scroll (decidido: sin volver atrás, como SMB)
 
 | Parámetro | Valor | Notas |
 |---|---|---|
@@ -144,8 +183,7 @@ Transiciones:
 | Vertical | ninguna | el nivel mide exactamente la zona de juego (16 filas de tiles) |
 
 Hardware:
-- Nivel dibujado en las filas 0-15 del mapa BG ($9800). HUD en la **ventana** (recomendado arriba,
-  §5). Con HUD arriba: `SCY = 0xF0` (-16) para que la fila 0 del BG aparezca en la línea 16.
+- Nivel dibujado en las filas 0-15 del mapa BG ($9800). HUD en la **ventana arriba** (§5). Con HUD arriba: `SCY = 0xF0` (-16) para que la fila 0 del BG aparezca en la línea 16.
 - `SCX = camera_x & 0xFF`. El valor se calcula en `update()` en `scx_shadow` y se escribe al
   **principio** de `draw_vram()`, en el mismo VBlank en el que el DMA de GBDK copia el shadow OAM
   calculado con la misma cámara → fondo y sprites se mueven juntos (sin temblor de 1 frame).
@@ -179,7 +217,7 @@ Clases de colisión de metatile (byte de atributos en la tabla de metatiles):
 | Clase | Sólido | Al golpear desde abajo | Al tocar |
 |---|---|---|---|
 | EMPTY (cielo, decorado) | no | — | — |
-| SOLID (suelo, bloque duro, tubería, usado) | sí | sonido BUMP | — |
+| SOLID (suelo, sillar, torreón, runa apagada) | sí | sonido BUMP | — |
 | BRICK (ladrillo) | sí | SMALL: rebota (BUMP, mata enemigos encima); BIG/SHOT: **se rompe** | — |
 | Q_COIN (? con moneda) | sí | moneda + pasa a USED | — |
 | Q_POWER (? con power-up) | sí | ITEM_GROW si SMALL, ITEM_SHOT si BIG/SHOT; pasa a USED | — |
@@ -217,32 +255,32 @@ Reglas comunes:
 - **Máximo 5 enemigos activos.** Si no hay hueco, el objeto espera (el puntero no avanza) hasta que
   se libere uno.
 - Gravedad 0x0040, caída máx. 0x0300. Caminan sobre el mapa con la misma colisión que el jugador.
-- Dos enemigos que se tocan **se dan la vuelta ambos** (excepto caparazón en movimiento, que mata).
+- Dos enemigos que se tocan **se dan la vuelta ambos** (excepto bola en movimiento, que mata).
 - **Pisotón:** el jugador cae (vy > 0) y su borde inferior está por encima del centro vertical del
   enemigo en el momento del solape. Si no, es daño.
-- **Muerte "volteada"** (proyectil, caparazón, estrella, bloque golpeado debajo): sprite con flip Y,
+- **Muerte "volteada"** (proyectil, bola, estrella, bloque golpeado debajo): sprite con flip Y,
   vy = -0x0200, cae sin colisión hasta salir de pantalla.
 
 | Enemigo | Hito | Tamaño / hitbox | Comportamiento | Al pisarlo | Otras muertes |
 |---|---|---|---|---|---|
-| **WALKER** ("Escarabajo") | M1 | 16x16 / (2,4) 12x12 | Anda a ±0x0080 (0.5 px/f), empieza hacia la izquierda; se da la vuelta en paredes; **cae** por los bordes. Animación: flip X cada 8 f | Aplastado: frame SQUASH 30 f y desaparece | volteado |
-| **SHELL** ("Caracol") | M1 | 16x16 / (2,2) 12x14 | Igual que WALKER al andar (cae por bordes). Animación 2 frames cada 8 f | Se mete en la concha (quieto) | volteado |
+| **WALKER** ("Limo") | M1 | 16x16 / (2,4) 12x12 | Anda a ±0x0080 (0.5 px/f), empieza hacia la izquierda; se da la vuelta en paredes; **cae** por los bordes. Animación: flip X cada 8 f | Aplastado: frame SQUASH 30 f y desaparece | volteado |
+| **SHELL** ("Armadín", armadillo) | M1 | 16x16 / (2,2) 12x14 | Igual que WALKER al andar (cae por bordes). Animación 2 frames cada 8 f | Se enrolla en bola (quieto) | volteado |
 | SHELL quieto | M1 | (2,4) 12x12 | Quieto 300 f; luego tiembla 60 f (frame PEEK alternando cada 4 f); después vuelve a andar hacia el jugador | **Patada** | volteado |
 | SHELL pateado | M1 | (2,4) 12x12 | vx ±0x0300 (3 px/f) alejándose del jugador; rebota en paredes; cae por bordes; mata a todo enemigo que toca (cadena de puntos); **daña al jugador** por contacto lateral salvo 8 f de gracia tras la patada | Se detiene (vuelve a SHELL quieto) | volteado |
-| PLANT ("Carnívora") | M2 | 16x16 / (3,2) 10x12 | Sale de una tubería: escondida 90 f, sube 16 px en 32 f, arriba 60 f, baja 32 f. No sale si el centro del jugador está a ≤ 24 px del centro de la tubería. Sprite con prioridad "detrás del BG" (bit 7 OAM) para que la tubería la tape | **Daña** (no se puede pisar) | proyectil, caparazón, estrella |
-| HOPPER ("Caracol alado") | M2 | 16x16 / (2,2) 12x14 | SHELL que, al aterrizar, salta con vy -0x0380 (≈ 24 px); avanza ±0x0080 | Pierde las alas → SHELL andando | volteado |
+| PLANT ("Serpiente del torreón") | M2 | 16x16 / (3,2) 10x12 | Sale de la boca de un torreón: escondida 90 f, sube 16 px en 32 f, arriba 60 f, baja 32 f. No sale si el centro del jugador está a ≤ 24 px del centro del torreón. Sprite con prioridad "detrás del BG" (bit 7 OAM) para que el torreón la tape | **Daña** (no se puede pisar) | proyectil, bola, estrella |
+| HOPPER ("Armadín alado", alas de murciélago) | M2 | 16x16 / (2,2) 12x14 | SHELL que, al aterrizar, salta con vy -0x0380 (≈ 24 px); avanza ±0x0080 | Pierde las alas → SHELL andando | volteado |
 
-Patada de caparazón quieto: al tocarlo de lado, o pisándolo. Dirección = signo de
-(centro caparazón - centro jugador); si es 0, la dirección hacia la que mira el jugador.
+Patada de bola quieta: al tocarla de lado, o pisándola. Dirección = signo de
+(centro bola - centro jugador); si es 0, la dirección hacia la que mira el jugador.
 
 ### 2.9 Ítems
 
 | Ítem | Hito | Sale del bloque | Movimiento | Efecto |
 |---|---|---|---|---|
-| ITEM_GROW ("Abono") | M1 | sube 16 px en 32 f (0x0080), sin colisión | vx +0x0100 (hacia la derecha), gravedad 0x0040, gira en paredes, cae por bordes | SMALL → BIG; +1000 |
-| ITEM_SHOT ("Girasol") | M1 | igual | quieto | BIG → SHOT (SMALL → BIG); +1000 |
-| ITEM_1UP | M1 | igual | como ITEM_GROW (mismos tiles, paleta OBP1) | +1 vida |
-| ITEM_STAR ("Mariquita dorada") | M2 (opcional, §12) | igual | vx ±0x0100, gravedad 0x0030, al tocar suelo vy = -0x0300 (bota siempre) | Invencible 600 f: mata por contacto (cadena), parpadeo de paleta OBP0/OBP1 cada 4 f (cada 8 f los últimos 120 f), música propia |
+| ITEM_GROW ("Yelmo") | M1 | sube 16 px en 32 f (0x0080), sin colisión | vx +0x0100 (hacia la derecha), gravedad 0x0040, gira en paredes, cae por bordes | SMALL → BIG; +1000 |
+| ITEM_SHOT ("Pergamino de fuego") | M1 | igual | quieto | BIG → SHOT (SMALL → BIG); +1000 |
+| ITEM_1UP ("Poción") | M1 | igual | como ITEM_GROW (tiles propios) | +1 vida |
+| ITEM_STAR ("Cáliz dorado") | M2 | igual | vx ±0x0100, gravedad 0x0030, al tocar suelo vy = -0x0300 (bota siempre) | Invencible 600 f: mata por contacto (cadena), parpadeo de paleta OBP0/OBP1 cada 4 f (cada 8 f los últimos 120 f), música propia |
 
 Máx. 1 ítem en pantalla (si sale otro, sustituye al anterior). Desaparece al salir por la izquierda o caer.
 
@@ -251,8 +289,8 @@ Máx. 1 ítem en pantalla (si sale otro, sustituye al anterior). Desaparece al s
 | Evento | Puntos |
 |---|---|
 | Pisotón en cadena (sin tocar suelo) | 100, 200, 400, 500, 800, 1000, 2000, 4000, 5000, 8000, luego 1UP cada uno |
-| Caparazón pateado: enemigos que mata en cadena | 500, 800, 1000, 2000, 4000, 5000, 8000, luego 1UP |
-| Patear caparazón quieto | 400 |
+| Bola pateada: enemigos que mata en cadena | 500, 800, 1000, 2000, 4000, 5000, 8000, luego 1UP |
+| Patear bola quieta | 400 |
 | Proyectil / estrella / bloque golpeado debajo | 100 (WALKER), 200 (SHELL, PLANT, HOPPER) |
 | Moneda | 200 |
 | Ladrillo roto | 50 |
@@ -260,14 +298,14 @@ Máx. 1 ítem en pantalla (si sale otro, sustituye al anterior). Desaparece al s
 | Asta de meta (fila de los pies al tocarla) | filas 0-1: 5000; 2: 2000; 3: 800; 4: 400; 5-6: 100 |
 | Tiempo restante al acabar | 50 por unidad |
 
-- La cadena de pisotón se reinicia al tocar el suelo; la del caparazón, al detenerlo o desaparecer.
+- La cadena de pisotón se reinicia al tocar el suelo; la de la bola, al detenerla o desaparecer.
 - **Monedas:** 100 → +1 vida y el contador vuelve a 0. **Vidas:** empiezan en 3, máx. 99.
 - **Puntuación:** 6 dígitos BCD (reutilizar `games/tetris/src/bcd.s`), tope 999999.
 - **Tiempo:** empieza en **300 unidades**; 1 unidad = **24 f** (300 = 120 s). A 100 unidades: aviso
   sonoro (M3: música acelerada). A 0: muerte.
-- **Récord:** en RAM en M1; guardado en SRAM en M4 si se aprueba (§12).
+- **Récord:** en RAM en M1; guardado en SRAM en M4 (decidido).
 
-### 2.11 Muerte, checkpoint y meta
+### 2.11 Muerte, checkpoint y meta (estandarte)
 
 - **Muerte** por daño siendo SMALL o por tiempo: lógica congelada 30 f, sprite DEATH con vy = -0x0400,
   gravedad 0x0040, sin colisión, cae fuera de pantalla (~90 f). Música/SFX de vida perdida.
@@ -279,7 +317,7 @@ Máx. 1 ítem en pantalla (si sale otro, sustituye al anterior). Desaparece al s
   puntuación y monedas se conservan.
 - **Meta (asta):** al tocar la columna POLE (hitbox del asta: 4 px de ancho centrados en el metatile):
   1. Puntos por altura (tabla §2.10); control bloqueado; x del jugador pegado al asta.
-  2. El jugador y la bandera (sprite 16x16) bajan a 2 px/f hasta la base.
+  2. El jugador y el estandarte (sprite 16x16) bajan a 2 px/f hasta la base.
   3. El jugador camina a la derecha a 1.0 px/f hasta la puerta del castillo y se oculta.
   4. Cuenta de tiempo: −1 unidad/frame, +50 puntos cada una, tic de sonido cada 4 f.
   5. Espera 60 f → LEVEL CLEAR.
@@ -292,7 +330,7 @@ Máx. 1 ítem en pantalla (si sale otro, sustituye al anterior). Desaparece al s
 |---|---|---|
 | Izquierda / Derecha | mover | — (no hay menús con opciones en M1) |
 | Abajo | agacharse (BIG/SHOT en suelo) | — |
-| Arriba | nada (reservado: tuberías con warp, §12) | — |
+| Arriba | nada (warps/salas de bonus: no antes de terminar M4) | — |
 | A | saltar (mantener = más alto) | confirmar |
 | B | mantener = correr; pulsar = disparar (forma SHOT) | — |
 | Start | pausa / reanudar | empezar en TITLE; saltar espera en GAME OVER / CLEAR |
@@ -336,8 +374,9 @@ Transiciones: fundido con BGP en 4 pasos x 4 f (16 f) → redibujado con LCD apa
 (`skip_measure = 1`) → fundido de entrada. Maquetas `.screen`: las hace el ui-designer (en este
 momento no hay tileset del juego que referenciar); los layouts de texto de este GDD son la guía.
 
-Textos: solo mayúsculas y dígitos (fuente compartida). Hace falta añadir **"-"** a
-`harness/common/font.tiles` para "1-1" (o escribir "1 1"); decisión del ui-designer.
+Textos en **español** (decidido), solo mayúsculas y dígitos de la fuente compartida; ninguno necesita
+tildes ni Ñ ("PULSA START", "PAUSA", "MUNDO 1-1", "NIVEL COMPLETADO", "FIN DEL JUEGO", "RECORD").
+Hace falta añadir **"-"** a `harness/common/font.tiles` (ver §9.6).
 
 ---
 
@@ -352,12 +391,12 @@ r0:  PUNTOS   oX00  1-1      o = icono moneda
 r1:  000000   vX03  t300     v = icono cabeza (vidas), t = icono reloj
 ```
 
-- **Posición recomendada: arriba** (como SMB/SML; los hoyos se pierden por abajo de forma natural).
+- **Posición: arriba** (decidido; como SMB/SML, los hoyos se pierden por abajo de forma natural).
   - Ventana en `WY = 0`, `WX = 7`. Interrupción STAT por LYC con `LYC = 15`: la ISR espera a modo 0
     (HBlank) de la línea 15 y apaga la ventana (`LCDC` bit 5 = 0); se vuelve a encender en VBlank.
     Coste ~100-150 T por frame.
   - `SCY = 0xF0` para que la fila 0 del nivel se vea en la línea 16.
-  - Alternativa (§12): HUD abajo, `WY = 128`, sin interrupciones, `SCY = 0`. El nivel ocupa las
+  - Plan B solo si falla en hardware real (M5): HUD abajo, `WY = 128`, sin interrupciones, `SCY = 0`. El nivel ocupa las
     mismas 16 filas, así que cambiar de una a otra es tocar 3 registros y la ISR.
 - Actualización: cuando cambia un valor, `update()` lo convierte a tiles en un buffer (`hud_buf`) y
   marca la zona sucia; `draw_vram()` copia como mucho **14 tiles de HUD por frame** (puntos 6, monedas 2,
@@ -372,10 +411,10 @@ Dificultad por **tablas de parámetros por nivel**, no por código especial:
 
 | Nivel | Hito | Tileset | Columnas | Tiempo | Hoyo máx. | Enemigos | Novedad |
 |---|---|---|---|---|---|---|---|
-| 1-1 "Huerto" | M1 | exterior | 200 | 300 | 3 | WALKER, SHELL | todo lo básico |
-| 1-2 "Raíces" | M2 | subterráneo | 220 | 300 | 3 | + PLANT | techo de ladrillos, tuberías con plantas |
-| 1-3 "Copas" | M2 | exterior (variante) | 200 | 250 | 5 | + HOPPER | plataformas altas, hoyos largos con carrerilla |
-| 1-4 "Invernadero" | M2 | interior | 180 | 300 | 4 | todos | final de mundo; ¿jefe? (§12) |
+| 1-1 "Pradera" | M1 | exterior | 200 | 300 | 3 | WALKER, SHELL | todo lo básico |
+| 1-2 "Mazmorra" | M2 | subterráneo | 220 | 300 | 3 | + PLANT | techo de ladrillos, torreones con serpientes |
+| 1-3 "Almenas" | M2 | exterior (variante) | 200 | 250 | 5 | + HOPPER | plataformas altas, hoyos largos con carrerilla |
+| 1-4 "Torre" | M2 | interior | 180 | 300 | 4 | todos | final de mundo, sin jefe: acaba en el estandarte |
 
 Parámetros por nivel en tabla: velocidad WALKER/SHELL (0x0080 en 1-1, 0x0090 en 1-3/1-4), tiempo
 inicial, tileset, música, columna de checkpoint.
@@ -386,18 +425,18 @@ inicial, tileset, música, columna de checkpoint.
 |---|---|---|
 | 0-15 | Inicio llano, decorado; jugador en col 2 | moverse, correr |
 | 16-24 | ? moneda (c16 f4); fila B P B ? B (c20-24 f4, P = power-up); ? arriba (c22 f1); WALKER c22 | golpear bloques, primer power-up, pisar |
-| 28-49 | Tuberías de alto 2 (c28), 3 (c38), 4 (c46); WALKER en c41 y par en c51-53 | saltar obstáculos |
-| 56-66 | Tubería 4 (c57); bloque oculto 1UP (c64 f3) | secreto |
+| 28-49 | Torreones de alto 2 (c28), 3 (c38), 4 (c46); WALKER en c41 y par en c51-53 | saltar obstáculos |
+| 56-66 | Torreón 4 (c57); bloque oculto 1UP (c64 f3) | secreto |
 | 69-70 | Hoyo de 2 | hoyos |
 | 76-88 | B P B (c77-79 f4); fila alta de ladrillos c80-87 f1 con 2 WALKER encima | plataformas altas |
 | 88-90 | Hoyo de 3 | |
 | 92-103 | Ladrillos y ? de monedas; **checkpoint k en c100** | |
-| 104-115 | ? en triángulo (c106, c109, c112 en f4; c109 en f1, uno P); SHELL en c107 | caparazón y patada |
+| 104-115 | ? en triángulo (c106, c109, c112 en f4; c109 en f1, uno P); SHELL en c107 | bola y patada |
 | 118-131 | Ladrillos sueltos y fila alta; **grupo de 3 WALKER** (c122-126) | cadena de pisotones |
 | 134-155 | Escalera sube 4 (c134-137) y baja (c140-143); escalera doble alto 4 con hoyo de 2 entre medias (c146-155) | escaleras |
-| 160-170 | Tubería 2 (c160); B B ? B (c164-167 f4); tubería 2 (c170); 2 WALKER | |
+| 160-170 | Torreón 2 (c160); B B ? B (c164-167 f4); torreón 2 (c170); 2 WALKER | |
 | 172-180 | Escalera final de alto 6 (bloques duros) | salto a la meta |
-| 189 | Asta: bola en f0, palo f1-f5, bloque duro de base en f6 | puntos por altura |
+| 189 | Estandarte: punta de lanza en f0, asta f1-f5, sillar de base en f6 | puntos por altura |
 | 193-199 | Castillo decorativo, puerta en c196 | fin |
 
 ### 6.2 Formato de nivel (fuente ASCII → C al compilar)
@@ -412,7 +451,7 @@ Mayúsculas/símbolos = metatiles; minúsculas = objetos (la celda debajo cuenta
 | `B` | ladrillo | `H` | bloque duro |
 | `?` | ? moneda | `P` | ? power-up |
 | `U` | oculto 1UP | `$` | moneda suelta |
-| `[` `]` | boca de tubería izq./der. | `{` `}` | cuerpo de tubería izq./der. |
+| `[` `]` | boca de torreón izq./der. | `{` `}` | cuerpo de torreón izq./der. |
 | `\|` | asta | `x` | inicio del jugador |
 | `w` | WALKER | `s` | SHELL |
 | `k` | checkpoint | `p` / `h` | PLANT / HOPPER (M2) |
@@ -446,27 +485,27 @@ Modo de sprites **8x16** (LCDC bit 2 = 1): cada sprite usa un par de tiles (par/
 | PLAYER grande | M1 | 40 | mitades sup.: NORMAL, JUMP, SKID, THROW (4 x 4); inf.: IDLE, WALK1, WALK2, JUMP, SKID (5 x 4); CROUCH 16x16 (4) | mitades combinables; SHOT = misma gráfica con OBP1 |
 | WALKER | M1 | 8 | WALK (anim por flip), SQUASH | |
 | SHELL | M1 | 16 | WALK1, WALK2, SHELL, PEEK | |
-| Ítems GROW/SHOT/STAR | M1 (STAR M2) | 12 | 1 c/u | 1UP = GROW con OBP1 |
+| Ítems Yelmo/Pergamino/Poción/Cáliz | M1 (Cáliz M2) | 16 | 1 c/u | |
 | Moneda que salta | M1 | 6 | 3 frames 8x16 | |
 | Trozo de ladrillo | M1 | 2 | 1 (rotación por flip) | |
 | Proyectil + puf | M1 | 4 | 1 + 1 | |
-| Bandera | M1 | 4 | 1 | |
+| Estandarte (tela) | M1 | 4 | 1 | |
 | PLANT | M2 | 8 | 2 | |
 | HOPPER (alas) | M2 | 8 | 2 | |
 | Números de puntos flotantes | M4 | 16 | | "100", "200"... "1UP" |
-| **Total** | | **M1: 116 · M2: 132 · M4: 148** | | sprite privados 0-127 + resto en los compartidos 128-255 |
+| **Total** | | **M1: 120 · M2: 136 · M4: 152** | | sprite privados 0-127 + resto en los compartidos 128-255 |
 
 ### 7.2 Tiles de fondo/ventana
 
 | Asset | Tiles | Notas |
 |---|---|---|
-| Fuente (dígitos + A-Z) + "-" | 37 | compartida |
+| Fuente (dígitos + A-Z) + "-" | 37 | compartida; hay que añadir "-" a `harness/common/font.tiles` |
 | Iconos HUD (moneda, cabeza, reloj) | 3 | |
-| Tileset exterior 1-1: cielo 1, suelo 4, ladrillo 4, ? 4, usado 4, duro 4, boca tubería 8, cuerpo tubería 4, moneda 4, nube 8, arbusto 8, colina 10, asta (bola 4 + palo 2), castillo 12 | 81 | el BG no tiene flip en DMG: cada mitad asimétrica es un tile propio |
+| Tileset exterior 1-1: cielo 1, suelo 4, ladrillo 4, ? 4, usado 4, duro 4, boca torreón 8, cuerpo torreón 4, moneda 4, nube 8, arbusto 8, colina 10, estandarte (punta 4 + asta 2), castillo 12 | 81 | el BG no tiene flip en DMG: cada mitad asimétrica es un tile propio |
 | Animación del bloque ? (M4) | 8 | se anima reescribiendo 1 tile (16 bytes) por frame |
 | **Total BG** | **~129** | 128 privados ($9000) + 1 en compartidos |
 
-**Total VRAM:** BG ~129 + sprites 148 (M4) = **277 / 384** tiles; zona compartida usada ~21/128.
+**Total VRAM:** BG ~129 + sprites 152 (M4) = **281 / 384** tiles; zona compartida usada ~25/128.
 Margen para que el pixel-artist crezca ~100 tiles. Cada tileset de nivel se carga en INTRO con LCD apagado.
 Metatiles por tileset: ≤ 64 (tabla `mt_tiles[64][4]` + `mt_attr[64]` = 320 bytes).
 
@@ -480,7 +519,7 @@ Metatiles por tileset: ≤ 64 (tabla `mt_tiles[64][4]` + `mt_attr[64]` = 320 byt
 | 16-17 | 2 proyectiles | 2 |
 | 18-21 | 4 trozos de ladrillo | 4 |
 | 22-23 | 2 monedas que saltan | 2 |
-| 24-25 | bandera de meta | 2 |
+| 24-25 | estandarte de meta | 2 |
 | 26-31 | puntos flotantes (M4, 3 x 2) | 6 |
 | **Total peor caso** | | **32 / 40** |
 
@@ -513,10 +552,10 @@ M1: **solo efectos**, escritos directamente en registros (sin driver). M3: integ
 | Aparece power-up | 1 | 2 | arpegio subiendo |
 | Coger power-up | 1 | 3 | |
 | Disparo | 4 | 1 | |
-| Patada de caparazón | 4 | 2 | |
+| Patada de bola | 4 | 2 | |
 | Daño / encoger | 1 | 3 | sweep bajada |
 | 1UP | 1 | 3 | |
-| Asta / bandera bajando | 1 | 3 | |
+| Estandarte bajando | 1 | 3 | |
 | Tic de cuenta de tiempo | 1 | 1 | cada 4 f |
 | Pausa | 1 | 3 | |
 | Aviso de tiempo (100) | 1 | 3 | |
@@ -564,7 +603,7 @@ Por qué MBC5 ya en M1: M1 queda rozando los 32 KB y el juego completo los dobla
 después obliga a reorganizar datos. Con el mapa del nivel copiado a WRAM al cargar, **solo el
 cargador de nivel/tileset y la llamada al driver de música cambian de banco**: el banking es casi gratis
 si se diseña así desde el principio. Sobre MBC1: MBC5 es el recomendado del estudio (CLAUDE.md).
-Batería: solo hace falta si se aprueba guardar el récord (§12); si no, tipo 0x19 (MBC5 sin RAM).
+Batería: para el récord guardado en M4 (decidido).
 Flags previstas: `["-autobank", "-Wm-yt0x1B", "-Wm-yo4", "-Wm-ya1"]` (si crece de 64 KB: `-Wm-yo8`).
 
 RAM (WRAM 8 KB):
@@ -635,6 +674,14 @@ perfilar (`gb.profile`) y llevar a asm la colisión de actores contra el mapa.
 | Banking (datos en bancos leídos con el banco equivocado) | solo el cargador y la música cambian de banco; test que carga cada nivel y compara `level[]` con el fuente |
 | Bugs de colisión en esquinas (cabeza entre dos bloques, atascado al crecer, borde izquierdo de cámara) | tests deterministas con posiciones fijadas por `write_u16` |
 
+### 9.6 Herramientas y assets compartidos que faltan (antes o durante M1)
+
+- **Fuente compartida** (`harness/common/font.tiles`): añadir **"-"** (para "1-1"). No hace falta
+  más puntuación: "x" de vidas/monedas es la letra X; no se usan "!", ":", "." ni "©". Si el
+  ui-designer quiere "©" o "." en el título, que los añada ahí también (compartidos, no del juego).
+- **Conversor de niveles** `.lvl` → C (§6.2), extensión del harness.
+- **Lint de niveles** en Python puro (§11).
+
 ---
 
 ## 10. Hitos
@@ -653,7 +700,7 @@ perfilar (`gb.profile`) y llevar a asm la colisión de actores contra el mapa.
 - **M4 — pulido:** bote visual de bloques, puntos flotantes, bloque ? animado, fundidos, polvo al
   derrapar, guardado del récord en SRAM (firma + checksum) si se aprueba.
 - **M5 — hardware real:** flash cart; revisar ISR de LYC, parpadeos, LCD borroso con objetos rápidos
-  (caparazón a 3 px/f), audio.
+  (bola de Armadín a 3 px/f), audio.
 
 ---
 
@@ -669,7 +716,7 @@ perfilar (`gb.profile`) y llevar a asm la colisión de actores contra el mapa.
 | Bloques: ? moneda / power-up / ladrillo SMALL / ladrillo BIG / oculto | test: golpear desde abajo → `level[]` cambia a USED/EMPTY, `coins`, `score`, ítem creado según forma |
 | Moneda suelta, 100 monedas → vida | test: fijar `coins = 99`, coger una → `coins == 0`, `lives + 1` |
 | Pisotón vs daño; cadena de puntos | test: enemigo colocado debajo con vy > 0 → muere y score +100; segundo sin tocar suelo +200; contacto lateral → `player_form` baja |
-| Caparazón: meterse, patear, rebotar en pared, matar en cadena, gracia 8 f | test con posiciones fijadas |
+| Bola de Armadín: enrollarse, patear, rebotar en pared, matar en cadena, gracia 8 f | test con posiciones fijadas |
 | Formas: crecer, disparo, encoger, invulnerabilidad 90 f | test de transiciones y temporizadores (`player_inv`) |
 | Proyectil: máx. 2, cadencia 8 f, rebote, muere en pared | test |
 | Hoyo y tiempo 0 → muerte; checkpoint | test: `state` pasa a DYING; reaparición en col 100 si `checkpoint` |
@@ -679,42 +726,24 @@ perfilar (`gb.profile`) y llevar a asm la colisión de actores contra el mapa.
 | Estrés de streaming | test con `camera_x` forzada a avanzar 4 y 8 px/f (cheat de tests) → misma comparación y `vram_late == 0` |
 | Presupuesto de frame | bot 10 000 frames (correr, saltar, disparar, con `cheat_flags` invencible) → `max_frame_lines ≤ 120`, `vram_late == 0`; perfil de `draw_vram ≤ 3000 T` |
 | Sprites por línea | bot: cada frame contar sprites visibles por línea desde OAM → ≤ 10 salvo frames con trozos de ladrillo |
-| Lint de niveles (Python puro, sin emulador) | sobre `res/*.lvl`: ancho/alto, hoyos ≤ máximo de la tabla §6, ≤ 3 enemigos por banda en ventana de 176 px, asta y `x` presentes, tuberías bien cerradas, obstáculos ≤ altura de salto |
+| Lint de niveles (Python puro, sin emulador) | sobre `res/*.lvl`: ancho/alto, hoyos ≤ máximo de la tabla §6, ≤ 3 enemigos por banda en ventana de 176 px, estandarte y `x` presentes, torreones bien cerrados, obstáculos ≤ altura de salto |
 | Banking | test: cargar cada nivel → `level[]` igual al generado desde el `.lvl` |
 | Capturas | `gb.screenshot` en inicio, bloque roto, BIG, meta → revisión visual (Read del PNG) |
-| **Playtest humano** | feel del salto y la carrera, umbral de cámara, dificultad del 1-1, legibilidad en LCD borroso (caparazón rápido), si el HUD arriba molesta, sonido |
+| **Playtest humano** | feel del salto y la carrera, umbral de cámara, dificultad del 1-1, legibilidad en LCD borroso (bola rápida), si el HUD arriba molesta, sonido |
 
 ---
 
-## 12. Decisiones pendientes (para el usuario)
+## 12. Decisiones tomadas (2026-10-14)
 
-- [ ] **1. Título, protagonista y tema** (nada de IP de Nintendo):
-  - **A) "BROTE"** (recomendado): un brote/semilla con patas en un huerto invadido por bichos.
-    Crecer = "Abono", disparo = "Girasol" (escupe pipas), estrella = "Mariquita dorada", monedas =
-    gotas de agua (100 gotas = vida), WALKER = escarabajo, SHELL = **caracol** (la concha encaja de forma
-    natural con la mecánica de patear), PLANT = planta carnívora en tubos de riego, meta = verja del huerto
-    con bandera. Siluetas muy legibles en DMG y tono simpático y original.
-  - B) "BOLT": un robot pequeño. Crecer = "Batería" (armadura), disparo = "Chispa", monedas = tornillos,
-    enemigos = droide andante, armadillo-bot (bola), torreta en conductos.
-  - C) "TINY KNIGHT" / "PEQUEÑO CABALLERO": caballerito. Crecer = "Yelmo", disparo = "Hacha" arrojadiza,
-    enemigos = slime, tortuga acorazada, planta en macetas; meta = estandarte del castillo.
-- [ ] **2. Posición del HUD:** A) **arriba con ventana + interrupción LYC** (recomendado: aspecto SMB/SML,
-  los hoyos se ven caer por abajo; además prueba una técnica útil para el arnés); B) abajo con la
-  ventana sin interrupciones (más simple y robusto, estilo Kirby, pero el jugador "cae dentro del HUD").
-- [ ] **3. Cámara:** A) **sin volver atrás, como SMB** (recomendado: streaming en un solo sentido,
-  enemigos que no reaparecen, más simple y probado); B) cámara libre en ambos sentidos (streaming por
-  los dos lados, reaparición de enemigos, más RAM de estado y más casos de test).
-- [ ] **4. Idioma de los textos:** A) **español** (recomendado: "PULSA START", "PAUSA", "FIN DEL JUEGO",
-  "MUNDO"; no hacen falta tildes ni Ñ); B) inglés arcade ("PUSH START", "GAME OVER").
-- [ ] **5. Dificultad / regla de daño:** A) clásica SMB: SHOT recibe daño → SMALL, 3 vidas;
-  B) **suave**: SHOT → BIG, 3 vidas (recomendado para sesiones cortas en GB); C) muy suave: además 5 vidas.
-- [ ] **6. Guardar récord en SRAM (batería):** A) **sí, en M4** (recomendado; MBC5+RAM+batería ya
-  reservado, coste pequeño); B) no (cartucho 0x19 sin RAM).
-- [ ] **7. Tamaño del juego final:** A) **4 niveles (un mundo) en M2** y decidir más tras el playtest
-  (recomendado); B) 8 niveles (dos mundos, ROM 128 KB); C) solo el 1-1 pulido.
-- [ ] **8. Estrella de invencibilidad (y ladrillo multi-moneda):** A) **sí, en M2** (recomendado:
-  momento de euforia barato); B) no.
-- [ ] **9. Jefe en el 1-4:** A) **sin jefe, final por asta** (recomendado para no ampliar alcance);
-  B) jefe sencillo estilo SMB (puente que se rompe con un interruptor), hito aparte.
-- [ ] **10. Tuberías con warp / salas de bonus (Abajo sobre la boca):** A) **no hasta después de M4**
-  (recomendado); B) sí en M2 (sala de monedas por nivel).
+1. **Tema:** pequeño caballero, título **CABALLERITO** (reserva: SIR TEO); nombres en §1.1.
+2. **HUD:** arriba, ventana apagada a mitad de frame por interrupción LYC (§5).
+3. **Cámara:** nunca vuelve atrás (§2.5).
+4. **Textos:** en español (§4).
+5. **Daño:** SHOT → BIG, BIG → SMALL; 3 vidas al empezar (§2.3, §2.10).
+6. **Récord:** guardado en SRAM con batería en M4 (MBC5+RAM+batería desde M1).
+7. **Tamaño:** 4 niveles (1-1 en M1; 1-2..1-4 en M2); ampliar se decide tras el playtest.
+8. **Cáliz dorado (estrella) y ladrillo multi-moneda:** sí, en M2.
+9. **Jefe:** no; el 1-4 acaba en el estandarte.
+10. **Torreones con warp / salas de bonus:** no antes de terminar M4.
+
+Pendiente solo de playtest: los valores marcados "ajustar en playtest".
