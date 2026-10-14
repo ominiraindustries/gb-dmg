@@ -10,7 +10,14 @@
 #include <gb/gb.h>
 #include <gb/metasprites.h>
 #include <stdint.h>
-#include "gbe_config.h"   // game-provided: GBE_ACT_MAX, GBE_MAP_MAX_COLS, ...
+#include "gbe_config.h"
+// GBE_BANKED (gbe_config.h, MBC games): the non-hot modules (tbox, menu, save, the C part of gact) go
+// to switchable banks and their functions are BANKED (games/faro: bank 0 overflowed with the engine).
+#ifdef GBE_BANKED
+#define GBE_FAR BANKED
+#else
+#define GBE_FAR
+#endif   // game-provided: GBE_ACT_MAX, GBE_MAP_MAX_COLS, ...
 
 // |d| < n for an 8-bit difference d = a - b (n <= 128). The obvious "(d + n) < 2n" is
 // asymmetric (d = -n counts as near, +n does not): this bug hit games/platformer enemies.
@@ -229,8 +236,8 @@ void log_update(void);                          // per frame (outside VBlank)
 #define MENU_BACK 0xFE
 extern uint8_t menu_n, menu_sel, menu_disabled;
 void menu_open(uint8_t n, uint8_t sel, uint8_t disabled, uint8_t *cursor0, uint8_t stride,
-               uint8_t cursor_tile, uint8_t blank_tile);
-uint8_t menu_update(void);                      // MENU_NONE / index chosen with A / MENU_BACK (B)
+               uint8_t cursor_tile, uint8_t blank_tile) GBE_FAR;
+uint8_t menu_update(void) GBE_FAR;                      // MENU_NONE / index chosen with A / MENU_BACK (B)
 
 // ---------------------------------------------------------------- gbe_rng.c
 // 16-bit xorshift; tests predict it (gbtest.rng_next). Seed rng_state from DIV + frames on a key press.
@@ -256,9 +263,9 @@ typedef struct { const void *bank; const void *ptr; } gbe_ref_t;
 // slots with signature, version, sequence, length and checksum; a torn write keeps the previous
 // save. len <= 4000.
 extern uint8_t save_slot, save_seq;
-uint8_t save_load(void *dst, uint16_t len, uint8_t version);   // 1 = newest valid save copied
-void save_store(const void *src, uint16_t len, uint8_t version);
-void save_erase(void);
+uint8_t save_load(void *dst, uint16_t len, uint8_t version) GBE_FAR;   // 1 = newest valid save copied
+void save_store(const void *src, uint16_t len, uint8_t version) GBE_FAR;
+void save_erase(void) GBE_FAR;
 
 // ---------------------------------------------------------------- gbe_world.c
 // 4-way scrolling world of 16x16 metatiles in sectors of 16x16 cells (top-down RPGs). Maps come from
@@ -322,24 +329,24 @@ typedef struct {                       // 24 bytes; offsets 0-15 are fixed in gb
     uint8_t beh, hx, hy, ox, oy, radius, leader, bumped;
 } gact_t;
 extern gact_t gact[];
-extern const uint8_t gact_count, gact_npc_frame[4];
+extern uint8_t gact_count, gact_npc_frame[4];
 extern uint8_t gact_px, gact_py, gact_px2, gact_py2, gact_prio_mask, gact_rng;
 uint8_t gact_terrain_ok(uint8_t i, uint8_t x, uint8_t y);    // provided by the game
-uint8_t gact_spawn(uint8_t type, uint8_t x, uint8_t y, uint8_t tile, uint8_t beh);   // 0xFF = full
-void gact_free(uint8_t i);
-void gact_speed(uint8_t i, uint8_t frames_per_cell);
+uint8_t gact_spawn(uint8_t type, uint8_t x, uint8_t y, uint8_t tile, uint8_t beh) GBE_FAR;   // 0xFF = full
+void gact_free(uint8_t i) GBE_FAR;
+void gact_speed(uint8_t i, uint8_t frames_per_cell) GBE_FAR;
 uint8_t gact_at(uint8_t x, uint8_t y);                         // asm: actor on/entering a cell, 0xFF
 uint8_t gact_at_c(uint8_t x, uint8_t y);
-uint8_t gact_free_cell(uint8_t i, uint8_t x, uint8_t y);
-uint8_t gact_try_move(uint8_t i, uint8_t dir);
-uint8_t gact_step_toward(uint8_t i, uint8_t x, uint8_t y, uint8_t away);
-void gact_update(void);                // gact_move_all + one thinker
+uint8_t gact_free_cell(uint8_t i, uint8_t x, uint8_t y) GBE_FAR;
+uint8_t gact_try_move(uint8_t i, uint8_t dir) GBE_FAR;
+uint8_t gact_step_toward(uint8_t i, uint8_t x, uint8_t y, uint8_t away) GBE_FAR;
+void gact_update(void) GBE_FAR;                // gact_move_all + one thinker
 void gact_move_all(void);              // asm
 void gact_move_all_c(void);
 void gact_draw(uint8_t first_oam);     // asm
 void gact_draw_c(uint8_t first_oam);
-int16_t gact_wx(uint8_t i);
-int16_t gact_wy(uint8_t i);
+int16_t gact_wx(uint8_t i) GBE_FAR;
+int16_t gact_wy(uint8_t i) GBE_FAR;
 
 // ---------------------------------------------------------------- gbe_flags.c
 // Story flags (bitset) and 16 byte variables; ids F_* / V_* from res/scripts (script_ids.h).
@@ -360,11 +367,11 @@ extern uint8_t *tbox_win;
 extern uint8_t tbox_row, tbox_frame[9], tbox_arrow, tbox_cursor, tbox_speed, tbox_yes_col, tbox_no_col;
 extern char tbox_name[8], tbox_text[256], tbox_speaker[13];
 extern uint8_t tbox_state, tbox_visible, tbox_answer, tbox_nchoices;
-void tbox_start(uint8_t kind);          // shows tbox_text: TB_SAY, TB_ASK (one line), TB_CHOICE
-void tbox_speaker_set(const char *s);   // "" = no tab
-void tbox_close(void);
-void tbox_draw_choices(void);
-uint8_t tbox_update(void);              // 1 while it needs the player
+void tbox_start(uint8_t kind) GBE_FAR;          // shows tbox_text: TB_SAY, TB_ASK (one line), TB_CHOICE
+void tbox_speaker_set(const char *s) GBE_FAR;   // "" = no tab
+void tbox_close(void) GBE_FAR;
+void tbox_draw_choices(void) GBE_FAR;
+uint8_t tbox_update(void) GBE_FAR;              // 1 while it needs the player
 
 // ---------------------------------------------------------------- gbe_script.c
 // Event script VM for harness/script.py bytecode (res/scripts/*.evs): script_run(SCRIPT_NAME).

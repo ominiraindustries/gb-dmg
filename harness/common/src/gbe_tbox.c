@@ -9,6 +9,10 @@
 // before). All tiles go through gbe_vq (1-2 per frame while typing, 8 when A finishes a page).
 // The game shows the window while tbox_visible (WY = 96 in VBlank) and sets the tile variables.
 #include <string.h>
+#include "gbe_config.h"
+#ifdef GBE_BANKED
+#pragma bank 255
+#endif
 #include "gbe.h"
 
 #define TB_W 20
@@ -59,7 +63,7 @@ static void arrow(uint8_t on) {
 }
 
 // Start showing tbox_text (kind: TB_SAY, TB_ASK, TB_CHOICE). Opens the box if closed.
-void tbox_start(uint8_t kind) {
+void tbox_start(uint8_t kind) GBE_FAR {
     if (!tbox_visible) { draw_frame(); tbox_visible = 1; }
     else clear_lines();
     tbox_pos = tbox_line = tbox_col = tbox_name_i = 0;
@@ -74,13 +78,13 @@ void tbox_start(uint8_t kind) {
     }
 }
 
-void tbox_speaker_set(const char *s) {
+void tbox_speaker_set(const char *s) GBE_FAR {
     strncpy(tbox_speaker, s, 12);           // rare (once per speaker): GBDK strncpy is slow C
     tbox_speaker[12] = 0;
     if (tbox_visible) draw_frame();
 }
 
-void tbox_close(void) {
+void tbox_close(void) GBE_FAR {
     tbox_visible = 0;
     tbox_state = TB_CLOSED;
 }
@@ -104,7 +108,7 @@ static void cursor_at(uint8_t row, uint8_t col, uint8_t on) {
     vq_push(cell(row, col), &t, 1);
 }
 
-void tbox_draw_choices(void) {
+void tbox_draw_choices(void) GBE_FAR {
     uint8_t k, row, col, t[TB_W];
     if (tbox_state == TB_YESNO) {
         for (k = 0; k < 2; k++) {
@@ -124,7 +128,7 @@ void tbox_draw_choices(void) {
 }
 
 // Once per frame (outside VBlank). Returns 1 while the box needs the player (typing or waiting).
-uint8_t tbox_update(void) {
+uint8_t tbox_update(void) GBE_FAR {
     uint8_t n, k, t;
     char c;
     switch (tbox_state) {

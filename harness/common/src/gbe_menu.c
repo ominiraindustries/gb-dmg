@@ -1,6 +1,10 @@
 // gbe: vertical menu with a cursor tile, hold-to-repeat (16 f, then every 6 f), wrap-around,
 // disabled options skipped, A = choose, B = back. The game draws the box and the texts (text
 // helpers, or a .screen map); the menu only moves the cursor through the VRAM queue.
+#include "gbe_config.h"
+#ifdef GBE_BANKED
+#pragma bank 255
+#endif
 #include "gbe.h"
 
 uint8_t menu_n, menu_sel, menu_disabled, menu_rep;
@@ -10,7 +14,7 @@ static uint8_t menu_stride, menu_tile, menu_blank;
 // cursor0: map address of the cursor cell for option 0; stride: map bytes between options (32 =
 // next row); disabled: bit i = option i cannot be chosen (e.g. CONTINUAR without a save).
 void menu_open(uint8_t n, uint8_t sel, uint8_t disabled, uint8_t *cursor0, uint8_t stride,
-               uint8_t cursor_tile, uint8_t blank_tile) {
+               uint8_t cursor_tile, uint8_t blank_tile) GBE_FAR {
     menu_n = n;
     menu_disabled = disabled;
     menu_cursor0 = cursor0;
@@ -35,7 +39,7 @@ static void menu_move(int8_t dir) {
 }
 
 // Once per frame: MENU_NONE, the chosen index (A), or MENU_BACK (B)
-uint8_t menu_update(void) {
+uint8_t menu_update(void) GBE_FAR {
     uint8_t k = keys & (J_UP | J_DOWN);
     if (pressed & J_A) return menu_sel;
     if (pressed & J_B) return MENU_BACK;

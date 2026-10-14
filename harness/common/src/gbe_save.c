@@ -7,6 +7,10 @@
 //
 // Slot layout: 'G' 'B' version seq len_lo len_hi data[len] sum1 sum2
 #include <string.h>
+#include "gbe_config.h"
+#ifdef GBE_BANKED
+#pragma bank 255
+#endif
 #include "gbe.h"
 
 #define SLOT0 ((uint8_t *)0xA000)
@@ -42,7 +46,7 @@ static uint8_t newest(uint16_t len, uint8_t version) {
 }
 
 // Copy the newest valid save to dst. Returns 1 if there is one.
-uint8_t save_load(void *dst, uint16_t len, uint8_t version) {
+uint8_t save_load(void *dst, uint16_t len, uint8_t version) GBE_FAR {
     uint8_t n, *s;
     ENABLE_RAM;
     SWITCH_RAM(0);
@@ -57,7 +61,7 @@ uint8_t save_load(void *dst, uint16_t len, uint8_t version) {
     return n != 0xFF;
 }
 
-void save_store(const void *src, uint16_t len, uint8_t version) {
+void save_store(const void *src, uint16_t len, uint8_t version) GBE_FAR {
     uint8_t n, seq = 0, *s;
     uint16_t sum;
     ENABLE_RAM;
@@ -78,7 +82,7 @@ void save_store(const void *src, uint16_t len, uint8_t version) {
     DISABLE_RAM;
 }
 
-void save_erase(void) {
+void save_erase(void) GBE_FAR {
     ENABLE_RAM;
     SWITCH_RAM(0);
     SLOT0[0] = SLOT0[1] = 0;

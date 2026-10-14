@@ -315,6 +315,12 @@ def build(name):
             sources.append(levels.convert(lvl, gen, cfg.get("levels", {})))
         except ValueError as e:
             die(str(e))
+    # a game header named like a generated one is silently shadowed (-I gen comes first):
+    # games/faro's src/faro.h lost to the faro.h of res/faro.tiles and nothing it declared existed
+    gen_h = {h.name for h in gen.glob("*.h")}
+    clash = sorted(h.name for h in (gdir / "src").rglob("*.h") if h.name in gen_h)
+    if clash:
+        die(f"headers in src/ with the name of a generated header (asset/map/table of the same stem): {clash}; rename them")
     banked = cfg.get("banked_res", [])
     for stem in banked:
         c_file = gen / f"{stem}.c"

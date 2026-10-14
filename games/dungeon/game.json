@@ -21,6 +21,7 @@
     "gbe_vq.c",
     "gbe_vq.s",
     "gbe_text.c",
+    "gbe_log.c",
     "gbe_menu.c",
     "gbe_selftest.c"
   ],
