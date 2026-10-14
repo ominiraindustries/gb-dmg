@@ -817,3 +817,11 @@ El usuario eligió:
 10. **Pisos de M2:** 16x16 como M1.
 
 (Opciones descartadas: ver historial de git, versión 0.1.)
+
+### Arte y UI (fase 2, 2026-10-14)
+- Paredes: ventanas tapiadas solo en los frentes laterales (variante a, elegida viendo
+  `build/preview/variant_windows.png`); suelo de rombos de nervios; halo claro en todos los monstruos.
+- UI: cursor de menú como tile de fondo; logo "TORRE" de tiles ya en M1; corazón parpadeando con vida
+  <= 25 %; guardar sin confirmación; el cursor de la pausa **recuerda la última opción**; automapa solo
+  con orientación; global `staff_owned`; mensajes PARTIDA CARGADA / EQUIPAS LA DAGA / EQUIPAS EL BACULO.
+

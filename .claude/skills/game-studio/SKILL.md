@@ -30,6 +30,9 @@ approval** before the next phase. Commit after each phase (CLAUDE.md rule).
 - They must not edit the same files (artist: game tilesets; ui: `ui.tiles` + screens).
 - Run `python harness/gb.py preview <game>` yourself and look at the PNGs; give the user the paths
   of the key previews and collect feedback. Route feedback back to the right agent. Commit.
+- Visual taste questions ("windows on the walls or not?") go to the user WITH a comparison image:
+  ask the artist for the variants side by side in the same scenes (games/dungeon:
+  `variant_windows.png`); the user could not choose from text alone.
 
 ## Phase 3 - Build (you, with the gbdk / gb-asm skills)
 - Implement milestone by milestone (M1 first). Follow CLAUDE.md: loop structure, VRAM rules,

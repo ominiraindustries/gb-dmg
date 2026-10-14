@@ -8,3 +8,4 @@
 - Generating .tiles with a throwaway Python script in the scratchpad worked well for big sets;
   the .tiles files are the source of truth afterwards.
 - [GRIFO shmup lessons](shmup_lessons.md) — bullet/BG readability rules learned on games/shmup (2026-10-14)
+- [First-person view lessons](fpview_lessons.md) — view.pcs generator, tile budget tricks, layered-shape monsters (games/dungeon)
