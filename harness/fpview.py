@@ -324,7 +324,11 @@ def preview(gdir, out=None):
     gdir = Path(gdir)
     sets = pv.find_tilesets(gdir)
     pcs_path = gdir / "res" / "view.pcs"
-    pcs = parse(pcs_path, sets[_tileset_of(pcs_path)].labels)
+    import json
+    import screens
+    cfg = json.loads((gdir / "game.json").read_text(encoding="utf-8"))
+    bases = screens.vram_bases(cfg["vram_order"], sets) if cfg.get("vram_order") else None
+    pcs = parse(pcs_path, sets[_tileset_of(pcs_path)].labels, bases)   # "@ base auto" needs them
     ts = sets[pcs.tileset]
     images = {pcs.base + i: im for i, im in enumerate(ts.images)}
     out = Path(out or gdir / "build" / "preview")
