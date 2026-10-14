@@ -244,6 +244,13 @@ def build(name):
             sources.append(metatiles.convert(mt_file, gen, tileset_labels(gdir, mt_file)))
         except ValueError as e:
             die(str(e))
+    pcs_file = gdir / "res" / "view.pcs"
+    if pcs_file.exists():
+        import fpview
+        try:
+            sources.append(fpview.to_c(fpview.parse(pcs_file, tileset_labels(gdir, pcs_file)), gen))
+        except ValueError as e:
+            die(str(e))
     for lvl in sorted((gdir / "res").glob("*.lvl")):
         try:
             sources.append(levels.convert(lvl, gen, cfg.get("levels", {})))

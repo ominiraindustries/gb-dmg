@@ -205,6 +205,9 @@ def preview(gdir):
             p = out / f"tiles_{name}.png"
             render_sheet(ts, p)
             written.append(p)
+    if (gdir / "res" / "view.pcs").exists():          # first-person view pieces (fpview.py)
+        import fpview
+        written += fpview.preview(gdir, out)
     for scr in sorted((gdir / "design" / "screens").glob("*.screen")):
         p = out / f"screen_{scr.stem}.png"
         render_screen(scr, sets, p)
