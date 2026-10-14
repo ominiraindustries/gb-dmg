@@ -1,0 +1,136 @@
+; SLOW (ojo flotante) at d1 against a wall at d2, slash effect over it
+; Pixel-artist mockup: rows 0-11 = the view exactly as fpview composes it (walls.tiles via
+; view.pcs), rows 12-17 = HUD from play.screen. Sprites at the GDD 2.3 positions; 8x16
+; sprites are listed as their top and bottom 8x8 tiles (spr.tiles index).
+; map (hero at '@' facing up): ##### / ##.## / ##@##
+tilesets: ui font walls spr
+legend:
+& ICON_HP
+^ ICON_STAFF
+$ ICON_AMULET
+[ ICON_KEY
+] ICON_POTION
+@ ICON_COMPASS
+/ DASH
+: COLON
+Α walls:1
+Β walls:2
+Γ walls:3
+Δ walls:4
+Ε walls:6
+Ζ walls:7
+Η walls:8
+Θ walls:9
+Ι walls:30
+Κ walls:31
+Λ walls:36
+Μ walls:37
+Ν walls:47
+Ξ walls:48
+Ο walls:49
+Π walls:50
+Ρ walls:51
+Σ walls:52
+Τ walls:53
+Υ walls:54
+Φ walls:55
+Χ walls:56
+Ψ walls:57
+Ω walls:58
+α walls:59
+β walls:60
+γ walls:61
+δ walls:62
+ε walls:63
+ζ walls:64
+η walls:65
+θ walls:66
+ι walls:67
+κ walls:68
+λ walls:69
+μ walls:70
+ν walls:71
+ξ walls:72
+ο walls:73
+π walls:74
+ρ walls:75
+σ walls:76
+τ walls:77
+υ walls:78
+φ walls:79
+χ walls:80
+ψ walls:81
+ω walls:82
+Б walls:83
+Г walls:84
+Д walls:85
+Ж walls:86
+З walls:87
+И walls:88
+Й walls:89
+Л walls:90
+П walls:91
+Ф walls:92
+Ц walls:93
+Ч walls:94
+Ш walls:95
+Щ walls:96
+Ъ walls:97
+Ы walls:98
+Ь walls:99
+Э walls:100
+Ю walls:101
+Я walls:102
+б walls:103
+в walls:104
+г walls:105
+д walls:106
+ж walls:107
+grid:
+ΝΞΑΒΑΒΑΒΑΒΑΒΑΒΑΒΑΒνξ
+ΟΠΝΡΓΔΓΔΓΔΓΔΓΔΓΔοξπΟ
+ΟΣΟΤПФΓΔΓΔΓΔΓΔЭЮρΟσΟ
+ΥΦΧΨΟЦΙΚΙΚΙΚΙΚЯΟτυηφ
+ΟΟΩΤЧШΚΙΚΙΚΙΚΙбвρχΟΟ
+ααβγЩЪΙΚΙΚΙΚΙΚгЩψωαα
+ΟδΟΤΟΤΚΙΚΙΚΙΚΙρΟρΟБΟ
+ΟδΟΤЫЬΙΚΙΚΙΚΙΚджρΟБΟ
+εζηθΟΤΛΜΛΜΛΜΛΜρΟГΦДЖ
+ΟΟΟΤλμΕΖΕΖΕΖΕΖЙЛρΟΟΟ
+ΟΟικΗΘΗΘΗΘΗΘΗΘΗΘЗИΟΟ
+λμΕΖΕΖΕΖΕΖΕΖΕΖΕΖΕΖЙЛ
+.&18/20.^$.[1.]3.@N.
+....................
+.GOLPE: 3...........
+....................
+....................
+....................
+sprites:
+spr:64 64 30
+spr:65 64 38
+spr:66 72 30
+spr:67 72 38
+spr:68 80 30
+spr:69 80 38
+spr:70 88 30
+spr:71 88 38
+spr:72 64 46
+spr:73 64 54
+spr:74 72 46
+spr:75 72 54
+spr:76 80 46
+spr:77 80 54
+spr:78 88 46
+spr:79 88 54
+spr:80 64 62
+spr:81 64 70
+spr:82 72 62
+spr:83 72 70
+spr:84 80 62
+spr:85 80 70
+spr:86 88 62
+spr:87 88 70
+spr:112 72 36
+spr:113 72 44
+spr:114 80 36
+spr:115 80 44

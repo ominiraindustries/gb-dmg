@@ -1,0 +1,110 @@
+; LOCKED door at d1 (D1 + LK1)
+; Pixel-artist mockup: rows 0-11 = the view exactly as fpview composes it (walls.tiles via
+; view.pcs), rows 12-17 = HUD from play.screen. Sprites at the GDD 2.3 positions; 8x16
+; sprites are listed as their top and bottom 8x8 tiles (spr.tiles index).
+; map (hero at '@' facing up): ##### / ##L## / ##@##
+tilesets: ui font walls spr
+legend:
+& ICON_HP
+^ ICON_STAFF
+$ ICON_AMULET
+[ ICON_KEY
+] ICON_POTION
+@ ICON_COMPASS
+/ DASH
+: COLON
+Α walls:0
+Β walls:1
+Γ walls:2
+Δ walls:3
+Ε walls:4
+Ζ walls:6
+Η walls:7
+Θ walls:8
+Ι walls:9
+Κ walls:10
+Λ walls:11
+Μ walls:13
+Ν walls:16
+Ξ walls:20
+Ο walls:21
+Π walls:47
+Ρ walls:48
+Σ walls:49
+Τ walls:50
+Υ walls:51
+Φ walls:52
+Χ walls:53
+Ψ walls:54
+Ω walls:55
+α walls:56
+β walls:57
+γ walls:58
+δ walls:59
+ε walls:60
+ζ walls:61
+η walls:62
+θ walls:63
+ι walls:64
+κ walls:65
+λ walls:66
+μ walls:67
+ν walls:68
+ξ walls:69
+ο walls:70
+π walls:71
+ρ walls:72
+σ walls:73
+τ walls:74
+υ walls:75
+φ walls:76
+χ walls:77
+ψ walls:78
+ω walls:79
+Б walls:80
+Г walls:81
+Д walls:82
+Ж walls:83
+З walls:84
+И walls:85
+Й walls:86
+Л walls:87
+П walls:88
+Ф walls:89
+Ц walls:90
+Ч walls:126
+Ш walls:127
+Щ walls:128
+Ъ walls:129
+Ы walls:130
+Ь walls:131
+Э walls:132
+Ю walls:133
+Я walls:134
+б walls:135
+в walls:136
+г walls:137
+д walls:145
+ж walls:146
+з walls:147
+и walls:148
+grid:
+ΠΡΒΓΒΓΒΓΒΓΒΓΒΓΒΓΒΓπρ
+ΣΤΠΥΔΕΔΕΔΕΔΕΔΕΔΕσρτΣ
+ΣΦΣΧΚΛΚΛΚΛΚΛΚΛΚΛυΣφΣ
+ΨΩαβΜΝΜΝЧШЩЪΜΝΜΝχψκω
+ΣΣγΧΝΜΝΜЫΑΑЬΝΜΝΜυБΣΣ
+δδεζΜΝΜΝЭджЯΜΝΜΝГДδδ
+ΣηΣΧΝΜΝΜбзигΝΜΝΜυΣЖΣ
+ΣηΣΧΜΝΜΝбввгΜΝΜΝυΣЖΣ
+θικλΝΜΝΜЭЮЮЯΝΜΝΜЗΩИЙ
+ΣΣΣΧΞΟΞΟбввгΞΟΞΟυΣΣΣ
+ΣΣμνΘΙΘΙΘΙΘΙΘΙΘΙЛПΣΣ
+ξοΖΗΖΗΖΗΖΗΖΗΖΗΖΗΖΗФЦ
+.&18/20.^$.[1.]3.@N.
+....................
+....................
+....................
+....................
+.ESTA CERRADA.......
+sprites:

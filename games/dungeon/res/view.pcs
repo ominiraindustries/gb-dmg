@@ -1,0 +1,406 @@
+; TORRE HUNDIDA - view pieces (harness/fpview.py format). Generated together with walls.tiles.
+; Legend: one char per walls.tiles index (digits, letters, symbols, then Latin letters).
+; Geometry per piece is fixed in fpview.GEOMETRY; '.' = transparent.
+@ tileset walls
+@ base 66
+legend:
+0 0
+1 1
+2 2
+3 3
+4 4
+5 5
+6 6
+7 7
+8 8
+9 9
+A 10
+B 11
+C 12
+D 13
+E 14
+F 15
+G 16
+H 17
+I 18
+J 19
+K 20
+L 21
+M 22
+N 23
+O 24
+P 25
+Q 26
+R 27
+S 28
+T 29
+U 30
+V 31
+W 32
+X 33
+Y 34
+Z 35
+a 36
+b 37
+c 38
+d 39
+e 40
+f 41
+g 42
+h 43
+i 44
+j 45
+k 46
+l 47
+m 48
+n 49
+o 50
+p 51
+q 52
+r 53
+s 54
+t 55
+u 56
+v 57
+w 58
+x 59
+y 60
+z 61
+! 62
+" 63
+# 64
+$ 65
+% 66
+& 67
+' 68
+( 69
+) 70
+* 71
++ 72
+, 73
+- 74
+/ 75
+: 76
+< 77
+= 78
+> 79
+? 80
+[ 81
+\ 82
+] 83
+^ 84
+_ 85
+` 86
+{ 87
+| 88
+} 89
+~ 90
+À 91
+Á 92
+Â 93
+Ã 94
+Ä 95
+Å 96
+Æ 97
+Ç 98
+È 99
+É 100
+Ê 101
+Ë 102
+Ì 103
+Í 104
+Î 105
+Ï 106
+Ð 107
+Ñ 108
+Ò 109
+Ó 110
+Ô 111
+Õ 112
+Ö 113
+Ø 114
+Ù 115
+Ú 116
+Û 117
+Ü 118
+Ý 119
+Þ 120
+ß 121
+à 122
+á 123
+â 124
+ã 125
+ä 126
+å 127
+æ 128
+ç 129
+è 130
+é 131
+ê 132
+ë 133
+ì 134
+í 135
+î 136
+ï 137
+ð 138
+ñ 139
+ò 140
+ó 141
+ô 142
+õ 143
+ö 144
+ø 145
+ù 146
+ú 147
+û 148
+ü 149
+ý 150
+þ 151
+ÿ 152
+Ā 153
+ā 154
+Ă 155
+ă 156
+Ą 157
+ą 158
+Ć 159
+ć 160
+Ĉ 161
+ĉ 162
+Ċ 163
+
+piece BG
+12121212121212121212
+34343434343434343434
+34343434343434343434
+55555555555555555555
+00000000000000000000
+00000000000000000000
+00000000000000000000
+00000000000000000000
+55555555555555555555
+67676767676767676767
+89898989898989898989
+67676767676767676767
+
+piece F3L2
+i
+i
+i
+i
+
+piece F3L1
+jjjjji
+jjjjji
+jjjjji
+jjjjji
+
+piece F3C
+jjjjjj
+jjjjjj
+jjjjjj
+jjjjjj
+
+piece D3
+jjõöjj
+jjîîjj
+jjîîjj
+jjîîjj
+
+piece E3
+jjõöjj
+jj00jj
+jją0jj
+jj0ąjj
+
+piece F3R1
+kjjjjj
+kjjjjj
+kjjjjj
+kjjjjj
+
+piece F3R2
+k
+k
+k
+k
+
+piece S2L2
+Ü
+Ý
+Ó
+Ó
+Þ
+ß
+
+piece S2L1
+Ñ
+Ò
+Ó
+Ó
+Ô
+Õ
+
+piece S2R1
+Ö
+Ø
+Ù
+Ù
+Ú
+Û
+
+piece S2R2
+à
+á
+Ù
+Ù
+â
+ã
+
+piece F2L1
+UVUVUW
+VUXUVY
+UVZVUW
+VUVUVY
+UVUVUW
+ababac
+
+piece F2C
+UVUVUVUV
+VUVUVUVU
+UVUVUVUV
+VUVUVUVU
+UVUVUVUV
+abababab
+
+piece D2
+UVUVUVUV
+VUVðñUVU
+UVUÙòVUV
+VUVóôUVU
+UVUÙòVUV
+abaÙòbab
+
+piece E2
+UVUVUVUV
+VUVðñUVU
+UVUćĈVUV
+VUVĉĈUVU
+UVUćĊVUV
+abaćĈbab
+
+piece F2R1
+dVUVUV
+eUVfVU
+dVUgUV
+eUVUVU
+dVUVUV
+hbabab
+
+piece S1L1
+ÀÁ
+nÂ
+ÃÄ
+ÅÆ
+nr
+ÇÈ
+nr
+()
+
+piece S1R1
+ÉÊ
+Ën
+ÌÍ
+ÎÅ
+/n
+ÏÐ
+/n
+}~
+
+piece F1L1
+ABAC
+DEDF
+GHGI
+DJDF
+GDGI
+DGDF
+GDGI
+KLKM
+
+piece F1C
+ABABABABABAB
+DGDGDGDGDGDG
+GDGDGDGDGDGD
+DGDGDGDGDGDG
+GDGDGDGDGDGD
+DGDGDGDGDGDG
+GDGDGDGDGDGD
+KLKLKLKLKLKL
+
+piece D1
+ABABABABABAB
+DGDGäåæçDGDG
+GDGDè00éGDGD
+DGDGêëëìDGDG
+GDGDíîîïGDGD
+DGDGíîîïDGDG
+GDGDêëëìGDGD
+KLKLíîîïKLKL
+
+piece E1
+ABABABABABAB
+DGDGäåæçDGDG
+GDGDè00éGDGD
+DGDGÿ00ĀDGDG
+GDGDā00ĀGDGD
+DGDGĂă0ĀDGDG
+GDGDĂĄąĀGDGD
+KLKLĂĄ0ĆKLKL
+
+piece F1R1
+NBAB
+OGPG
+QDRD
+OGSG
+QDGD
+OGDG
+QDGD
+TLKL
+
+piece S0L
+lm..
+nolp
+nqnr
+stuv
+nnwr
+xxyz
+n!nr
+n!nr
+"#$%
+nnnr
+nn&'
+()..
+
+piece S0R
+..*+
+,+-n
+/n:n
+<=$>
+/?nn
+[\xx
+/n]n
+/n]n
+^t_`
+/nnn
+{|nn
+..}~
+
+piece LK1
+øù
+úû
+
+piece LK2
+üý
+
+piece LK3
+þ

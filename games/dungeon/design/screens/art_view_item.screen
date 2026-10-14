@@ -1,0 +1,120 @@
+; BACULO (staff) on the floor at d1: 16x16 at (72,64)
+; Pixel-artist mockup: rows 0-11 = the view exactly as fpview composes it (walls.tiles via
+; view.pcs), rows 12-17 = HUD from play.screen. Sprites at the GDD 2.3 positions; 8x16
+; sprites are listed as their top and bottom 8x8 tiles (spr.tiles index).
+; map (hero at '@' facing up): ##### / ##.## / ##.## / ##.## / ##@##
+tilesets: ui font walls spr
+legend:
+& ICON_HP
+^ ICON_STAFF
+$ ICON_AMULET
+[ ICON_KEY
+] ICON_POTION
+@ ICON_COMPASS
+/ DASH
+: COLON
+Α walls:0
+Β walls:1
+Γ walls:2
+Δ walls:3
+Ε walls:4
+Ζ walls:5
+Η walls:6
+Θ walls:7
+Ι walls:8
+Κ walls:9
+Λ walls:47
+Μ walls:48
+Ν walls:49
+Ξ walls:50
+Ο walls:51
+Π walls:52
+Ρ walls:53
+Σ walls:54
+Τ walls:55
+Υ walls:56
+Φ walls:57
+Χ walls:58
+Ψ walls:59
+Ω walls:60
+α walls:61
+β walls:62
+γ walls:63
+δ walls:64
+ε walls:65
+ζ walls:66
+η walls:67
+θ walls:68
+ι walls:69
+κ walls:70
+λ walls:71
+μ walls:72
+ν walls:73
+ξ walls:74
+ο walls:75
+π walls:76
+ρ walls:77
+σ walls:78
+τ walls:79
+υ walls:80
+φ walls:81
+χ walls:82
+ψ walls:83
+ω walls:84
+Б walls:85
+Г walls:86
+Д walls:87
+Ж walls:88
+З walls:89
+И walls:90
+Й walls:91
+Л walls:92
+П walls:93
+Ф walls:94
+Ц walls:95
+Ч walls:96
+Ш walls:97
+Щ walls:98
+Ъ walls:99
+Ы walls:100
+Ь walls:101
+Э walls:102
+Ю walls:103
+Я walls:104
+б walls:105
+в walls:106
+г walls:107
+д walls:108
+ж walls:109
+з walls:110
+и walls:111
+й walls:112
+к walls:113
+л walls:114
+м walls:115
+н walls:116
+п walls:117
+grid:
+ΛΜΒΓΒΓΒΓΒΓΒΓΒΓΒΓΒΓλμ
+ΝΞΛΟΔΕΔΕΔΕΔΕΔΕΔΕνμξΝ
+ΝΠΝΡЙЛΔΕΔΕΔΕΔΕЫЬοΝπΝ
+ΣΤΥΦΝПдΖΖΖΖΖΖкЭΝρσετ
+ΝΝΧΡФЦжΑΑΑΑΑΑлЮЯουΝΝ
+ΨΨΩαЧШзΑΑΑΑΑΑмбЧφχΨΨ
+ΝβΝΡΝΡзΑΑΑΑΑΑмοΝοΝψΝ
+ΝβΝΡЩЪиΑΑΑΑΑΑнвгοΝψΝ
+γδεζΝΡйΖΖΖΖΖΖпοΝωΤБГ
+ΝΝΝΡικΗΘΗΘΗΘΗΘЗИοΝΝΝ
+ΝΝηθΙΚΙΚΙΚΙΚΙΚΙΚДЖΝΝ
+ικΗΘΗΘΗΘΗΘΗΘΗΘΗΘΗΘЗИ
+.&18/20.^$.[1.]3.@N.
+....................
+....................
+....................
+....................
+....................
+sprites:
+spr:102 72 64
+spr:103 72 72
+spr:104 80 64
+spr:105 80 72
