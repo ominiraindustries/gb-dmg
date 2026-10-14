@@ -1,0 +1,63 @@
+; FARO interior TIENDA: 1 sector, room 10x9 at cells 3..12 x 3..11, VOID around.
+@ map TIENDA
+@ metatiles metatiles_interior
+@ size 1 1
+@ border VOID
+legend:
+# VOID
+. FLOOR
+D DOORMAT
+W WALL
+O WALL_WIN
+K WALL_CLOCK
+s SHELF_00
+h SHELF_10
+[ COUNTER_L
+= COUNTER_M
+] COUNTER_R
+f PLANT
+a RUG_00
+b RUG_01
+d RUG_02
+e RUG_10
+g RUG_11
+i RUG_12
+grid:
+; sector row 0 (y 0)
+################
+################
+################
+###WsWsOWsWKW###
+###fh.h..h..f###
+###...[==]...###
+###..........###
+###..........###
+###...abd....###
+###...egi....###
+###f........f###
+###....D.....###
+################
+################
+################
+################
+objects:
+; sector row 0 (y 0)
+................
+................
+................
+................
+........T.......
+................
+................
+..........C.....
+................
+................
+................
+.......D........
+................
+................
+................
+................
+@ obj D warp map=ISLA x=54 y=83 face=DOWN                                            ; salida a Varadero
+@ obj T npc look=LOOK_VECINA face=DOWN beh=STILL script=tendera                      ; tendera tras el mostrador
+@ obj C npc look=LOOK_PESCADOR face=DOWN beh=WANDER script=cliente_tienda            ; cliente

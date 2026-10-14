@@ -1,6 +1,8 @@
 ; FARO - tablas de aparicion (GDD 2.4). El evento 'spawn table=<ID> radius=n' del mapa usa una fila.
 ; Hasta 4 entradas: especie, nivel lo-hi, peso, horario, lamp_ring minimo. Entradas 'raras' = peso
 ; <= RULE RARE_W (las dobla OLFATO). Lint: <= 4 especies por ventana de 3x3 sectores.
+; M1b (map_objects.md): filas 4-6 = Pinzarro, Dunejo, Polifaro, Sapoyo; filas 5-7 = Pinzarro, Dunejo,
+; Gavirata, Erizal. La 5a especie del anillo 1 esta tras las zarzas (Machete del encargo).
 @ table spawns
 @ prefix SPAWN
 @ col e1 ref species
@@ -28,8 +30,8 @@
 @ col e4hor enum SIEMPRE DIA NOCHE
 @ col e4ring u8
 ;id       e1       e1lo e1hi e1w e1hor   e1ring e2       e2lo e2hi e2w e2hor   e2ring e3     e3lo e3hi e3w e3hor   e3ring e4 e4lo e4hi e4w e4hor   e4ring
-PLAYA_VAR PINZARRO 2    4    12  SIEMPRE 0      GAVIRATA 3    4    4   DIA     0      -      0    0    0   SIEMPRE 0      -  0    0    0   SIEMPRE 0
-SENDERO   DUNEJO   2    5    10  DIA     0      PINZARRO 3    4    3   SIEMPRE 0      SAPOYO 3    5    3   SIEMPRE 0      -  0    0    0   SIEMPRE 0
+PLAYA_VAR PINZARRO 2    4    12  SIEMPRE 0      -        0    0    0   SIEMPRE 0      -      0    0    0   SIEMPRE 0      -  0    0    0   SIEMPRE 0
+SENDERO   DUNEJO   2    5    10  DIA     0      PINZARRO 3    4    3   SIEMPRE 0      -      0    0    0   SIEMPRE 0      -  0    0    0   SIEMPRE 0
 CABO      GAVIRATA 3    6    8   DIA     0      ERIZAL   3    6    8   SIEMPRE 0      -      0    0    0   SIEMPRE 0      -  0    0    0   SIEMPRE 0
 CLARO     POLIFARO 5    6    6   SIEMPRE 0      DUNEJO   4    5    4   DIA     0      SAPOYO 4    6    4   SIEMPRE 0      -  0    0    0   SIEMPRE 0
 CHARCA    SAPOYO   3    6    12  SIEMPRE 0      DUNEJO   3    4    3   DIA     0      -      0    0    0   SIEMPRE 0      -  0    0    0   SIEMPRE 0

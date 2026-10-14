@@ -1,56 +1,134 @@
-// New game template on the gbe engine library (harness/common/README.md).
-// Loop rules (CLAUDE.md): vsync -> frame_begin -> VRAM copies only -> frame_vram_check ->
-// logic -> sprites -> frame_end. Globals the tests read must be non-static.
-#include "gbe.h"
-#include "bg.h"
-#include "spr.h"
+// FARO - glue: init, the main loop and the state machine (GDD 4.2). Rules (CLAUDE.md): vsync ->
+// VBlank copies -> frame_vram_check -> frame_begin -> logic -> sprites -> frame_end.
+// New game = the script "nueva_partida" (res/scripts): data only (items, flags, then a warp to the
+// start map); the field shows the result. The code never names a map or an item.
+#include "rpg.h"
+#include "ui.h"
 #include "font.h"
+#include "font_lower.h"
+#include "font_es.h"
+#include "overworld.h"
+#include "interior.h"
+#include "faro.h"
+#include "metatiles.h"
+#include "metatiles_faro.h"
+#include "metatiles_interior.h"
+#include "leo.h"
+#include "npc.h"
+#include "fx.h"
 
-#define PLAYER_W 16
-#define PLAYER_H 16
-#define TILE_FONT BG_COUNT
+uint8_t state, field_sub, cheat_flags;   // cheat_flags: written by tests only
+extern uint8_t warp_map, warp_x, warp_y, warp_dir, warp_pending;
 
-enum { SFX_MOVE, SFX_COUNT };
 const sfx_t sfx_table[SFX_COUNT] = {
-    [SFX_MOVE] = { 2, 1, 4, { 0, 0xBC, 0x61, 0x00, 0xC6 } },
+    [SFX_BUMP]  = { 4, 1, 8, { 0, 0x00, 0x42, 0x61, 0x80 } },
+    [SFX_BLIP]  = { 2, 0, 3, { 0, 0x80, 0x41, 0xC0, 0x87 } },
+    [SFX_OK]    = { 1, 2, 10, { 0x15, 0x80, 0x73, 0x40, 0x86 } },
+    [SFX_PICK]  = { 1, 2, 12, { 0x16, 0x80, 0x82, 0x00, 0x87 } },
 };
 
-uint8_t player_x, player_y;
+// Metatile sets in res/metatiles*.mt name order (world.py mtset): their tiles share one VRAM slot
+void map_gfx(uint8_t set) {
+    if (set == 1) {
+        bank_set_bkg_data(BANK(faro), VRAM_FARO, FARO_COUNT, faro_tiles);
+        world_metatiles(BANK(metatiles_faro), mt_faro_tiles[0], mt_faro_attr, MT_FARO_COUNT);
+    } else if (set == 2) {
+        bank_set_bkg_data(BANK(interior), VRAM_INTERIOR, INTERIOR_COUNT, interior_tiles);
+        world_metatiles(BANK(metatiles_interior), mt_interior_tiles[0], mt_interior_attr, MT_INTERIOR_COUNT);
+    } else {
+        bank_set_bkg_data(BANK(overworld), VRAM_OVERWORLD, OVERWORLD_COUNT, overworld_tiles);
+        world_metatiles(BANK(metatiles), mt_tiles[0], mt_attr, MT_COUNT);
+    }
+}
 
-// LCD off: tiles, an empty background, palettes, interrupts
-void init(void) {
-    DISPLAY_OFF;
-    set_bkg_data(0, BG_COUNT, bg_tiles);
-    set_bkg_data(TILE_FONT, FONT_COUNT, font_tiles);
-    set_sprite_data(0, SPR_COUNT, spr_tiles);
-    init_bkg(BG_DOT);
-    SPRITES_8x16;
-    video_init(0, 0xE4, 0xE4, 0xE4);          // no HUD cut (hud_cut stays 0)
-    sound_init();
-    player_x = (SCREENWIDTH - PLAYER_W) / 2;
-    player_y = (SCREENHEIGHT - PLAYER_H) / 2;
-    SHOW_BKG;
-    SHOW_SPRITES;
+// gbe_screen calls this with the LCD off between a fade out and a fade in
+void screen_build(uint8_t which) {
+    lcd_off_redraw_begin();
+    if (which == ST_TITLE) { field_set = 0xFF; title_build(); }   // the title overwrites the set's slot
+    else if (which == ST_FIELD) {
+        HIDE_WIN;
+        field_enter(warp_map, warp_x, warp_y, warp_dir);
+        warp_pending = 0;
+        SHOW_BKG; SHOW_SPRITES;
+    }
     DISPLAY_ON;
 }
 
-void update(void) {
-    if ((keys & J_LEFT) && player_x > 0) player_x--;
-    if ((keys & J_RIGHT) && player_x < SCREENWIDTH - PLAYER_W) player_x++;
-    if ((keys & J_UP) && player_y > 0) player_y--;
-    if ((keys & J_DOWN) && player_y < SCREENHEIGHT - PLAYER_H) player_y++;
-    if (pressed & (J_LEFT | J_RIGHT | J_UP | J_DOWN)) sfx(SFX_MOVE);
+static void ui_init(void) {
+    tbox_frame[0] = VRAM_UI + UI_FRAME_TL; tbox_frame[1] = VRAM_UI + UI_FRAME_T;
+    tbox_frame[2] = VRAM_UI + UI_FRAME_TR; tbox_frame[3] = VRAM_UI + UI_FRAME_L;
+    tbox_frame[4] = VRAM_UI + UI_BLANK;    tbox_frame[5] = VRAM_UI + UI_FRAME_R;
+    tbox_frame[6] = VRAM_UI + UI_FRAME_BL; tbox_frame[7] = VRAM_UI + UI_FRAME_B;
+    tbox_frame[8] = VRAM_UI + UI_FRAME_BR;
+    tbox_arrow = VRAM_UI + UI_ARROW_DOWN;
+    tbox_cursor = VRAM_UI + UI_CURSOR;
+    tbox_row = 0;
+    txt_font = VRAM_FONT;
+    txt_lower = VRAM_FONT_LOWER;
+    txt_es = VRAM_FONT_ES;
+    txt_blank = VRAM_UI + UI_BLANK;
+    memcpy(tbox_name, "Leo", 4);
+}
+
+// Run the data-only script "nueva_partida" to its end: items, flags and the start warp
+static void new_game(void) {
+    player_new();
+    memset(flags, 0, sizeof(flags));
+    memset(vars, 0, sizeof(vars));
+    warp_map = 0; warp_x = 8; warp_y = 8; warp_dir = DIR_DOWN;
+#ifdef SID_NUEVA_PARTIDA
+    script_run_id(SID_NUEVA_PARTIDA);
+    while (script_active && script_state == SS_RUN) script_update();
+    script_active = 0;
+#endif
+}
+
+void init(void) {
+    DISPLAY_OFF;
+    bank_set_bkg_data(BANK(ui), VRAM_UI, UI_COUNT, ui_tiles);
+    bank_set_bkg_data(BANK(font), VRAM_FONT, FONT_COUNT, font_tiles);
+    bank_set_bkg_data(BANK(font_lower), VRAM_FONT_LOWER, FONT_LOWER_COUNT, font_lower_tiles);
+    bank_set_bkg_data(BANK(font_es), VRAM_FONT_ES, FONT_ES_COUNT, font_es_tiles);
+    bank_set_sprite_data(BANK(leo), SPR_LEO, LEO_COUNT, leo_tiles);
+    bank_set_sprite_data(BANK(npc), SPR_NPC, NPC_COUNT, npc_tiles);
+    bank_set_sprite_data(BANK(fx), SPR_FX, 16, fx_tiles);
+    SPRITES_8x16;
+    LCDC_REG |= LCDCF_WIN9C00;
+    WX_REG = 7;
+    WY_REG = 144;
+    video_init(0, 0xE4, 0xE4, 0xD8);          // ui.md: BGP/OBP0 0xE4
+    sound_init();
+    ui_init();
+    show_screen_now(ST_TITLE);
 }
 
 void main(void) {
     init();
+    vsync();
+    vram_late = 0;
     while (1) {
         vsync();
-        frame_begin();
-        // VBlank work goes here: copy buffers prepared last frame, nothing else
+        world_draw_vram();
+        vq_draw_vram();
+        tiles_draw_vram();
+        WY_REG = tbox_visible ? 96 : 144;
         frame_vram_check();
-        update();
-        oam16(0, player_x + 8, player_y + 16, SPR_PLAYER, 0);
+        frame_begin();
+        if (gbe_eq_request) { gbe_eq_request = 0; gbe_selftest(); skip_measure = 1; }
+        if (!transition_update()) {
+            switch (state) {
+            case ST_TITLE:
+                if (title_update() == TITLE_NEW) { new_game(); warp_pending = 1; transition(ST_FIELD); }
+                break;
+            case ST_FIELD:
+                if (tbox_visible || script_active) { tbox_update(); script_update(); }
+                field_update();
+                field_vblank();
+                break;
+            }
+        }
+        tiles_prepare();
+        if (state == ST_FIELD) field_draw();
         sound_update();
         frame_end();
     }

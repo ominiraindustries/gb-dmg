@@ -1,0 +1,59 @@
+; FARO interior FARO_PB: 1 sector, room 10x9 at cells 3..12 x 3..11, VOID around.
+@ map FARO_PB
+@ metatiles metatiles_faro
+@ size 1 1
+@ border VOID
+legend:
+# VOID
+: STONE
+D DOORMAT
+O WALL_WIN
+G WALL_STONE
+b BOOKS_00
+k BOOKS_10
+B BED_00
+E BED_10
+t TABLE_00
+y TABLE_01
+c CHAIR
+U STAIRS_UP
+grid:
+; sector row 0 (y 0)
+################
+################
+################
+###GOGbbGGOUG###
+###B::kk:::::###
+###E:::::::::###
+###::::::::::###
+###::ctyc::::###
+###::::::::::###
+###::::::::::###
+###::::::::::###
+###::::D:::::###
+################
+################
+################
+################
+objects:
+; sector row 0 (y 0)
+................
+................
+................
+...........U....
+......b.........
+................
+............o...
+................
+................
+................
+................
+.......D........
+................
+................
+................
+................
+@ obj D warp map=ISLA x=53 y=121 face=DOWN                                           ; salida al cabo
+@ obj U warp map=FARO_LENTE x=11 y=4 face=DOWN                                       ; escalera a la Sala de la Lente
+@ obj b sign script=faro_bitacora                                                    ; bitacora de Ines en la estanteria
+@ obj o item item=ITEM_TONICO n=1 flag=F_PICK_FARO_1                                 ; objeto en la planta baja del faro

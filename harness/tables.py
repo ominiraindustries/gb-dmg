@@ -18,7 +18,9 @@ Python loader for tests and bots. All balance numbers live here, never in C (gam
 A row: ID then one value per column (text in quotes). The C struct has the columns in order
 (text n -> char[n + 1]); code copies one row to WRAM with bank_memcpy(BANK(tbl_items), &r,
 &tbl_items[id], sizeof r). Enum/flag names become #defines in the header so code can test
-roles without content ids (ability & ABILITY_CUT), and every table gets
+roles without content ids (ability & ITEMS_ABILITY_CUT: <TABLE>_<COLUMN>_<NAME>; the build stops on
+any clash - moves and skills both had EFECTO_ESTADO, and items' id CEBO_DULCE met column cebo's
+DULCE), and every table gets
 #define <PREFIX>_<ID> id for the content side (scripts, maps).
 """
 import re
@@ -193,18 +195,27 @@ def convert(folder, out_dir):
     tables = load_all(folder)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    outs = []
+    outs, seen = [], {}
     for t in tables.values():
         sym = f"tbl_{t.name}"
         fields = "".join(f"    char {c['name']}[{c['size'] + 1}];\n" if c["kind"] == "text"
                          else f"    {_ctype(c)} {c['name']};\n" for c in t.cols)
         defs = [f"#define {t.prefix}_{r['id']} {i}" for i, r in enumerate(t.rows)]
         defs.append(f"#define {t.prefix}_COUNT {len(t.rows)}")
+        tn = t.name.upper()                         # column values: <TABLE>_<COLUMN>_<VALUE>
         for c in t.cols:
             if c["kind"] == "enum":
-                defs += [f"#define {c['name'].upper()}_{v} {i}" for i, v in enumerate(c["values"])]
+                defs += [f"#define {tn}_{c['name'].upper()}_{v} {i}" for i, v in enumerate(c["values"])]
             elif c["kind"] == "flags":
-                defs += [f"#define {c['name'].upper()}_{v} 0x{1 << i:X}" for i, v in enumerate(c["values"])]
+                defs += [f"#define {tn}_{c['name'].upper()}_{v} 0x{1 << i:X}" for i, v in enumerate(c["values"])]
+        for d in defs:                              # a clash would silently redefine a value
+            name = d.split()[1]
+            if name in seen and seen[name] != t.name:
+                raise ValueError(f"{t.path}: #define {name} also comes from table {seen[name]}: rename the id, "
+                                 "the column or the value (or use a different @ prefix)")
+            if name in seen and d not in defs[:defs.index(d)]:
+                raise ValueError(f"{t.path}: #define {name} defined twice in this table (id vs column value?)")
+            seen[name] = t.name
         (out_dir / f"{sym}.h").write_text(
             f"// Generated from {t.path.name} by harness/tables.py - do not edit\n#pragma once\n"
             f"#include <gb/gb.h>\n#include <stdint.h>\n\n" + "\n".join(dict.fromkeys(defs)) + "\n\n"

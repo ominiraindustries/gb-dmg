@@ -29,7 +29,8 @@ Output (always in a switchable bank: '#pragma bank 255', BANKREF(map_<name>)):
     const uint8_t map_<name>_grid[w * h]       sector index of each sector of the map, row-major
     const uint8_t map_<name>_events[8 * k]     object records sorted by sector
     const uint16_t map_<name>_evidx[w*h + 1]   first record of each sector (prefix sums)
-    const world_map_t map_<name>               { w, h, border, n, grid, sectors, events, evidx }
+    const world_map_t map_<name>               { w, h, border, n, mtset, grid, sectors, events, evidx }
+    (mtset = index of the map's metatile table among the sorted res/metatiles*.mt names)
 and world_index.c/.h: MAP_<NAME> ids and world_maps[] = { bank, address } (world_load_id()).
 Identical sectors are stored once (sea, forest fill).
 """
@@ -308,7 +309,7 @@ def _int(v, lo, hi, where):
     return n
 
 
-def convert(m, out_dir, types=None, symbols=None):
+def convert(m, out_dir, types=None, symbols=None, mtset=0):
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     sym = f"map_{m.name.lower()}"
@@ -330,7 +331,7 @@ def convert(m, out_dir, types=None, symbols=None):
         f"const uint8_t {sym}_grid[{len(grid)}] = {{ {', '.join(map(str, grid))} }};\n\n"
         f"const uint8_t {sym}_events[] = {{\n{ev}\n}};\n\n"
         f"const uint16_t {sym}_evidx[{len(evidx)}] = {{ {', '.join(map(str, evidx))} }};\n\n"
-        f"const world_map_t {sym} = {{ {m.w}, {m.h}, {m.border}, {len(uniq)}, {sym}_grid, "
+        f"const world_map_t {sym} = {{ {m.w}, {m.h}, {m.border}, {len(uniq)}, {mtset}, {sym}_grid, "
         f"(const uint8_t *){sym}_sectors, {sym}_events, {sym}_evidx }};\n\n"
         f"BANKREF({sym})\n", encoding="utf-8")
     return out_dir / f"{sym}.c"

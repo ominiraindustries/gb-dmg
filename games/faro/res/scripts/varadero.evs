@@ -1,0 +1,200 @@
+; FARO - Varadero (exterior, playa y muelle). Objetos: design/map_objects.md, ISLA (2,5)-(3,5), (2,6).
+; Reglas: cada guion fija su speaker (persiste entre guiones); speaker "" = narrador / cartel.
+; give es silencioso: el guion narra lo que recibes. Los triggers ponen su propia bandera 'once'.
+; Personajes: Rosa (vecina mayor, amiga de Ines), Marisa (plaza), Paco (redes), Anselmo (muelle).
+
+; ---------------------------------------------------------------- carteles
+script cartel_varadero
+  speaker ""
+  say "Varadero, puerto de la isla de Albor."
+  say "Debajo, alguien ha escrito con tiza: Sin barcos desde que llego la Bruma. Y van siete inviernos."
+  end
+
+script cartel_bruma
+  speaker ""
+  if flag F_BRUMA_1 goto abierto
+  say "Camino de las Marismas y de Salinas."
+  say "La tabla esta humeda y llena de moho. Detras, la Bruma es tan espesa que no se ve ni el camino."
+  say "Dicen que solo la luz del faro la hacia retroceder."
+  end
+abierto:
+  say "Camino de las Marismas y de Salinas."
+  say "La Bruma se ha retirado. Por primera vez en siete inviernos, se ve el camino."
+  end
+
+; ---------------------------------------------------------------- escena del muelle (trigger I)
+script intro_muelle
+  speaker ""
+  say "El muelle de Varadero. Las barcas duermen amarradas, con las redes secas al sol."
+  say "Donde deberia verse el mar abierto solo hay una pared blanca que no se mueve: la Bruma."
+  say "Hace siete inviernos el faro de Albor se apago. Esa misma noche tu abuela Ines desaparecio, y la Bruma cerro el mar."
+  say "Desde entonces no llega ningun barco. La isla vive de lo que caza y de lo que pesca en la orilla."
+  if flag F_DIARIO goto fin
+  say "Tomasa te esperaba en la posada. Mejor no hacerla esperar."
+fin:
+  set F_INTRO
+  end
+
+; ---------------------------------------------------------------- salida al Sendero (trigger w)
+; Sin el Diario (ni farolillos) Leo no se va: vuelve un paso y la bandera no se pone.
+script aviso_sendero
+  speaker ""
+  if flag F_DIARIO goto aviso
+  say "Al sur empieza el Sendero del Cabo. Sin farolillos ni provisiones no tiene sentido ir tan lejos."
+  say "Ademas, Tomasa queria verte en la posada."
+  pwalk 1 1
+  end
+aviso:
+  say "Al sur, el Sendero del Cabo lleva hasta el faro."
+  say "En la hierba alta se esconden criaturas. Si te acercas despacio y por la espalda, no te oiran."
+  set F_AVISO_SENDERO
+  end
+
+; ---------------------------------------------------------------- Rosa, vecina mayor (A)
+script vecina_rosa
+  speaker "Rosa"
+  if not flag F_DIARIO goto tomasa
+  if flag F_ANILLO_1 goto anillo
+  if V_VECINA == 1 goto l1
+  if V_VECINA == 2 goto l2
+  if V_VECINA >= 3 goto l3
+  say "Tu abuela y yo nos criamos puerta con puerta. Ella siempre en lo alto del faro, y yo aqui, con mis tomates."
+  vset V_VECINA 1
+  end
+l1:
+  say "Cuando el faro estaba encendido, la luz pasaba por mi ventana cada pocos segundos. Yo contaba las vueltas para dormirme."
+  vset V_VECINA 2
+  end
+l2:
+  say "Ines decia que la luz del faro no era suya. Que se la prestaban las criaturas de la isla."
+  vset V_VECINA 3
+  end
+l3:
+  say "Coge bayas de la zarzamora de tu abuela. Ella la plantaba para los bichos, pero no le importara."
+  vset V_VECINA 0
+  end
+tomasa:
+  say "¡{N}, hijo! Tomasa te anda buscando desde temprano."
+  say "Esta en la posada, un poco mas al este. Algo de tu abuela, me dijo."
+  end
+anillo:
+  say "¡Anoche la luz paso por mi ventana! Una vuelta nada mas, pero la conte."
+  say "Gracias, {N}. Ines estaria tan orgullosa."
+  end
+
+; ---------------------------------------------------------------- Marisa, vecina de la plaza (C)
+script vecina_plaza
+  speaker "Marisa"
+  rand V_TMP 3
+  if V_TMP == 1 goto l1
+  if V_TMP == 2 goto l2
+  say "La tienda de Lucia tiene de todo: madera para la hoguera, cebos y farolillos. Lo que ella no vende, no existe en Albor."
+  end
+l1:
+  say "Si una fiera te deja tirado, despiertas en la enfermeria. Pilar cura gratis, pero te dejas la mitad de las conchas."
+  end
+l2:
+  say "Antes venian barcos de Altamar a vender farolas del Gremio. Brillaban mucho."
+  say "Tu abuela no quiso ni una en casa. Nunca supe por que."
+  end
+
+; ---------------------------------------------------------------- Paco, pescador de redes en la playa (N)
+script pescador_redes
+  speaker "Paco"
+  if flag F_ENCARGO_OK goto charla
+  if flag F_ENCARGO_ON goto plumas
+charla:
+  rand V_TMP 2
+  if V_TMP == 1 goto l1
+  say "Los Pinzarros andan de lado por la arena. Si te ven venir de frente, se plantan y pellizcan."
+  say "Acercate por detras, despacio. O deja un cebo de pescado y espera a que se pongan a comer."
+  end
+l1:
+  say "Con el cuchillo los abres sin problema. Su carne, con un poco de sal, es un manjar."
+  say "Y si sale una perla, no se la digas a nadie. Bueno, a mi si."
+  end
+plumas:
+  say "¿Plumas para Anselmo? Las Gaviratas bajan a las rocas del Cabo, al sur."
+  say "No todas sueltan pluma. Con la honda caen del cielo sin rechistar."
+  end
+
+; ---------------------------------------------------------------- Anselmo, pescador del muelle (F)
+; Honda (F_HONDA) y encargo de 3 Plumas (F_ENCARGO_ON -> F_ENCARGO_OK) que paga el Machete.
+; Las plumas se entregan de una en una (V_ENCARGO 0-3), V_TMP = entregadas en esta charla.
+script pescador_muelle
+  speaker "Anselmo"
+  if flag F_ENCARGO_OK goto hecho
+  if flag F_ENCARGO_ON goto encargo
+  if flag F_HONDA goto ofrecer
+  say "Hombre, {N}. Siete inviernos sin echar la red mas alla de este muelle. La Bruma se come las barcas."
+  say "Toma, la honda que yo usaba de chico. Una piedra a tiempo y una gaviota baja del cielo."
+  give ITEM_HONDA 1
+  set F_HONDA
+  speaker ""
+  say "Recibes la Honda."
+  speaker "Anselmo"
+  say "Registrala en la Mochila y usala con Select. Si le das a una criatura, empiezas el combate con ventaja."
+ofrecer:
+  say "Oye, ¿me harias un favor? Ato moscas de pescar con plumas de Gavirata, y se me han acabado."
+  say "Las Gaviratas vuelan por el Cabo, al sur del pueblo. Traeme 3 plumas y te doy mi machete."
+  say "Con un machete se cortan las zarzas del norte del pueblo. Detras hay un claro donde viven criaturas que no veras en otro sitio."
+  ask "¿Te encargas?" no=rechaza
+  set F_ENCARGO_ON
+  say "¡Trato hecho! Una Gavirata no siempre suelta pluma. A lo mejor tienes que cazar unas cuantas."
+  say "Y no se las vendas a Lucia, que te conozco."
+  end
+rechaza:
+  say "Bueno. Aqui estare. El mar no se va a ninguna parte, y yo tampoco."
+  end
+encargo:
+  vset V_TMP 0
+entrega:
+  if V_ENCARGO >= 3 goto pagar
+  has ITEM_PLUMA 1
+  if_answer 0 falta
+  take ITEM_PLUMA 1
+  vadd V_ENCARGO 1
+  vadd V_TMP 1
+  goto entrega
+falta:
+  if V_TMP >= 1 goto gracias
+  say "¿Y esas plumas? Las Gaviratas estan en el Cabo, al sur del pueblo."
+  goto cuenta
+gracias:
+  say "¡Buena pluma! Me la quedo."
+cuenta:
+  if V_ENCARGO == 1 goto faltan2
+  if V_ENCARGO == 2 goto falta1
+  say "Me hacen falta 3 plumas para el machete."
+  end
+faltan2:
+  say "Me faltan 2 plumas para el machete."
+  end
+falta1:
+  say "Solo me falta 1 pluma. Ya casi es tuyo."
+  end
+pagar:
+  say "¡Tres plumas! Con esto ato moscas para toda la temporada."
+  say "Aqui tienes el machete. Lo afile ayer, por si volvias."
+  give ITEM_MACHETE 1
+  set F_ENCARGO_OK
+  speaker ""
+  say "Recibes el Machete."
+  speaker "Anselmo"
+  say "Las zarzas estan al norte del pueblo, entre la casa de tu abuela y la posada. Ponte delante y pulsa A."
+  say "En el claro de detras viven los Polifaros. Tu abuela decia que su luz guiaba a los barcos."
+  end
+hecho:
+  if V_PESCADOR == 1 goto h1
+  if V_PESCADOR >= 2 goto h2
+  say "Con estas moscas nuevas, el dia que se vaya la Bruma me hincho a pescar."
+  vset V_PESCADOR 1
+  end
+h1:
+  say "Una noche de temporal, la luz de tu abuela me encontro entre las olas. Le debo esto y mucho mas."
+  vset V_PESCADOR 2
+  end
+h2:
+  say "El machete no es solo para carne. Si ves un paso cerrado por ramas, pruebalo."
+  vset V_PESCADOR 0
+  end

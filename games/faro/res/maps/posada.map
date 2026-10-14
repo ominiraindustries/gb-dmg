@@ -1,0 +1,66 @@
+; FARO interior POSADA: 1 sector, room 10x9 at cells 3..12 x 3..11, VOID around.
+@ map POSADA
+@ metatiles metatiles_interior
+@ size 1 1
+@ border VOID
+legend:
+# VOID
+. FLOOR
+D DOORMAT
+W WALL
+O WALL_WIN
+K WALL_CLOCK
+s SHELF_00
+h SHELF_10
+v STOVE_00
+u STOVE_10
+[ COUNTER_L
+= COUNTER_M
+] COUNTER_R
+B BED_00
+E BED_10
+t TABLE_00
+y TABLE_01
+c CHAIR
+p POT
+f PLANT
+grid:
+; sector row 0 (y 0)
+################
+################
+################
+###WOvWsWKOWW###
+###fpu.h...BB###
+###[===]...EE###
+###.....cty..###
+###..........###
+###.cty......###
+###..........###
+###f........f###
+###....D.....###
+################
+################
+################
+################
+objects:
+; sector row 0 (y 0)
+................
+................
+................
+................
+......T.........
+................
+...........H....
+................
+.......P........
+................
+................
+.......D........
+................
+................
+................
+................
+@ obj D warp map=ISLA x=46 y=83 face=DOWN                                            ; salida a Varadero
+@ obj T npc look=LOOK_ABUELA face=DOWN beh=STILL script=tomasa                       ; Tomasa tras el mostrador
+@ obj P npc look=LOOK_PESCADOR face=LEFT beh=STILL script=huesped_pescador           ; huesped en la mesa
+@ obj H npc look=LOOK_VECINA face=LEFT beh=STILL script=huesped_vecina               ; huesped en la otra mesa

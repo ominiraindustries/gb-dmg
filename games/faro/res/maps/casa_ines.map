@@ -1,0 +1,67 @@
+; FARO interior CASA_INES: 1 sector, room 10x9 at cells 3..12 x 3..11, VOID around.
+@ map CASA_INES
+@ metatiles metatiles_interior
+@ size 1 1
+@ border VOID
+legend:
+# VOID
+. FLOOR
+D DOORMAT
+W WALL
+O WALL_WIN
+P WALL_PIC
+K WALL_CLOCK
+b BOOKS_00
+k BOOKS_10
+B BED_00
+E BED_10
+t TABLE_00
+y TABLE_01
+c CHAIR
+f PLANT
+a RUG_00
+d RUG_01
+e RUG_02
+g RUG_10
+h RUG_11
+i RUG_12
+grid:
+; sector row 0 (y 0)
+################
+################
+################
+###WOWPWbKOWW###
+###f....k..B.###
+###........E.###
+###..........###
+###.ctyc.ade.###
+###......ghi.###
+###..........###
+###f........f###
+###....D.....###
+################
+################
+################
+################
+objects:
+; sector row 0 (y 0)
+................
+................
+................
+......c.........
+........b.......
+............o...
+................
+................
+................
+................
+................
+.......D........
+................
+................
+................
+................
+@ obj D warp map=ISLA x=36 y=83 face=DOWN                                            ; salida a Varadero
+@ obj b sign script=ines_estanteria                                                  ; estanteria de Ines
+@ obj c sign script=ines_cuadro                                                      ; cuadro del faro encendido
+@ obj o item item=ITEM_REMO n=1 flag=F_REMO                                          ; el Remo viejo junto a la cama de Leo

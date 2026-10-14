@@ -1,0 +1,29 @@
+; FARO - Sendero del Cabo (3,6) y Cabo (3,7) (map_objects.md). La puerta del faro (triggers K en
+; (53,121) y (54,121), once=F_FARO_ABIERTO) la abre la escena del Diario de Tomasa.
+
+script cartel_sendero
+  speaker ""
+  say "Sendero del Cabo. Faro de Albor, al sur."
+  say "Bajo la flecha alguien ha clavado una nota: Los Dunejos oyen hasta tus pasos. Un cebo dulce los entretiene."
+  end
+
+script cartel_faro
+  speaker ""
+  say "Faro de Albor. Su luz guia a los barcos."
+  say "Debajo, en letra chica: Farera, Ines."
+  if not flag F_ANILLO_1 goto fin
+  say "El bronce de la placa refleja la luz del primer anillo."
+fin:
+  end
+
+; Mientras la puerta este cerrada, Leo vuelve un paso abajo (no se pone la bandera).
+script faro_cerrado
+  speaker ""
+  if flag F_DIARIO goto abrir
+  say "La puerta del faro esta cerrada con llave. La cerradura es grande, de hierro viejo."
+  say "Tomasa guardaba muchas cosas de tu abuela. Quiza ella sepa algo."
+  pwalk 0 1
+  end
+abrir:
+  set F_FARO_ABIERTO           ; normalmente ya la puso Tomasa: esto solo cubre partidas antiguas
+  end

@@ -1,0 +1,70 @@
+; FARO - el faro: planta baja (FARO_PB) y Sala de la Lente (FARO_LENTE) (map_objects.md).
+; Anillo 1 = 5 especies registradas (GDD 6.2). Cada anillo trae un recuerdo de Ines (GDD 6.4).
+
+; ================================================================ FARO_PB
+; Pagina 1 del diario de Ines: receta Tortilla mar (GDD 5.2 #5) + pista de captura.
+script faro_bitacora
+  speaker ""
+  if flag F_DIARIO_1 goto leida
+  say "Entre los libros de bitacora hay una hoja suelta con la letra de tu abuela. Es una pagina de su diario."
+  speaker "Ines"
+  say "Primer dia de frio. La lente pierde fuerza. Cada temporada hay menos criaturas en la isla, y menos luz."
+  say "Las Gaviratas ponen en las rocas del Cabo. Dos huevos batidos con aceite: tortilla para subir las escaleras volando."
+  say "Una Gavirata en el aire no se deja atrapar. Bajala primero, con una piedra o con paciencia."
+  say "La luz no se compra ni se encierra. Se pide prestada."
+  learn_recipe RECIPE_TORTILLA
+  set F_DIARIO_1
+  speaker ""
+  say "Guardas la pagina en el diario. Aprendes la receta Tortilla mar."
+  end
+leida:
+  say "Libros de bitacora. Noches de viento, barcos que pasaron, aceite gastado. La ultima entrada es de hace siete inviernos."
+  end
+
+; ================================================================ FARO_LENTE
+script lente_vista
+  speaker ""
+  say "La Sala de la Lente. En el centro, la gran lente del faro, apagada y fria."
+  say "La rodean seis anillos de cristal. Los seis estan negros."
+  say "Junto a la lente esta la mesa del farero."
+  set F_LENTE_VISTA
+  end
+
+; Mesa del farero: con 5 especies registradas enciende el anillo 1, disuelve la Bruma hacia las
+; Marismas (F_BRUMA_1), ofrece guardar y termina la demo (M1b).
+script faro_lente
+  speaker ""
+  if flag F_ANILLO_1 goto encendido
+  say "La mesa del farero. Encima, un libro de registro abierto y una palanca de bronce."
+  reg_count 5
+  if_answer 1 encender
+  say "En el libro, con la letra de Ines: Cada anillo pide la luz de varias especies distintas. El primero, cinco."
+  say "Registra cinco especies distintas en el Cuaderno y vuelve."
+  if flag F_ENCARGO_OK goto fin
+  say "Hay criaturas que no salen de su rincon. Quiza alguna viva tras las zarzas del norte de Varadero."
+fin:
+  end
+encender:
+  say "Los farolillos tiemblan en la mochila. La luz de cinco especies distintas quiere salir."
+  ask "¿Bajar la palanca?" no=espera
+  lamp_ring 1
+  set F_ANILLO_1
+  set F_BRUMA_1
+  say "El primer anillo se enciende. Un haz blanco barre la isla y empuja la Bruma lejos del camino de las Marismas."
+  say "En el reflejo de la lente aparece un recuerdo: Ines te sube en brazos para ver girar la luz."
+  say "Tu le preguntas de donde sale."
+  speaker "Ines"
+  say "De ellos, {N}. De todos los que viven en la isla. Nosotros solo la juntamos y se la devolvemos al mar."
+  speaker ""
+  say "El recuerdo se apaga. Quedan cinco anillos negros."
+  set F_DEMO_FIN
+  save_prompt
+  demo_end
+  end
+espera:
+  say "Dejas la palanca como estaba."
+  end
+encendido:
+  say "El primer anillo brilla. Los otros cinco siguen negros."
+  say "En el libro: Segundo anillo, once especies."
+  end

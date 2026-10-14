@@ -278,6 +278,14 @@ world_ev_t *world_event_at(uint8_t x, uint8_t y) {
 BANKREF_EXTERN(world_maps)
 extern const gbe_ref_t world_maps[];
 
+// Metatile set of a map (world.py: index of its res/metatiles*.mt among the sorted names): the game
+// loads that set's tiles and metatiles before world_load_id draws the map
+uint8_t world_map_mtset(uint8_t id) {
+    gbe_ref_t r;
+    bank_memcpy(BANK(world_maps), &r, &world_maps[id], sizeof(r));
+    return bank_read8((uint8_t)(uint16_t)r.bank, (const uint8_t *)r.ptr + 4);   // offsetof(world_map_t, mtset)
+}
+
 // LCD off: load map MAP_<NAME> (world.py world_index)
 void world_load_id(uint8_t id, uint8_t fx, uint8_t fy, int16_t cx, int16_t cy) {
     gbe_ref_t r;

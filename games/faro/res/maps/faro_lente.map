@@ -1,0 +1,69 @@
+; FARO interior FARO_LENTE: 1 sector, room 10x9 at cells 3..12 x 3..11, VOID around.
+@ map FARO_LENTE
+@ metatiles metatiles_faro
+@ size 1 1
+@ border VOID
+legend:
+# VOID
+: STONE
+O WALL_WIN
+G WALL_STONE
+t TABLE_00
+y TABLE_01
+d STAIRS_DOWN
+a LENS_00
+b LENS_01
+e LENS_02
+g LENS_10
+h LENS_11
+i LENS_12
+j LENS_20
+k LENS_21
+l LENS_22
+grid:
+; sector row 0 (y 0)
+################
+################
+################
+###GGOGGGOGdG###
+###::::::::::###
+###:::abe::::###
+###:::ghi::::###
+###:::jkl::::###
+###::::::ty::###
+###::::::::::###
+###::::::::::###
+###::::::::::###
+################
+################
+################
+################
+objects:
+; sector row 0 (y 0)
+................
+................
+................
+...........U....
+................
+......123.......
+......4.5.......
+......678.......
+.......V.L......
+................
+................
+................
+................
+................
+................
+................
+@ obj U warp map=FARO_PB x=11 y=4 face=DOWN                                          ; escalera a la planta baja
+@ obj V trigger script=lente_vista once=F_LENTE_VISTA                                ; delante de la gran lente: primera vez (6 anillos negros)
+@ obj L sign script=faro_lente                                                       ; mesa del farero junto a la lente: enciende el anillo 1 con 5 especies
+@ obj 1 patch flag=F_ANILLO_1 mt=23                                                  ; lente -> anillo 1 encendido (LENS_00 -> LENSLIT_00)
+@ obj 2 patch flag=F_ANILLO_1 mt=24                                                  ; lente -> anillo 1 encendido (LENS_01 -> LENSLIT_01)
+@ obj 3 patch flag=F_ANILLO_1 mt=25                                                  ; lente -> anillo 1 encendido (LENS_02 -> LENSLIT_02)
+@ obj 4 patch flag=F_ANILLO_1 mt=26                                                  ; lente -> anillo 1 encendido (LENS_10 -> LENSLIT_10)
+@ obj 5 patch flag=F_ANILLO_1 mt=28                                                  ; lente -> anillo 1 encendido (LENS_12 -> LENSLIT_12)
+@ obj 6 patch flag=F_ANILLO_1 mt=29                                                  ; lente -> anillo 1 encendido (LENS_20 -> LENSLIT_20)
+@ obj 7 patch flag=F_ANILLO_1 mt=30                                                  ; lente -> anillo 1 encendido (LENS_21 -> LENSLIT_21)
+@ obj 8 patch flag=F_ANILLO_1 mt=31                                                  ; lente -> anillo 1 encendido (LENS_22 -> LENSLIT_22)

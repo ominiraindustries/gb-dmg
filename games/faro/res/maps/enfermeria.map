@@ -1,0 +1,61 @@
+; FARO interior ENFERMERIA: 1 sector, room 10x9 at cells 3..12 x 3..11, VOID around.
+@ map ENFERMERIA
+@ metatiles metatiles_interior
+@ size 1 1
+@ border VOID
+legend:
+# VOID
+: STONE
+D DOORMAT
+W WALL
+O WALL_WIN
+P WALL_PIC
+K WALL_CLOCK
+[ COUNTER_L
+= COUNTER_M
+] COUNTER_R
+B BED_00
+E BED_10
+t TABLE_00
+y TABLE_01
+c CHAIR
+f PLANT
+grid:
+; sector row 0 (y 0)
+################
+################
+################
+###WOWWKWWPOW###
+###B:B::::::f###
+###E:E::[==]:###
+###::::::::::###
+###::::::::::###
+###::::::::::###
+###:::cty::::###
+###f::::::::f###
+###::::D:::::###
+################
+################
+################
+################
+objects:
+; sector row 0 (y 0)
+................
+................
+................
+................
+.........N......
+....P...........
+................
+................
+................
+................
+................
+.......D........
+................
+................
+................
+................
+@ obj D warp map=ISLA x=60 y=83 face=DOWN                                            ; salida a Varadero
+@ obj N npc look=LOOK_VECINA face=DOWN beh=STILL script=enfermera                    ; enfermera tras el mostrador
+@ obj P npc look=LOOK_PESCADOR face=LEFT beh=STILL script=paciente                   ; paciente junto a las camas

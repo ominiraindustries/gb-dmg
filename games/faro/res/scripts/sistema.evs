@@ -1,0 +1,16 @@
+; FARO - guiones de sistema (harness/script.py). GDD 5.5, 6.4.
+;
+; nueva_partida: SOLO DATOS (corre antes de que exista el campo, main.c new_game() lo ejecuta de un
+; tiron): nada de say/ask/choice/cook/fade. player_new() ya puso nivel, dinero (RULE_START_MONEY),
+; saciedad y las recetas 'inicio' de recipes.tbl; aqui van los objetos iniciales y el punto de
+; salida. El codigo equipa las armas que haya en la bolsa. Los 5 farolillos y el Diario los da
+; Tomasa (guion tomasa, RULE_START_LANTERNS = 5).
+
+script nueva_partida
+  give ITEM_CUCHILLO 1           ; arma inicial (GDD 3.5)
+  give ITEM_ROPA_FAENA 1         ; ropa inicial (DEF 1)
+  give ITEM_POCION 2
+  give ITEM_PAN 2
+  vset V_TUTO 0
+  warp MAP_CASA_INES 11 6 0      ; al pie de la cama de Leo (cama en 11,4-11,5), mirando abajo
+  end

@@ -4,3 +4,4 @@ V_PESCADOR         ; charla rotativa del pescador
 V_VECINA           ; charla rotativa de la vecina
 V_ENCARGO          ; plumas entregadas en el encargo del pescador (0-3)
 V_TUTO             ; paso del tutorial del prologo (0 inicio .. 5 hecho)
+V_TMP            ; temporal de guion (rand, recuentos); no guarda nada entre guiones

@@ -1,0 +1,210 @@
+; FARO - interiores de Varadero: casa de Ines, posada de Tomasa, tienda, enfermeria (map_objects.md).
+; Personajes: Tomasa (cocinera, mentora), Faustino y Carmela (huespedes), Lucia (tendera),
+; Genaro (cliente), Pilar (enfermera), Ramon (paciente).
+
+; ================================================================ CASA_INES
+script ines_estanteria
+  speaker ""
+  rand V_TMP 3
+  if V_TMP == 1 goto l1
+  if V_TMP == 2 goto l2
+  say "Criaturas de Albor, tomo primero. Los margenes estan llenos de notas con la letra de tu abuela."
+  end
+l1:
+  say "Manual del farero. Hay una pagina doblada:"
+  say "La lente no quema aceite. Recoge la luz que llevan dentro los seres de la isla y la devuelve al mar."
+  end
+l2:
+  say "Un recetario copiado a mano. En la primera pagina, con letra de Tomasa:"
+  say "Nunca caces mas de lo que te vas a comer."
+  end
+
+script ines_cuadro
+  speaker ""
+  say "Un cuadro del faro de Albor de noche. Seis anillos de luz giran alrededor de la lente."
+  say "En una esquina, pintado con prisa: Para {N}, cuando sea mayor."
+  end
+
+; ================================================================ POSADA
+; Tomasa: V_TUTO 0 = primera charla (Diario, 5 farolillos, puerta del faro), 1 = espera la carne
+; de Pinzarro, 2 = tutorial de cocina hecho: menu Cocinar / Dormir / Hablar.
+script tomasa
+  speaker "Tomasa"
+  if flag F_DIARIO goto despues
+  say "¡{N}! Por fin te levantas. Ven, que tengo que darte una cosa."
+  say "Hoy hace siete inviernos que se apago el faro. Y que tu abuela se fue."
+  say "Ines me dejo esto antes de irse. Me dijo: cuando el chico sepa cazar su comida, daselo."
+  give ITEM_DIARIO 1
+  give ITEM_FAROLILLO 5
+  speaker ""
+  say "Recibes el Diario de Ines y 5 farolillos."
+  speaker "Tomasa"
+  say "El diario esta lleno de criaturas, recetas y cosas del faro. Le faltan paginas: Ines las iba dejando por ahi."
+  say "Los farolillos guardan la luz de una criatura. Tu abuela decia que el faro no quema aceite: junta la luz de los seres de la isla."
+  say "Y esta llave abre la puerta del faro. Ya va siendo hora de que alguien suba."
+  set F_DIARIO
+  set F_FARO_ABIERTO
+  speaker ""
+  say "Ahora puedes entrar en el faro, al final del Sendero del Cabo."
+  speaker "Tomasa"
+  say "Pero lo primero es lo primero: con la tripa vacia no se enciende nada."
+  say "Baja a la playa y caza un Pinzarro. Traeme su carne y te digo como se cocina."
+  vset V_TUTO 1
+  end
+
+despues:
+  if V_TUTO >= 2 goto menu
+  has ITEM_CARNE_CANGREJO 1
+  if_answer 1 cocinar
+  say "Los Pinzarros andan por la playa, al sur del pueblo. Peleale hasta tumbarlo y su carne es tuya."
+  say "Si te hieren, una pocion. Y si no, la enfermeria de Pilar."
+  end
+
+cocinar:
+  set F_TUTO_CAZA
+  say "¡Mira que pinzas! Bien cazado."
+  say "La carne fresca se estropea en unos dias. Con sal aguanta y sabe mejor. Toma, sal para que pruebes."
+  give ITEM_SAL 2
+  learn_recipe RECIPE_CANGREJO_SAL
+  speaker ""
+  say "Recibes 2 de Sal. Aprendes la receta Cangrejo y sal."
+  speaker "Tomasa"
+  say "Ahora tu. Pon la carne y la sal en la olla."
+  cook
+  say "Un buen plato te cura y te protege un rato. Comer bien es la mitad de la caza."
+  say "Otra que te va a gustar: bayas, mas bayas y un poco de miel. Mermelada: te deja ligero y callado como un gato."
+  learn_recipe RECIPE_MERMELADA
+  speaker ""
+  say "Aprendes la receta Mermelada."
+  speaker "Tomasa"
+  say "Una cosa mas. Para el faro no sirve cazar: hay que capturar."
+  say "Cansa a la criatura sin tumbarla y lanzale un farolillo. Cuanto menos vida le quede, mas facil."
+  say "Cuando tengas mas mano aprenderas el Golpe suave: pega fuerte, pero nunca mata."
+  say "Con cinco especies distintas en el Cuaderno, sube a la Sala de la Lente. Ines sabria que hacer. Y tu tambien."
+  say "Ah, y pasate por el muelle. Anselmo lleva dias preguntando por ti."
+  set F_TUTO_COCINA
+  vset V_TUTO 2
+  end
+
+menu:
+  say "¿Que se te ofrece, {N}?"
+  choice "Cocinar" "Dormir" "Hablar" "Adios"
+  if_answer 0 m_cocina
+  if_answer 1 m_dormir
+  if_answer 2 m_hablar
+  say "Cuidate mucho, y come caliente."
+  end
+m_cocina:
+  say "La olla es tuya. Echa lo que traigas."
+  cook
+  end
+m_dormir:
+  say "Para ti la cama es gratis. Anda, descansa."
+  inn 0
+  end
+m_hablar:
+  if not flag F_HONDA goto h_muelle
+  if not flag F_ENCARGO_OK goto h_machete
+  if not flag F_LENTE_VISTA goto h_lente
+  if not flag F_ANILLO_1 goto h_cinco
+  say "¡Vi la luz desde esta ventana, {N}! Siete inviernos esperando esa vuelta."
+  goto lore
+h_muelle:
+  say "Anselmo quiere verte. Lo encontraras al final del muelle, al sur."
+  goto lore
+h_machete:
+  say "Anselmo tiene un machete que te vendria bien. Hay criaturas que solo viven tras las zarzas del norte."
+  goto lore
+h_lente:
+  say "¿Has subido ya a la Sala de la Lente? El faro esta al final del Sendero del Cabo."
+  goto lore
+h_cinco:
+  say "Cinco especies distintas, {N}. Mira el Cuaderno: ahi ves cuantas llevas."
+lore:
+  if V_TOMASA == 1 goto t1
+  if V_TOMASA == 2 goto t2
+  if V_TOMASA >= 3 goto t3
+  say "Cocina lo que caces. Lo que se estropea, se sala. Lo que sobra, se vende."
+  vset V_TOMASA 1
+  end
+t1:
+  say "Tu abuela bajaba del faro oliendo a aceite y a sal. Se comia tres platos y se volvia a subir."
+  vset V_TOMASA 2
+  end
+t2:
+  say "Antes de la Bruma, esta posada se llenaba de marineros de toda la isla. Ahora solo me quedan Faustino y Carmela."
+  vset V_TOMASA 3
+  end
+t3:
+  say "Nunca caces mas de lo que te vas a comer. La isla te lo devuelve, o te lo cobra."
+  vset V_TOMASA 0
+  end
+
+script huesped_pescador
+  speaker "Faustino"
+  rand V_TMP 2
+  if V_TMP == 1 goto l1
+  say "Tres semanas esperando a que levante la Bruma para salir a por sardina. Y nada."
+  end
+l1:
+  say "Dicen que cuando el faro se encienda, la Bruma se aparta. Como un gato del agua."
+  say "Yo ya no creo en nada. Pero si pasa, invito a la primera ronda."
+  end
+
+script huesped_vecina
+  speaker "Carmela"
+  rand V_TMP 2
+  if V_TMP == 1 goto l1
+  say "Las ancas de Sapoyo con unas bayas... Mi madre decia que eso da una fuerza que no veas."
+  say "Nunca me dijo cuanto de cada. Habra que probar."
+  end
+l1:
+  say "Los huevos de Gavirata chiquitos pero sabrosos. Ines hacia algo con ellos, en el faro."
+  end
+
+; ================================================================ TIENDA
+script tendera
+  speaker "Lucia"
+  if not flag F_ENCARGO_ON goto tienda
+  if flag F_ENCARGO_OK goto tienda
+  say "Si traes plumas, no me las vendas a mi. Anselmo te las paga mejor."
+tienda:
+  say "¡Bienvenido! ¿Que te hace falta?"
+  shop SHOP_VARADERO
+  say "Vuelve cuando quieras."
+  end
+
+script cliente_tienda
+  speaker "Genaro"
+  rand V_TMP 2
+  if V_TMP == 1 goto l1
+  say "Madera para la hoguera, siempre. Sin fuego no se cocina, y sin cocinar, en el campo pasas hambre."
+  end
+l1:
+  say "Un cebo dulce en la hierba y los Dunejos vienen solos. Mientras comen no oyen nada."
+  end
+
+; ================================================================ ENFERMERIA
+script enfermera
+  speaker "Pilar"
+  if flag F_ENFERMERIA goto curar
+  say "Hola, {N}. Aqui curamos a quien venga, y no cobramos nada."
+  say "Si una criatura te deja sin fuerzas, te traeran a esta enfermeria. Eso si, las conchas se pierden por el camino."
+  set F_ENFERMERIA
+curar:
+  say "A ver esas heridas."
+  heal
+  say "Listo. Como nuevo."
+  end
+
+script paciente
+  speaker "Ramon"
+  rand V_TMP 2
+  if V_TMP == 1 goto l1
+  say "Sali con mi barca a buscar a mi hermano dentro de la Bruma. Di vueltas dos dias sin ver el agua bajo el remo."
+  say "Ahi dentro no hay norte ni sur. No entres, {N}."
+  end
+l1:
+  say "En la Bruma se oyen cosas. Como un canto muy grave, debajo del agua."
+  say "Pilar dice que fue la fiebre. Yo se lo que oi."
+  end

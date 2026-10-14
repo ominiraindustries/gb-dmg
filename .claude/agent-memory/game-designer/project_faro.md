@@ -21,6 +21,12 @@ eighths (`(d*mul)>>3`, Golpe suave 6). tests/test_data.py = GDD 3.10 examples (s
 Fixed ids other agents use: LOOK ABUELA/PESCADOR/VECINA (spr 0/16/32), SPAWN PLAYA_VAR/SENDERO/CABO/CLARO,
 FORAGE BAYAS/RAMAS. flags.txt/vars.txt are append-only.
 
+M1b scripts written 2026-10-14 (res/scripts/*.evs by area). Named NPCs (keep consistent): Rosa (old
+neighbour), Marisa (plaza), Paco (beach nets), Anselmo (dock: Honda + 3 Plumas -> Machete), Lucia (shop),
+Genaro, Pilar (clinic), Ramon (lost in the Bruma), Faustino/Carmela (inn guests). Tomasa opens the faro
+door with the diary scene. Speaker persists between scripts: every script sets its own `speaker`.
+`give` is silent (scripts narrate "Recibes..."). Gremio de Altamar foreshadowed (Ines refused its lamps).
+
 **Why:** commercial product, 10-15 h; also grows the harness with RPG infrastructure.
 **How to apply:** keep M1a engine before M1b slice; bank 0 <= 14 KB; when adding species/items, append
 rows (row order = registry number / save ids); re-run test_data.py after any table change.

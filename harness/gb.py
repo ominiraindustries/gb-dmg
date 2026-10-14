@@ -303,7 +303,8 @@ def build(name):
             for map_file in map_files:
                 m = world.load(gdir, map_file)
                 maps.append(m)
-                sources.append(world.convert(m, gen, cfg.get("world_objects", {}), syms))
+                mtsets = [f.stem for f in sorted((gdir / "res").glob("metatiles*.mt"))]
+                sources.append(world.convert(m, gen, cfg.get("world_objects", {}), syms, mtsets.index(m.mt_stem)))
             sources.append(world.write_index(maps, gen))
             problems = world.lint_warps(maps)
             if problems:

@@ -1,0 +1,17 @@
+; FARO - Claro tras las zarzas, ISLA (2,4) (map_objects.md). Se entra cortando las zarzas
+; (40,78)-(41,78) con el Machete del encargo de Anselmo: aqui viven Polifaro y Sapoyo, la especie
+; que falta para el anillo 1.
+
+script claro_entrada
+  speaker ""
+  say "Al otro lado de las zarzas se abre un claro tranquilo, con una charca en medio."
+  say "Entre la hierba flotan lucecitas que se encienden y se apagan: Polifaros."
+  say "Tu abuela escribio sobre ellos en el diario. Su luz guiaba a los barcos en las noches sin luna."
+  set F_CLARO_VISTO
+  end
+
+script cartel_claro
+  speaker ""
+  say "Un cartel viejo, tallado a navaja:"
+  say "Aqui acampaba Ines. Silencio, que en la charca duermen los Sapoyos."
+  end

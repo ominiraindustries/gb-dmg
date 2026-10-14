@@ -279,6 +279,7 @@ void save_erase(void) GBE_FAR;
 #endif
 typedef struct {
     uint8_t w, h, border, nsec;          // size in sectors, metatile outside, unique sectors
+    uint8_t mtset;                       // metatile set: index of res/metatiles*.mt (sorted names)
     const uint8_t *grid;                 // w*h unique-sector indices
     const uint8_t *sectors;              // nsec x 256 metatile ids (row-major 16x16)
     const uint8_t *events;               // 8-byte object records sorted by sector (world.py)
@@ -309,6 +310,7 @@ uint8_t wmt_at_c(uint8_t x, uint8_t y);      // C reference (gbe_selftest.c, GBE
 uint8_t wattr_at(uint8_t x, uint8_t y);
 void world_set_cell(uint8_t x, uint8_t y, uint8_t mt);   // temporary patch (until the sector reloads)
 void world_load_id(uint8_t map_id, uint8_t fx, uint8_t fy, int16_t cx, int16_t cy);   // MAP_<NAME>
+uint8_t world_map_mtset(uint8_t map_id);      // its metatile set: load the tiles + metatiles first
 uint8_t world_events(uint8_t sx, uint8_t sy);   // copy a sector's objects to wev[] -> wev_n
 world_ev_t *world_event_at(uint8_t x, uint8_t y);   // object on a cell (0 = none); fills wev[]
 
