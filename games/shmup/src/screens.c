@@ -11,6 +11,9 @@
 
 #define BG(r, c)  ((uint8_t *)0x9800 + (r) * 32 + (c))
 #define WIN(r, c) ((uint8_t *)0x9C00 + (r) * 32 + (c))
+// positions from the mockups (harness/screens.py SCREEN_<NAME>_AT_<TEXT>)
+#define BGA(at)   ((uint8_t *)0x9800 + (at))
+#define WINA(at)  ((uint8_t *)0x9C00 + (at))
 
 uint16_t screen_timer;           // 16-bit: CONTINUAR lasts 632 f (an 8-bit timer wrapped, QA bug)
 uint8_t screen_sub, count_n, died_in_stage;
@@ -55,7 +58,7 @@ void game_start(void) {
 // ---------------------------------------------------------------- TITLE
 void title_build(void) {
     load_screen(screen_title_map);
-    put_bcd_now(BG(12, 10), hiscore);
+    put_bcd_now(BG(12, 10), hiscore);              // RECORD 000000: digits after "RECORD "
     SHOW_BKG;
     SHOW_SPRITES;
     state = ST_TITLE;
@@ -66,10 +69,10 @@ void title_update(void) {
     uint16_t t = ++screen_timer;
     oam16(0, 72 + 8, 56 + 16 + ((t >> 4) & 1), SPR_PLAYER, 0);    // bob 1 px every 16 f
     if (screen_sub == 0) {
-        blink_text(BG(10, 4), "PULSA START", t);
+        blink_text(BGA(SCREEN_TITLE_AT_PULSA_START), "PULSA START", t);
         if (pressed & (J_START | J_A)) { sfx(SFX_START); screen_sub = 1; screen_timer = 0; }
     } else {                                             // fast blink 32 f, then go
-        if ((t & 3) == 0) text_put_str(BG(10, 4), (t & 4) ? "           " : "PULSA START");
+        if ((t & 3) == 0) text_put_str(BGA(SCREEN_TITLE_AT_PULSA_START), (t & 4) ? "           " : "PULSA START");
         if (t == 32) { game_start(); transition(ST_PLAY); }
     }
 }
@@ -103,7 +106,7 @@ void pause_update(void) {
 // sub 0 fade out, 1 count, 2 fade out to play, 3 fade in to play
 static void continue_digits(void) {
     uint8_t d = T_DIGIT0 + count_n, q = T_DIGIT0 + continues;
-    text_put(WIN(8, 9), &d, 1);
+    text_put(WINA(SCREEN_CONTINUAR_AT_9), &d, 1);
     text_put(WIN(11, 13), &q, 1);
 }
 
@@ -131,7 +134,7 @@ void continue_update(void) {
         }
     } else if (screen_sub == 1) {
         if (t <= 16) { k = (t - 1) >> 2; set_fade(k >= 3 ? 0 : 3 - k); }
-        else blink_text(WIN(13, 4), "PULSA START", t - 16);
+        else blink_text(WINA(SCREEN_CONTINUAR_AT_PULSA_START), "PULSA START", t - 16);
         if (t >= 46 && (pressed & J_START)) {            // continue in place (GDD 2.4)
             uint8_t i;
             sfx(SFX_START);
@@ -172,9 +175,9 @@ void continue_update(void) {
 void gameover_build(void) {
     hiscore_update();
     load_screen(screen_gameover_map);
-    put_bcd_now(BG(7, 11), score);
-    put_bcd_now(BG(9, 11), hiscore);
-    memset(BG(11, 4), T_BLANK, 13);                      // the mockup shows NUEVO RECORD!: blinks if set
+    put_bcd_now(BGA(SCREEN_GAMEOVER_AT_012340), score);
+    put_bcd_now(BGA(SCREEN_GAMEOVER_AT_012340_2), hiscore);
+    memset(BGA(SCREEN_GAMEOVER_AT_NUEVO_RECORD), T_BLANK, SCREEN_GAMEOVER_LEN_NUEVO_RECORD);   // blinks if set
     SHOW_BKG;
     state = ST_GAMEOVER;
     DISPLAY_ON;
@@ -182,7 +185,7 @@ void gameover_build(void) {
 
 void gameover_update(void) {
     uint16_t t = ++screen_timer;
-    if (new_record) blink_text(BG(11, 4), "NUEVO RECORD!", t);
+    if (new_record) blink_text(BGA(SCREEN_GAMEOVER_AT_NUEVO_RECORD), "NUEVO RECORD!", t);
     if (t == 180 || (t >= 30 && (pressed & (J_START | J_A)))) transition(ST_TITLE);
 }
 
@@ -221,7 +224,7 @@ void clear_build(void) {
     bonus_tiles(BG(6, 12));
     put_bcd_now(BG(8, 11), score);
     put_bcd_now(BG(10, 11), hiscore);
-    memset(BG(12, 3), T_BLANK, 13);
+    memset(BGA(SCREEN_CLEAR_AT_NUEVO_RECORD), T_BLANK, SCREEN_CLEAR_LEN_NUEVO_RECORD);
     SHOW_BKG;
     state = ST_CLEAR;
     DISPLAY_ON;
@@ -257,6 +260,6 @@ void clear_update(void) {
         }
         return;
     }
-    if (new_record) blink_text(BG(12, 3), "NUEVO RECORD!", t);
+    if (new_record) blink_text(BGA(SCREEN_CLEAR_AT_NUEVO_RECORD), "NUEVO RECORD!", t);
     if (t == 300 || (t >= 30 && (pressed & (J_START | J_A)))) transition(ST_TITLE);
 }

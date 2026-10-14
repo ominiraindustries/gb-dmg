@@ -215,6 +215,25 @@ class GB:
         interrupts that fire during the call. Uses PyBoy's private _cycles() (PyBoy 2.8)."""
         return Profiler(self, funcs)
 
+    def worst_frames(self, funcs, frames, step=None, top=3, var="frame_lines"):
+        """Play `frames` frames (step(gb, f) presses buttons) and return the `top` frames with the
+        highest `var` (scanlines), each as (lines, frame, [(T, func, calls), ...]) sorted by cost.
+        The question it answers: what exactly is in the worst frame (games/shmup: the peak was 4
+        medium costs at once, not one hot spot; per-call averages hid it)."""
+        p = self.profile(funcs)
+        prev, out = {}, []
+        for f in range(frames):
+            if step:
+                step(self, f)
+            self.frames(1)
+            cur = {k: (s["total"], s["calls"]) for k, s in p.stats.items()}
+            d = [(cur[k][0] - prev.get(k, (0, 0))[0], k, cur[k][1] - prev.get(k, (0, 0))[1])
+                 for k in cur]
+            prev = cur
+            out.append((self.u8(var), f, sorted((x for x in d if x[0]), reverse=True)))
+        p.stop()
+        return sorted(out, key=lambda x: -x[0])[:top]
+
     # --- screen ---
     def screenshot(self, name):
         """Render and save shots/<name>.png. Returns the path. Advances 2 frames: PyBoy draws the
