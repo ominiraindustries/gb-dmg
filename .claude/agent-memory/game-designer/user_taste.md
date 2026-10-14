@@ -17,8 +17,10 @@ Choices made on the platformer GDD (2026-10-14):
 - Scope: small first (4 levels, decide more after playtest); accepts my recommendations on technical/scope questions.
 
 Also likes classic PC first-person crawlers (Eye of the Beholder, Dungeon Hack): asked for one on
-the DMG (games/dungeon, 2026-10-14).
+the DMG (games/dungeon, 2026-10-14). There he **rejected my knight-world recommendation (CRIPTA) and
+picked TORRE HUNDIDA** (wizard's tower swallowed upside down) — so the knight world is not a default;
+he likes a fresh, quirky premise per game. Accepted all my technical/UX recommendations otherwise.
 
 **How to apply:** default to proven classic mechanics and numbers from the reference game; offer
-2-3 theme concepts including a fantasy/medieval one (don't assume cute is preferred); lean toward
+2-3 theme concepts including a fantasy/medieval one and an original twist (don't assume cute or the knight world); lean toward
 forgiving difficulty for GB sessions; write UI text in Spanish.

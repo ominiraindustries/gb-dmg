@@ -1,15 +1,15 @@
-# CRIPTA (título provisional) — Documento de diseño
+# TORRE HUNDIDA — Documento de diseño
 
-Estado: borrador (2026-10-14)    Versión: 0.1    Autor: game-designer
+Estado: aprobado (2026-10-14)    Versión: 1.0    Autor: game-designer
 
 > Carpeta `games/dungeon`. Dungeon crawler en primera persona por casillas para DMG (mover una
 > casilla, girar 90°, vista pseudo-3D compuesta con piezas). **Doble objetivo:** un juego pequeño y
-> pulido, y **ampliar el arnés** con lo que aún le falta: **bancos de ROM** (tarea pendiente de
-> CLAUDE.md), **vista en primera persona con doble búfer de mapa**, **texto y menús**, **guardado en
+> pulido, y **ampliar el arnés** con lo que aún le falta: **bancos de ROM** (ya en el arnés para assets;
+> aquí se usan a fondo), **vista en primera persona con doble búfer de mapa**, **texto y menús**, **guardado en
 > SRAM**, y **niveles en rejilla con su lint y su vista previa**.
-> Tema y título pendientes (§12); este documento usa el concepto recomendado **CRIPTA**. En código y
-> tests se usan **nombres técnicos neutros** (HERO, FAST, GUARD, SLOW, KEY, POTION...); entre
-> paréntesis, el nombre del tema.
+> Tema y decisiones aprobados por el usuario (§12): **TORRE HUNDIDA**, la torre de un mago que se tragó
+> la tierra boca abajo. En código y tests se usan **nombres técnicos neutros** (HERO, FAST, GUARD, SLOW,
+> KEY, POTION, STAFF, AMULET...); entre paréntesis, el nombre del tema.
 > Mecánicas clásicas del género (crawlers de rejilla en tiempo real); nada de nombres, gráficos,
 > textos ni mapas de juegos existentes.
 > `harness/physics.py` no aplica (no hay saltos): aquí ese papel lo hacen el lint del nivel y el
@@ -20,9 +20,14 @@ Estado: borrador (2026-10-14)    Versión: 0.1    Autor: game-designer
 ## 1. Pitch
 
 - **Género:** dungeon crawler en primera persona, por casillas, combate en tiempo real lento.
-- **Fantasía:** "eres el joven caballero de CABALLERITO, que baja a la cripta sellada bajo el castillo
-  del dragón con una daga, una antorcha y una poción: abre puertas, encuentra la llave que guarda un
-  esqueleto y llega a la escalera del siguiente piso."
+- **Fantasía:** "eres el aprendiz del mago. Una noche la tierra se tragó su torre entera, **boca abajo**,
+  con el maestro dentro. Bajas por el hueco con una daga y una poción y recorres los pisos invertidos
+  —baldosas en el techo, bóvedas bajo los pies, ventanas llenas de tierra— hacia el que fue el piso más
+  alto, el estudio del mago. Abres puertas, le quitas la llave a una armadura viva y encuentras la
+  escalera que, en la torre del revés, ahora baja."
+- **Ambientación:** la escalera de bajada de cada piso es la antigua escalera de subida; los pisos se
+  cuentan hacia abajo (PISO 1 = el que era el último). Las criaturas son las del laboratorio del mago,
+  sueltas: diablillos, armaduras animadas, ojos flotantes.
 - **Bucle principal:** explorar casilla a casilla → ver algo en el pasillo (ojos en la oscuridad,
   una puerta, un objeto) → luchar de frente (atacar, apartarse cuando el monstruo se prepara) →
   recoger llave/poción/arma → abrir la puerta cerrada → bajar la escalera.
@@ -77,7 +82,7 @@ Estado: borrador (2026-10-14)    Versión: 0.1    Autor: game-designer
 | Repetición manteniendo ↑/↓/lateral | 1 paso cada **12 f** (5 pasos/s) | f | ajustar en playtest |
 | Repetición manteniendo ←/→ | 1 giro cada **12 f** | f | ajustar en playtest |
 | Búfer de entrada | 1 acción pulsada en los últimos 6 f del enfriamiento se ejecuta al acabar | f | como el búfer de tetris |
-| Chocar (muro, puerta cerrada, monstruo, UP) | no se mueve; SFX `BUMP`; `shake_y` 1 px durante 4 f; enfriamiento 12 f | | contra UP además "SALIDA SELLADA" |
+| Chocar (muro, puerta cerrada, monstruo, UP) | no se mueve; SFX `BUMP`; `shake_y` 1 px durante 4 f; enfriamiento 12 f | | contra UP además "EL HUECO SE CERRO" |
 | Entrar en DOWN | solo de frente (↑) desde su única casilla vecina | | → CLEAR (§2.8) |
 | Coger objeto | automático al entrar en su casilla | | §2.7 |
 
@@ -93,7 +98,7 @@ Estado: borrador (2026-10-14)    Versión: 0.1    Autor: game-designer
   oscuridad / suelo, §2.3), así el barrido y el balanceo enseñan fondo coherente.
 - Los sprites (monstruo, objeto) se desplazan con el mismo `scx`/`shake_x` (x de sprite −= desplazamiento);
   durante el barrido de giro se ocultan (3 f).
-- Balanceo y barrido son opcionales (§12, decisión 9): constantes `STEP_BOB` y `TURN_SLIDE`.
+- Balanceo y barrido aprobados (§12, decisión 9); quedan en constantes `STEP_BOB` y `TURN_SLIDE` para el playtest.
 
 ### 2.2 Vista: lo que se ve
 
@@ -124,6 +129,9 @@ de lejos a cerca sin mezclar píxeles de dos piezas en un tile.
 **Fondo (pieza BG):** filas 0-3 techo, 4-7 oscuridad (la franja de P3: todo lo que está a más de 3
 casillas), 8-11 suelo. Cada fila es **un patrón de 2 tiles alternos** (24 bytes de tabla), para que
 `view_clear` rellene a ~8 T por tile y las columnas 20-31 se puedan rellenar con lo mismo.
+En la torre del revés el **techo son las antiguas baldosas** (losas con juntas) y el **suelo es la antigua
+bóveda** (nervios de piedra, tierra en las grietas): el contraste techo oscuro / suelo de trama media se
+mantiene.
 
 **Piezas** (rectángulos con filas contiguas; los lados son trapecios: cada fila es un tramo contiguo):
 
@@ -147,7 +155,7 @@ casillas), 8-11 suelo. Cada fila es **un patrón de 2 tiles alternos** (24 bytes
 - **Puertas y escaleras solo tienen pieza propia en la columna central** (D1-D3, E1-E3). En las
   columnas laterales se pintan como muro (en M1 una puerta lateral parece muro hasta que la miras de
   frente; piezas laterales en M2, §10). Sus caras laterales son las del muro (el marco de piedra).
-- LOCKED = pieza de puerta + LK*. UP = pieza de puerta + LK* ("puerta sellada", no hay escalera de
+- LOCKED = pieza de puerta + LK*. UP = pieza de puerta + LK* (el hueco de entrada, tapado de tierra; no hay escalera de
   subida en M1).
 - DOOR_OPEN se pinta como FLOOR (sin marco en M1).
 - **El DMG no puede voltear tiles de fondo**: las piezas derechas (R) tienen tiles propios.
@@ -174,7 +182,7 @@ las celdas (k,0) con k < d son transitables.
 | Monstruo | 1 | 32x48 | (64, 30), pies en y 77 | 4x3 = 12 | 4 |
 | Monstruo | 2 | 16x32 | (72, 38), pies en y 69 | 2x2 = 4 | 2 |
 | Monstruo | 3 | ojos 16x8 en la oscuridad | (72, 44) | 2 (ojo der. = flip X) | 2 |
-| Objeto en el suelo | 1 | 16x16 (espada, escudo) / 8x16 (llave, poción) | (72, 64) / (76, 64) | 2 / 1 | 2 |
+| Objeto en el suelo | 1 | 16x16 (báculo, amuleto) / 8x16 (llave, poción) | (72, 64) / (76, 64) | 2 / 1 | 2 |
 | Objeto en el suelo | 2 | saco genérico 8x8 | (76, 62) | 1 | 1 |
 
 - Respiración del monstruo (sin tiles extra): la fila superior de sprites sube 1 px cada 32 f.
@@ -183,7 +191,7 @@ las celdas (k,0) con k < d son transitables.
 - Los sprites representan **la vista que se está mostrando** (`shown_x/y/f`, que se actualizan cuando se
   programa el cambio de mapa), no la posición lógica: así sprite y fondo cambian en el mismo frame.
 
-### 2.4 Héroe (HERO, "Caballero")
+### 2.4 Héroe (HERO, "Aprendiz")
 
 | Parámetro | Valor | Notas |
 |---|---|---|
@@ -191,23 +199,23 @@ las celdas (k,0) con k < d son transitables.
 | Arma inicial | DAGA | siempre la tiene |
 | Pociones al empezar | 1 | dificultad suave |
 | Precisión | 208 / 256 | menos la esquiva del monstruo |
-| Defensa | 0; **1 con ESCUDO** | cada punto resta 32 a la precisión del monstruo |
+| Defensa | 0; **1 con AMULETO** | cada punto resta 32 a la precisión del monstruo |
 | Regeneración | +1 PV cada **300 f** si ningún monstruo está alerta (`aware_count == 0`) | suave; ajustar |
 | Llaves / pociones | máx. 9 / 9 | contadores |
 
 | Arma | Daño | Enfriamiento | Notas |
 |---|---|---|---|
 | DAGA | 1-2 | 20 f | |
-| ESPADA | 2-4 | 28 f | se equipa sola al cogerla; se puede volver a la daga en OBJETOS |
+| BACULO (STAFF) | 2-4 | 28 f | bastón de combate del mago; se equipa solo al cogerlo; se puede volver a la daga en OBJETOS |
 
-### 2.5 Combate (tiempo real lento, recomendado §12)
+### 2.5 Combate (tiempo real lento con aviso, §12)
 
 **Atacar (A):** si `atk_cd == 0`: `atk_cd = enfriamiento del arma`, efecto de tajo 8 f, SFX `SWING`, y en
 el mismo frame se resuelve contra la celda (1,0):
 - **Monstruo:** acierta si `rng_next() < 208 − esquiva`. Daño = `min + rng_next() % (max − min + 1)`
   − armadura del monstruo, **mínimo 1**. Acierto: destello (OBP1 = paleta clara) 6 f, retroceso y −2 px
   6 f, SFX `HIT`, mensaje "GOLPE: 3". Fallo: SFX `MISS`, "FALLAS".
-- PV ≤ 0: parpadeo (visible en frames alternos) 24 f, SFX `KILL`, "RATA MUERE"; si llevaba objeto lo deja
+- PV ≤ 0: parpadeo (visible en frames alternos) 24 f, SFX `KILL`, "DIABLILLO CAE"; si llevaba objeto lo deja
   en su celda ("SUELTA UNA LLAVE"); `kills + 1`.
 - **Puerta / cerradura:** ver §2.8 (abrir no gasta enfriamiento).
 - **Nada / muro:** solo el tajo y `SWING`.
@@ -223,16 +231,16 @@ el mismo frame se resuelve contra la celda (1,0):
 
 **Daño esperado por combate** (primer orden, para orientar el playtest; la verdad es el ROM):
 
-| Arma | Escudo | RATA (golpes / f / PV perdidos) | ESQUELETO | LIMO |
+| Arma | Amuleto | DIABLILLO (golpes / f / PV perdidos) | ARMADURA | OJO |
 |---|---|---|---|---|
 | DAGA | no | 3.2 / 64 / 1.5 | 11.1 / 223 / 4.8 | 9.8 / 197 / 4.6 |
 | DAGA | sí | 3.2 / 64 / 1.2 | 11.1 / 223 / 3.9 | 9.8 / 197 / 3.7 |
-| ESPADA | no | 1.6 / 45 / 1.1 | 5.6 / 156 / 3.3 | 4.9 / 138 / 3.2 |
-| ESPADA | sí | 1.6 / 45 / 0.9 | 5.6 / 156 / 2.7 | 4.9 / 138 / 2.6 |
+| BACULO | no | 1.6 / 45 / 1.1 | 5.6 / 156 / 3.3 | 4.9 / 138 / 3.2 |
+| BACULO | sí | 1.6 / 45 / 0.9 | 5.6 / 156 / 2.7 | 4.9 / 138 / 2.6 |
 
-Piso completo (4 ratas, 3 esqueletos, 1 limo) con daga: ~25 PV; con espada y escudo: ~16 PV. Con 20 PV,
+Piso completo (4 diablillos, 3 armaduras, 1 ojo) con daga: ~25 PV; con báculo y amuleto: ~16 PV. Con 20 PV,
 3 pociones en el mapa + 1 inicial (+10 c/u) y regeneración, un jugador medio no debería morir más de una
-vez (objetivo de dificultad suave, §12).
+vez (objetivo de dificultad suave).
 
 ### 2.6 Monstruos
 
@@ -240,9 +248,9 @@ Hasta **12 por piso** (lint). Una celda = un monstruo. Siempre miran al héroe (
 
 | Código (tema) | PV | Daño | Precisión | Esquiva | Armadura | Mover cada | Atacar cada | Preparación | Detecta (Manhattan) | Olvida (>) | Sin alerta |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| FAST ("Rata gigante") | 3 | 1-2 | 192 | 48 | 0 | 24 f | 48 f | 12 f | 4 | 7 | deambula: paso aleatorio cada 72 f |
-| GUARD ("Esqueleto") | 8 | 1-3 | 176 | 24 | 1 | 40 f | 64 f | 16 f | 5 | 8 | quieto |
-| SLOW ("Limo") | 12 | 2-4 | 160 | 0 | 0 | 64 f | 80 f | 20 f | 3 | 6 | quieto |
+| FAST ("Diablillo": rápido, deambula) | 3 | 1-2 | 192 | 48 | 0 | 24 f | 48 f | 12 f | 4 | 7 | deambula: paso aleatorio cada 72 f |
+| GUARD ("Armadura viva": armadura 1, guarda salas) | 8 | 1-3 | 176 | 24 | 1 | 40 f | 64 f | 16 f | 5 | 8 | quieto |
+| SLOW ("Ojo flotante": lento, aguanta mucho) | 12 | 2-4 | 160 | 0 | 0 | 64 f | 80 f | 20 f | 3 | 6 | quieto |
 
 Todos los valores: ajustar en playtest (están en una tabla `mon_stats[]`, nada de código por tipo).
 
@@ -254,7 +262,7 @@ Todos los valores: ajustar en playtest (están en una tabla `mon_stats[]`, nada 
 - **Moverse (alerta):** voraz: eje con mayor |delta| primero (empate: x); si la celda no está libre,
   el otro eje si su delta ≠ 0; si no, espera. Libre = FLOOR o DOOR_OPEN, sin monstruo, sin héroe.
   Los monstruos **no abren puertas** ni pisan escaleras. (Campo de distancias BFS en asm: M2.)
-- Monstruo con objeto: `K` en el nivel = esqueleto que lleva la llave.
+- Monstruo con objeto: `K` en el nivel = armadura viva que lleva la llave.
 
 ### 2.7 Objetos e inventario
 
@@ -262,12 +270,12 @@ Todos los valores: ajustar en playtest (están en una tabla `mon_stats[]`, nada 
 |---|---|---|---|
 | KEY ("Llave") | 8x16 | `keys + 1`, "COGES UNA LLAVE" | se gasta al abrir una LOCKED |
 | POTION ("Poción") | 8x16 | `potions + 1`, "COGES UNA POCION" | OBJETOS → A: +10 PV (tope máx.), "RECUPERAS 10 PV"; con PV llenos "YA ESTAS SANO" y no se gasta |
-| SWORD ("Espada") | 16x16 | `weapon = 1`, "COGES LA ESPADA" | se equipa sola |
-| SHIELD ("Escudo") | 16x16 | `shield = 1`, "COGES EL ESCUDO" | defensa 1, siempre puesto |
+| STAFF ("Báculo") | 16x16 | `weapon = 1`, "COGES EL BACULO" | se equipa solo |
+| AMULET ("Amuleto") | 16x16 | `amulet = 1`, "COGES EL AMULETO" | defensa 1, siempre puesto |
 
 - Máx. 1 objeto por celda (lint), máx. 24 objetos por piso. Si un contador está a 9, el objeto se queda
   en el suelo ("NO PUEDES LLEVAR MAS").
-- Inventario = contadores + arma/escudo (no hay ranuras): la pantalla OBJETOS es una lista fija (§4).
+- Inventario = contadores + arma/amuleto (no hay ranuras): la pantalla OBJETOS es una lista fija (§4).
 
 ### 2.8 Puertas, llaves y escaleras
 
@@ -276,7 +284,7 @@ Todos los valores: ajustar en playtest (están en una tabla `mon_stats[]`, nada 
 | DOOR | → DOOR_OPEN, recomponer vista (mismo camino de 3 f), SFX `DOOR`, "ABRES LA PUERTA" |
 | LOCKED con `keys > 0` | `keys − 1`, → DOOR_OPEN, SFX `UNLOCK`, "USAS LA LLAVE" |
 | LOCKED sin llaves | SFX `LOCKED`, "ESTA CERRADA" |
-| UP | SFX `LOCKED`, "SALIDA SELLADA" |
+| UP | SFX `LOCKED`, "EL HUECO SE CERRO" (por donde entró el aprendiz: tierra) |
 
 - Las puertas no se vuelven a cerrar en M1 (cerrar para cortar el paso a monstruos: M2).
 - Animación de apertura: ninguna en M1 (cambio instantáneo); puerta que sube en 2 pasos: M3 (más piezas).
@@ -288,7 +296,7 @@ PV = 0 → `play_sub = DYING`: entrada bloqueada, la pantalla se funde a negro e
 4 pasos de 8 f; `set_fade` solo aclara: fundido a negro nuevo en E2), SFX `DEATH` → GAMEOVER ("HAS CAIDO": CONTINUAR = cargar la última
 partida guardada; si no hay, empezar el piso desde el principio; TITULO).
 
-### 2.10 Automapa (recomendado, §12)
+### 2.10 Automapa (§12)
 
 - Select en PLAY abre el mapa (pausa total); Select o B lo cierra.
 - Pantalla completa: la ventana se oculta y el búfer trasero se dibuja con 18 filas (filas 8-25 del mapa
@@ -305,13 +313,13 @@ partida guardada; si no hay, empezar el piso desde el principio; TITULO).
 ### 2.11 Mensajes
 
 Línea ≤ 18 caracteres, mayúsculas, sin tildes ni Ñ, solo los glifos de la fuente (dígitos, A-Z,
-`- ! . : ?` y `/` nuevo, E14). Tabla de cadenas en un banco (§9.1), con `#` = número.
+`- ! . : ?` y `/` nuevo, E14). Tabla de cadenas en un banco (§9.1, `#pragma bank 255`), con `#` = número.
 
-`PISO 1` · `GOLPE: #` · `FALLAS` · `<NOMBRE> MUERE` (RATA, ESQUELETO, LIMO) · `SUELTA UNA LLAVE` ·
-`TE HIERE: #` · `ESQUIVAS` · `COGES UNA LLAVE` · `COGES UNA POCION` · `COGES LA ESPADA` ·
-`COGES EL ESCUDO` · `NO PUEDES LLEVAR MAS` (20: se parte en 2 líneas "NO PUEDES" / "LLEVAR MAS") ·
+`PISO 1` · `GOLPE: #` · `FALLAS` · `<NOMBRE> CAE` (DIABLILLO, ARMADURA, OJO) · `SUELTA UNA LLAVE` ·
+`TE HIERE: #` · `ESQUIVAS` · `COGES UNA LLAVE` · `COGES UNA POCION` · `COGES EL BACULO` ·
+`COGES EL AMULETO` · `NO PUEDES LLEVAR MAS` (20: se parte en 2 líneas "NO PUEDES" / "LLEVAR MAS") ·
 `RECUPERAS # PV` · `YA ESTAS SANO` · `ABRES LA PUERTA` · `USAS LA LLAVE` · `ESTA CERRADA` ·
-`SALIDA SELLADA` · `BAJAS LA ESCALERA` · `PARTIDA GUARDADA` · `ERROR AL GUARDAR`.
+`EL HUECO SE CERRO` · `BAJAS LA ESCALERA` · `PARTIDA GUARDADA` · `ERROR AL GUARDAR`.
 
 ---
 
@@ -347,11 +355,11 @@ PLAY --entra en DOWN--> CLEAR (resumen) --Start--> TITLE (M1: "FIN DE LA DEMO")
 
 | Pantalla | Cómo se dibuja | Contenido |
 |---|---|---|
-| TITLE | `.screen`, LCD apagado (`gbe_screen`) | "CRIPTA" con la fuente (logo de tiles en M3), menú NUEVA PARTIDA / CONTINUAR (solo si hay partida válida; el cursor empieza en CONTINUAR), "2026" |
+| TITLE | `.screen`, LCD apagado (`gbe_screen`) | "TORRE HUNDIDA" con la fuente (logo de tiles en M3: la torre del revés), menú NUEVA PARTIDA / CONTINUAR (solo si hay partida válida; el cursor empieza en CONTINUAR), "2026" |
 | PLAY | vista (BG, doble búfer) + HUD (ventana) | §2.2, §5 |
 | MENU pausa | **superposición en el búfer trasero**: la vista actual + caja con marco en columnas 5-14, filas 2-9 | OBJETOS, ESTADO, MAPA, GUARDAR, VOLVER; cursor = sprite flecha |
-| OBJETOS | caja columnas 1-18, filas 1-10 sobre la vista | "POCION   X3", "LLAVE    X1", "DAGA", "ESPADA  EQ", "ESCUDO   EQ" (las que se tengan); A sobre POCION bebe, sobre un arma la equipa |
-| ESTADO | igual | "CABALLERO", "PV      18/20", "ATAQUE   2-4", "DEFENSA  1", "DERROTADOS 3", "TIEMPO 04:12", "PISO 1" |
+| OBJETOS | caja columnas 1-18, filas 1-10 sobre la vista | "POCION   X3", "LLAVE    X1", "DAGA", "BACULO  EQ", "AMULETO  EQ" (las que se tengan); A sobre POCION bebe, sobre un arma la equipa |
+| ESTADO | igual | "APRENDIZ", "PV      18/20", "ATAQUE   2-4", "DEFENSA  1", "DERROTADOS 3", "TIEMPO 04:12", "PISO 1" |
 | GUARDAR | mensaje en el log | escribe la partida (§9.5); "PARTIDA GUARDADA" |
 | MAP | búfer trasero a pantalla completa, ventana oculta | §2.10 |
 | GAMEOVER | `.screen`, LCD apagado | "HAS CAIDO", CONTINUAR / TITULO |
@@ -368,19 +376,19 @@ PLAY --entra en DOWN--> CLEAR (resumen) --Start--> TITLE (M1: "FIN DE LA DEMO")
 
 ## 5. HUD e interfaz
 
-**Recomendado: vista arriba (filas 0-11) + HUD de 6 filas abajo en la VENTANA** (`WY = 96`, `WX = 7`,
+**Vista arriba (filas 0-11) + HUD de 6 filas abajo en la VENTANA** (`WY = 96`, `WX = 7`,
 mapa de ventana en `$9C00` filas 0-5). Sin interrupción LYC: la ventana tapa por sí sola de la línea 96
 hacia abajo. El HUD no se mueve con SCX/SCY (balanceo, barrido, temblor) y existe una sola copia
 (no hay que escribirlo en los dos mapas del doble búfer).
 
 ```
 col: 01234567890123456789
-w0:  V18/20 ES K1 O3   RN     V corazón, E icono de arma (daga/espada), S escudo (o vacío),
+w0:  V18/20 ES K1 O3   RN     V corazón, E icono de arma (daga/báculo), S amuleto (o vacío),
 w1:  ====================     K llave + cuenta, O poción + cuenta, R rosa + letra N/E/S/O
 w2:   PISO 1                  separador (1 tile)
 w3:   ABRES LA PUERTA         registro de mensajes: 4 líneas x 18 (columnas 1-18),
 w4:   GOLPE: 3                el más nuevo abajo
-w5:   RATA MUERE
+w5:   DIABLILLO CAE
 ```
 
 - PV: dos dígitos con espacio a la izquierda (" 8/20"). La brújula usa O = Oeste.
@@ -392,7 +400,7 @@ w5:   RATA MUERE
 - **Menús:** caja con marco de 9 piezas (4 esquinas, 4 bordes, relleno), texto a 1 tile del borde,
   cursor sprite (flecha derecha) a la izquierda de la opción, con vuelta de abajo a arriba. Auto-
   repetición 16/6 f. El menú es un módulo genérico (§9.8 E7).
-- Alternativas (§12, decisión 4): vista 128x96 + panel derecho estilo PC; vista 160x112 + HUD de 4 filas.
+- Disposición aprobada (§12, decisión 4).
 
 ---
 
@@ -409,14 +417,14 @@ ningún monstruo a menos de 4 casillas (Manhattan) del inicio.
      0123456789012345  0123456789012345                   U entrada sellada  X escalera abajo
   0  ################  ................   objetos: @ inicio (@ facing S)  r FAST  k GUARD
   1  #####U##########  ................            K GUARD con llave  m SLOW  p POTION
-  2  #...#.##...#...#  .p...@....w...h.            w SWORD  h SHIELD  l KEY suelta (no hay en M1)
+  2  #...#.##...#...#  .p...@....w...h.            w STAFF  h AMULET  l KEY suelta (no hay en M1)
   3  #...D..D...#...#  ..r.............
-  4  #...#.##...#...#  .........r...k..   Recorrido previsto: sala oeste (rata, poción) ->
-  5  ##.##.#######.##  ................   armería tras D (7,3) (rata, ESPADA) -> sala NE
-  6  ##.##.#######.##  ................   (esqueleto, ESCUDO) -> pasillo central -> sala sur
-  7  ##.##.#######.##  ................   tras D (8,9) (2 esqueletos, uno con la LLAVE,
-  8  #..............#  ................   poción) -> L (12,11) -> antesala con el LIMO
-  9  ##D#####D###.###  ................   delante de X (14,13). Sala SO (2 ratas, poción)
+  4  #...#.##...#...#  .........r...k..   Recorrido previsto: despensa oeste (diablillo,
+  5  ##.##.#######.##  ................   poción) -> almacén tras D (7,3) (diablillo, BACULO)
+  6  ##.##.#######.##  ................   -> sala NE (armadura, AMULETO) -> pasillo central
+  7  ##.##.#######.##  ................   -> biblioteca tras D (8,9) (2 armaduras, una con la
+  8  #..............#  ................   LLAVE, poción) -> L (12,11) -> antesala con el OJO
+  9  ##D#####D###.###  ................   delante de X (14,13). Sala SO (2 diablillos, poción)
  10  #...###....#.###  ................   opcional.
  11  #...###....#L###  .r..............
  12  #...###....#..##  ...r...k........
@@ -425,7 +433,7 @@ ningún monstruo a menos de 4 casillas (Manhattan) del inicio.
  15  ################  ................
 ```
 
-Contenido: 8 monstruos (4 FAST, 3 GUARD, 1 SLOW), 3 pociones, espada, escudo, 1 llave (en un GUARD),
+Contenido: 8 monstruos (4 FAST, 3 GUARD, 1 SLOW), 3 pociones, báculo, amuleto, 1 llave (en un GUARD),
 4 puertas, 1 cerradura. El pixel-artist y el diseñador de niveles pueden retocarlo; el lint manda.
 
 ### 6.2 Reglas del nivel (las comprueba el lint, §11)
@@ -456,9 +464,9 @@ Modo LCDC.4 = 0: índices 0-127 en `$9000`, 128-255 en `$8800` (compartidos con 
 
 | Asset | Índices | Tiles | Notas |
 |---|---|---|---|
-| UI: marco de menú (9), iconos HUD (corazón, daga, espada, escudo, llave, poción, rosa: 7), separador (1), automapa (6), BLANK (1) | 0-23 | 24 | `res/ui.tiles` (ui-designer) |
+| UI: marco de menú (9), iconos HUD (corazón, daga, báculo, amuleto, llave, poción, rosa: 7), separador (1), automapa (6), BLANK (1) | 0-23 | 24 | `res/ui.tiles` (ui-designer) |
 | Fuente compartida + `/` (E14) | 24-65 | 42 | `harness/common/font.tiles` |
-| **Juego de paredes "piedra"** | 66-231 | **166** | `res/walls.tiles` + `res/view.pcs` (pixel-artist) |
+| **Juego de paredes "torre"** | 66-231 | **166** | `res/walls.tiles` + `res/view.pcs` (pixel-artist) |
 | Libres (los pueden usar sprites 232-255) | 232-255 | 24 | margen |
 
 Reparto del juego de paredes (presupuesto por pieza; si el arte no cabe, simplificar texturas):
@@ -474,16 +482,18 @@ Reparto del juego de paredes (presupuesto por pieza; si el arte no cabe, simplif
 | Escalera E1 / E2 / E3 | ≤ 11 / 6 / 3 | arco con peldaños hacia la oscuridad |
 | **Total** | **≤ 166** | |
 
-Legibilidad en el LCD borroso: **sombreado por distancia** (P1 colores 0-1 con contorno 3, P2 1-2, P3 2-3,
+Tema del juego de paredes "torre": sillares de torre redonda, ventanas ojivales **tapiadas de tierra** y
+raíces asomando en algún frontal (variante de textura dentro del presupuesto), puertas de madera con
+herrajes, escalera de caracol del revés que "baja". Legibilidad en el LCD borroso: **sombreado por distancia** (P1 colores 0-1 con contorno 3, P2 1-2, P3 2-3,
 oscuridad 3), techo oscuro y suelo de trama media; las aristas de las esquinas en color 3.
 
 ### 7.2 Tiles de sprite (modo 8x16, `$8000-$87FF`, índices 0-127)
 
 | Asset | Tiles | Notas |
 |---|---|---|
-| FAST, GUARD, SLOW: d1 32x48 (24) + d2 16x32 (8) | 96 | 32 por tipo; ataque = lunge + zarpazo, sin frame extra |
+| FAST (diablillo), GUARD (armadura viva), SLOW (ojo flotante): d1 32x48 (24) + d2 16x32 (8) | 96 | 32 por tipo; ataque = lunge + zarpazo, sin frame extra |
 | Ojos (d3) | 2 | compartidos; ojo derecho = flip X |
-| Objetos d1: llave 2, poción 2, espada 4, escudo 4 | 12 | |
+| Objetos d1: llave 2, poción 2, báculo 4, amuleto 4 | 12 | |
 | Saco genérico d2 | 2 | |
 | Tajo 16x16 / zarpazo 16x16 | 4 / 4 | |
 | Flechas (arriba, derecha; flip para abajo/izquierda) | 4 | indicador de ataque lateral, héroe del automapa, cursor de menús |
@@ -531,10 +541,10 @@ M1: **solo efectos** (`gbe_sfx`). Música en M2 (hUGEDriver en su banco, E16).
 
 ## 9. Técnica
 
-### 9.1 Cartucho y bancos (E1, bloqueante)
+### 9.1 Cartucho y bancos (E1: base ya hecha, queda ampliarla)
 
 **MBC5 + RAM + batería (0x1B), 64 KB en M1 (4 bancos), 8 KB de SRAM:**
-`["-Wm-yt0x1B", "-Wm-yo4", "-Wm-ya1"]` (M2: `-Wm-yo8`, 128 KB).
+`["-autobank", "-Wm-yt0x1B", "-Wm-yo4", "-Wm-ya1"]` (receta de CLAUDE.md; M2: `-Wm-yo8`, 128 KB).
 
 | Parte | M1 |
 |---|---|
@@ -547,29 +557,31 @@ M1: **solo efectos** (`gbe_sfx`). Música en M2 (hUGEDriver en su banco, E16).
 | Pantallas `.screen` (title, gameover, clear: 360 B c/u) | 1.1 KB |
 | **Total** | **~28-31 KB** de código + datos → **no cabe plano junto a GBDK (~3 KB)**: hacen falta bancos ya en M1 |
 
-**Disposición de bancos:**
+**Lo que ya da el arnés (probado en games/gbe_lab):** `game.json` `"banked_res": [stems]` mete los assets
+generados (tilesets, niveles, `screen_<nombre>`) en bancos con `#pragma bank 255` + `BANKREF(stem)`, y
+bankpack (`-autobank`) elige el banco. Helpers en `harness/common/src/gbe_bank.c` (banco 0, restauran el
+banco): `bank_set_bkg_data(bank, first, n, data)`, `bank_set_sprite_data(...)`,
+`bank_memcpy(bank, dst, src, n)`, `bank_read8(bank, p)`. El build se para si algo fijo pasa de `0x4000`
+cuando hay bancos.
 
-| Banco | Contenido | Quién lo mapea |
+**Disposición de bancos** (los números de banco de datos los decide bankpack; el código no los supone,
+usa `BANK(stem)`):
+
+| Zona | Contenido | Quién la mapea |
 |---|---|---|
-| 0 (fijo, `$0000-$3FFF`) | crt de GBDK, ISRs (VBlank de gbe_video), todo gbe, **helpers de banco**, `view_compose`/`view_blit`, bucle principal | siempre |
-| 1 (`$4000`, "banco de casa") | código C del juego (`#pragma bank 1`), tablas pequeñas (stats de monstruos, objetos) | mapeado por defecto; solo lo cambian los helpers del banco 0 y siempre lo restauran |
-| 2 | gráficos: `walls` + `view.pcs` (piezas), `ui`, `font`, `spr` | helpers |
-| 3 | niveles, textos, pantallas `.screen` | helpers |
-| 4-7 (M2) | música (hUGEDriver + canciones), juegos de paredes y pisos nuevos | helpers / ISR de música |
+| Banco 0 (fijo, `$0000-$3FFF`) | crt de GBDK, ISRs (VBlank de gbe_video), todo gbe (incl. `gbe_bank`, `gbe_view`, `gbe_bgbuf`), bucle principal, código del juego **mientras quepa** | siempre |
+| Banco 1 (solo si el banco 0 se llena) | código C del juego con `#pragma bank 1` y entradas `BANKED` llamadas desde `main()` | trampolín de GBDK (cambia y restaura; medir su coste, se esperan ~100-150 T, pocas llamadas por frame) |
+| Bancos autobank | `"banked_res": ["walls", "view", "ui", "font", "spr", "floor1", "screen_title", "screen_gameover", "screen_clear"]` + textos y tablas grandes del juego en un `.c` con `#pragma bank 255` | helpers de `gbe_bank` / `SWITCH_ROM` dentro de gbe_view |
+| M2 | música (hUGEDriver + canciones), juegos de paredes y pisos nuevos | helpers / ISR de música |
 
-Reglas (van a CLAUDE.md, sección "Bancos de ROM", al cerrar E1):
-1. **Código en banco 0 o 1.** Las entradas del banco 1 que llama `main()` son `BANKED` (trampolín de GBDK:
-   cambia y restaura el banco; medir su coste, se espera ~100-150 T, se llaman pocas veces por frame).
-2. **Solo el banco 0 llama a `SWITCH_ROM`**, siempre guardando `_current_bank` y restaurándolo antes de
-   volver. El código del banco 1 nunca cambia de banco (lint del build: `grep SWITCH_ROM` en ficheros
-   del banco 1 → error).
-3. Helpers (banco 0, E1): `bank_memcpy(bank, dst, src, n)` (WRAM), `bank_vram_load(bank, dst_tile, src, n)`
-   (tiles con LCD apagado), `bank_str(bank, id, buf)` (copia un texto a WRAM), y el compositor de la vista
-   cambia al banco de las piezas durante la composición (1 cambio por paso, ~50 T).
-4. Las ISRs del banco 0 no leen datos con banco; la de música (M2) guarda/restaura el banco.
-5. **Arnés:** `game.json` `"banks": {"walls": 2, "view": 2, "ui": 2, "font": 2, "spr": 2, "floor1": 3,
-   "texts": 3, "screens": 3}` → los `.c` generados llevan `#pragma bank N` + `BANKREF`, y `gb.py build`
-   imprime el uso por banco. El enlace plano de games/platformer queda como estaba (no se toca aquí).
+Reglas (para la sección "Bancos de ROM" de CLAUDE.md):
+1. **Solo código del banco 0 cambia de banco** (`SWITCH_ROM`), guardando `_current_bank` y restaurándolo
+   antes de volver. Si existe código en banco 1, nunca cambia de banco (lint nuevo del build, E1).
+2. Datos con banco: tiles con `bank_set_bkg_data`/`bank_set_sprite_data` (LCD apagado), nivel y textos con
+   `bank_memcpy` a WRAM (un mensaje ≤ 18 B, ~300 T), y el compositor de la vista cambia al banco de las
+   piezas (`BANK(view)`) durante la composición (1 cambio por paso, ~50 T).
+3. Las ISRs del banco 0 no leen datos con banco; la de música (M2) guarda/restaura el banco.
+4. `view.pcs` (E11) genera un `.c` que debe poder ir en `"banked_res"` como los tilesets.
 
 **Carga de datos:** al entrar en un piso, con el LCD apagado dentro de `screen_build`: tiles (356 x 16 B),
 mapa a `dmap`, objetos y monstruos a sus tablas, relleno de los dos mapas de fondo (filas 7-20, columnas
@@ -656,20 +668,17 @@ VRAM 16 x 4 = 64, shadow OAM 160, estado ~200 → **~1.4 KB**.
 | `$9C00` filas 7-20 (8-25 en el automapa) | búfer de vista B |
 | LCDC | bit 3 = búfer visible, bit 6 = 1 (ventana en `$9C00`), bit 5 ventana on (off en MAP), bit 4 = 0, bit 2 = 1 (8x16) |
 
-**SRAM (8 KB, E8 `gbe_save`):** dos ranuras de 512 B (`$A000` y `$A200`) escritas en alternancia; vale la
-ranura con firma y suma correctas y la secuencia más alta (si se corta la corriente al guardar, queda la
-otra). SRAM habilitada solo durante el acceso (0x0A a `$0000`, luego 0x00).
+**SRAM (8 KB, `gbe_save`, ya existe):** hoy un bloque en `$A000`: `'G' 'B' versión len_lo len_hi
+datos[len] suma1 suma2` (Fletcher-16, la firma se escribe la última, SRAM habilitada solo dentro de las
+funciones). API: `save_load(dst, len, version)` → 1 si es válido, `save_store(src, len, version)`,
+`save_erase()`. El juego usa `version = 1` (cambiarla invalida partidas de un formato viejo).
 
-| Offset | Bytes | Campo |
-|---|---|---|
-| 0 | 4 | firma `"CRP1"` (por juego) |
-| 4 | 1 | versión del formato (1) |
-| 5 | 1 | secuencia (u8, comparación módulo 256) |
-| 6 | 2 | longitud de la carga n |
-| 8 | n | carga del juego |
-| 8+n | 2 | Fletcher-16 de los bytes 4 .. 8+n−1 |
+**Ampliación E8 (dos ranuras):** ranuras en `$A000` y `$B000` escritas en alternancia, con un byte de
+secuencia (u8, comparación módulo 256) tras la versión; `save_load` elige la ranura válida con la
+secuencia más alta, así un corte de corriente a mitad de guardado deja la partida anterior. Misma API
+(compatible con GRIFO); `save_erase()` borra las dos.
 
-Carga del juego (~360 B): piso 1, `px py pf` 3, `hp hp_max` 2, `keys potions weapon shield` 4, `kills` 1,
+Carga del juego (~360 B): piso 1, `px py pf` 3, `hp hp_max` 2, `keys potions weapon amulet` 4, `kills` 1,
 `play_secs` 2, `rng_state` 2, `dmap` 256 (puertas abiertas incluidas), `seen` 32, objetos cogidos (bits,
 24) 3, monstruos 12 x 4 (vivo/PV, x, y, estado) 48.
 
@@ -680,10 +689,10 @@ Carga del juego (~360 B): piso 1, `px py pf` 3, `hp hp_max` 2, `keys potions wea
 | Composición de la vista más cara de lo estimado (24-30k T) | medir en M1a con un mapa de prueba y el peor caso; culling con test de equivalencia; consultas de celda en asm |
 | VBlank del frame de copia al 78 % (estimado) | medir; `ROWS_PER_VBLANK` a 3; presupuesto de la cola de VRAM bajo mientras se copia |
 | El arte no cabe en 166 tiles de paredes | presupuesto por pieza (§7.1); el pixel-artist revisa con el compositor de referencia (E11); simplificar texturas antes que pedir streaming |
-| Errores de bancos (cuelgue al cambiar de banco, código del banco 1 cambiando banco) | reglas de §9.1, lint del build, test que lee datos de cada banco por los helpers y los compara con los ficheros fuente; `romusage` por banco en el build |
+| Errores de bancos (cuelgue al cambiar de banco, código con banco cambiando banco) | reglas de §9.1, lint del build (E1), test que lee datos de cada banco por los helpers y los compara con los ficheros fuente; uso por banco en el build (E1) |
 | Ventana y búfer B comparten `$9C00` | regiones disjuntas (§9.5); test: tras cada copia, las filas 0-5 de `$9C00` == HUD esperado |
 | Desfase sprites/fondo al cambiar de vista | `shown_x/y/f` fijados el frame antes del cambio; test que en cada frame compara sprites con la vista visible |
-| API de PyBoy para SRAM persistente | verificar en E13 (`ram_file` / guardar-cargar estado); plan B: test de escritura/lectura en la misma sesión + lectura de `$A000` |
+| Guardado cortado a mitad (corriente) | firma escrita la última (ya en `gbe_save`) + dos ranuras (E8); test con `gb.power_off()` |
 | Monstruos que atacan sin verse (lados, detrás) | flecha + `GROWL` en la preparación + mensaje; dibujo lateral en M2 |
 | Puertas laterales que parecen muro | aceptado en M1; piezas laterales de puerta en M2 si sobra presupuesto de tiles |
 | Hardware real: escribir LCDC.3 en VBlank, ventana con WY fijo | sencillo, sin ISR a mitad de frame; probar en M4 |
@@ -691,7 +700,7 @@ Carga del juego (~360 B): piso 1, `px py pf` 3, `hp hp_max` 2, `keys potions wea
 ### 9.7 Globales para tests (no `static`)
 
 `state`, `play_sub`, `menu_page`, `menu_sel`, `px`, `py`, `pf`, `hp`, `hp_max`, `keys`, `potions`,
-`weapon`, `shield`, `atk_cd`, `move_cd`, `kills`, `play_secs`, `dmap[256]`, `seen[32]`, `mon_type[]`,
+`weapon`, `amulet`, `atk_cd`, `move_cd`, `kills`, `play_secs`, `dmap[256]`, `seen[32]`, `mon_type[]`,
 `mon_x[]`, `mon_y[]`, `mon_hp[]`, `mon_state[]` (bit 0 alerta, bit 1 preparando, bit 2 muriendo),
 `mon_move_t[]`, `mon_atk_t[]`, `mon_item[]`, `mon_count`, `aware_count`, `item_type[]`, `item_x[]`,
 `item_y[]`, `item_count`, `view_buf[240]`, `view_flips` (u8, +1 en cada cambio de mapa), `bg_front`
@@ -704,27 +713,29 @@ visto; solo los escriben los tests).
 
 **Reutiliza tal cual:** `gbe_frame` (bucle, entrada, `max_frame_lines`, `vram_late`), `gbe_oam`
 (`oam16/oam8`), `gbe_screen` (transiciones con LCD apagado), `gbe_sfx`, `gbe_vram.s` (`vram_row20` para la
-copia de filas), fuente compartida, `harness/screens.py`, `gb.run_bot`, `gb.profile`, `gb.selftest`.
-`gbe_video` con cambios (E2). **No usa** `gbe_map`, `gbe_vmap`, `gbe_actors`, `gbe_pool`, `gbe_spr`,
+copia de filas), fuente compartida, `harness/screens.py`, `gb.run_bot`, `gb.profile`, `gb.selftest`,
+`gb.worst_frames`, **`gbe_bank`** (`"banked_res"` + helpers, §9.1), **`gbe_save`** (un bloque con
+Fletcher-16; se amplía en E8), `gb.power_off()` / `GB(rom, ram=...)` (apagar y encender conservando la
+SRAM), `gb.bg_map(window=True)`, `gb.io()`. `gbe_video` con cambios (E2). **No usa** `gbe_map`, `gbe_vmap`, `gbe_actors`, `gbe_pool`, `gbe_spr`,
 `gbe_aim` (no hay scroll ni muchos objetos).
 
 Piezas nuevas, genéricas (cada asm con referencia C + caso en `gbe_selftest`), en el orden de M1a:
 
 | # | Pieza | Qué hace | Por qué / para quién más |
 |---|---|---|---|
-| E1 | **Bancos de ROM** (arnés + `gbe_bank.c`) | `"banks"` en game.json → `#pragma bank` + `BANKREF` en los `.c` generados; código del juego en banco 1 con entradas `BANKED`; helpers `bank_memcpy`, `bank_vram_load`, `bank_str`; uso por banco en `gb.py build`; lint "SWITCH_ROM solo en banco 0"; sección de CLAUDE.md actualizada | tarea pendiente bloqueante de CLAUDE.md; la música y los pisos nuevos de todos los juegos la necesitan |
+| E1 | **Bancos de ROM: ampliar** (la base `"banked_res"` + `gbe_bank` ya existe) | (a) código del juego en `#pragma bank 1` con entradas `BANKED` si el banco 0 se llena (receta y coste medido del trampolín); (b) lint del build: `SWITCH_ROM`/`SWITCH_ROM_MBC5` solo en código del banco 0; (c) informe de uso por banco en `gb.py build`; (d) el `.c` de `view.pcs` (E11) y los textos admitidos en `"banked_res"`; (e) CLAUDE.md "Bancos de ROM" al día | primer juego que llena el banco 0 de código; música y pisos nuevos de todos los juegos |
 | E2 | `gbe_video`: doble mapa y ventana abajo | sombra del bit 3 de LCDC aplicada en VBlank + `video_bgmap_now(sel)` (escritura inmediata en VBlank), `video_window(wy)` (ventana fija sin ISR), base de `scy`/`scx`, fundido a negro `set_fade_dark(k)` | doble búfer; HUD inferior sin interrupción |
 | E3 | `gbe_view` (+ `.s`) | compositor de vista en primera persona: formato de piezas por tramos, `view_clear(bg)` asm, `view_blit(piece)` asm (+ C), `view_compose(x, y, f)` con la tabla de las 15 celdas y el orden de §2.3; el juego da `view_cell_class(x, y)` → MURO/PUERTA/CERRADURA/ESCALERA/LIBRE y las tablas de piezas | núcleo del género; reutilizable por otro crawler o por vistas de "ventana" en un RPG |
 | E4 | `gbe_bgbuf` | doble búfer de mapa: lienzo de WRAM (20x12 o 20x18) → mapa oculto, N filas por VBlank con `vram_row20`, cambio de LCDC.3 al acabar, `bgbuf_busy()`, relleno de márgenes | vista, menús superpuestos, automapa; cualquier juego que redibuje pantallas grandes sin apagar el LCD |
 | E5 | `gbe_vq` | cola FIFO de escrituras de mapa `(dst, src, len)` con presupuesto de tiles por frame, ajustable (`vq_budget`) | generaliza las colas de HUD hechas a mano en platformer/shmup |
-| E6 | `gbe_text` | tabla carácter → tile de la fuente, `txt_put(buf, str)`, números con anchura y ceros, registro de N líneas con escritura de K caracteres/frame en la ventana, cadenas en banco (vía `bank_str`) | textos de todos los juegos; base de un futuro RPG |
+| E6 | `gbe_text` | tabla carácter → tile de la fuente, `txt_put(buf, str)`, números con anchura y ceros, registro de N líneas con escritura de K caracteres/frame en la ventana, cadenas en banco (copiadas a WRAM con `bank_memcpy`) | textos de todos los juegos; base de un futuro RPG |
 | E7 | `gbe_menu` | menú vertical: caja de 9 piezas en un lienzo, opciones, cursor sprite, auto-repetición 16/6 f, A/B/Start, devuelve la opción; opciones desactivables (CONTINUAR sin partida) | pausa/título/opciones de cualquier juego |
-| E8 | `gbe_save` | SRAM: 2 ranuras alternas, firma, versión, secuencia, Fletcher-16, habilitar/deshabilitar la RAM alrededor del acceso; `save_write(buf, n)`, `save_read(buf, n)` → 0/1, `save_valid()`, `save_erase()` | récord de shmup (M2 de GRIFO), progreso de cualquier juego |
+| E8 | `gbe_save`: **ampliar** (ya hay 1 bloque con firma `'G''B'`, versión, longitud y Fletcher-16; firma escrita la última) | 2 ranuras alternas (`$A000`/`$B000`) + byte de secuencia; `save_load` elige la válida más nueva; misma API `save_load/save_store/save_erase` | partida a salvo si se corta la corriente al guardar; récord de GRIFO |
 | E9 | `gbe_rng` | xorshift de 16 bits, `rng_next()` 8 bits, `rng_state` global; copia del algoritmo en `harness/gbtest.py` para predecir en tests | todos los juegos con azar |
 | E10 | `harness/levels.py` `"order": "grid"` | rejilla W x H (≤ 32x32) fila-mayor de arriba abajo (`map[y*W + x]`), capa de objetos como los niveles verticales, `@ facing`; `levels.parse()` para el lint | niveles de crawler, puzles, RPG |
 | E11 | `harness/fpview.py` + formato `res/view.pcs` | piezas de la vista en ASCII (leyenda de tiles + rejilla por pieza, `.` transparente, cada fila un tramo contiguo: lo valida); genera las tablas C (con banco); **compositor de referencia en Python** que da las 240 entradas para (mapa, x, y, f) y PNG de vistas canónicas (pasillo, cruce, puerta delante, sala) y de cualquier posición de un nivel | arte de piezas revisable sin compilar; verdad de los tests VRAM == modelo |
 | E12 | `harness/preview.py`: niveles de rejilla | `level_<nombre>.png` en vista cenital con leyenda (colores por tipo de celda y letras de objetos) | revisar niveles sin jugar |
-| E13 | `harness/gbtest.py` | `gb.bg_map(which=0/1)` y `gb.active_bg()` (según LCDC.3), `gb.window_map()`, `gb.sram()` / `gb.write_sram()`, `gb.reset(keep_sram=True)`, `gb.rng_next(state)` | tests de doble búfer, ventana y guardado |
+| E13 | `harness/gbtest.py`: **ampliar** (ya hay `gb.power_off()` + `GB(rom, ram=...)`, `gb.bg_map(window=True)` = `$9C00`, `gb.io()`) | `gb.bg_map(map=0/1)` explícito y `gb.active_bg()` (según LCDC.3 vía `gb.io(0xFF40)`), corromper bytes de la SRAM devuelta por `power_off()` antes de encender, `gb.rng_next(state)` | tests de doble búfer y de ranuras corruptas |
 | E14 | `harness/common/font.tiles` | glifo `SLASH` (`/`) (y su mapeo en `screens.py`/`preview.py`) | "18/20" en el HUD; útil para todos |
 | E15 | `gbe_tiles` (M2, opcional) | cola de datos de tile (16 B) copiados en VBlank con presupuesto (~8 tiles/frame cuando no hay copia de vista) | > 3 tipos de monstruo por piso, decoraciones; la E10 de shmup |
 | E16 | Música (M2) | hUGEDriver en su banco, llamado desde la ISR con guardar/restaurar banco | primera música del estudio |
@@ -733,20 +744,20 @@ Piezas nuevas, genéricas (cada asm con referencia C + caso en `gbe_selftest`), 
 
 ## 10. Hitos
 
-- **M1a — arnés y motor (antes de la lógica del juego):** E1-E14 con referencias C y `gbe_selftest`
-  ampliado, README de `harness/common` y CLAUDE.md (bancos) actualizados. Demo en `games/dungeon`: piezas
+- **M1a — arnés y motor (antes de la lógica del juego):** E1-E14 (E1, E8 y E13 son ampliaciones de lo que ya existe) con referencias C y
+  `gbe_selftest` ampliado, README de `harness/common` y CLAUDE.md (bancos) actualizados. Demo en `games/dungeon`: piezas
   provisionales (rectángulos con números de pieza), un mapa de prueba, andar y girar con el doble búfer,
   menú de pausa de prueba, guardar/cargar, y **medidas reales** de `view_compose`, `bgbuf_draw_vram` y la
   cola (§9.3, §9.4) apuntadas en budgets.md.
 - **M1b — slice jugable (piso 1, arte provisional del pixel-artist):** movimiento/giro con balanceo y
-  barrido, vista con piedra/puertas/escalera, 3 monstruos con IA y combate, objetos, puertas y llave,
+  barrido, vista con muros de torre/puertas/escalera, 3 monstruos con IA y combate, objetos, puertas y llave,
   automapa, HUD y registro, TITLE / MENU (OBJETOS, ESTADO, MAPA, GUARDAR) / GAMEOVER / CLEAR, guardado en
   SRAM y CONTINUAR, efectos de sonido, tests de §11.
 - **M2 — contenido:** pisos 2-3 (`-Wm-yo8`, un juego de paredes por piso), música (E16), experiencia y
   niveles, monstruos en columnas laterales, piezas laterales de puerta, cerrar puertas, palancas y paredes
   falsas, campo de distancias BFS (asm) para la IA, `gbe_tiles` si hacen falta más monstruos.
 - **M3 — pulido:** puerta que sube en 2 pasos, logo de título, más animación de monstruos, grupo o magia
-  (si se aprueban, §12).
+  (solo si se piden más adelante).
 - **M4 — hardware real:** flash cart; legibilidad de la profundidad en el LCD, ghosting de los sprites
   grandes, SRAM con batería real (cortar la corriente al guardar).
 
@@ -763,7 +774,7 @@ que tenga delante y bebe poción con PV < 8 (por el menú).
 | Qué | Cómo |
 |---|---|
 | Autoprueba del motor | `gb.selftest()` → 0 discrepancias en `view_clear`, `view_blit`, `vram_row20`, `rng_next` |
-| Bancos | test: cada recurso con banco leído por `bank_memcpy`/`bank_str` desde la ROM == fichero fuente (tiles, piezas, nivel, textos); build: lint de `SWITCH_ROM`; tras 10 000 f de bot, `_current_bank == 1` en cada frame (foto en `vsync`) |
+| Bancos | test: cada recurso con banco leído por `bank_memcpy`/`bank_read8` desde la ROM == fichero fuente (tiles, piezas, nivel, textos); build: lint de `SWITCH_ROM` y nada fijo por encima de `0x4000`; tras 10 000 f de bot, `_current_bank` en cada `vsync` es el del código (ningún helper deja un banco de datos mapeado) |
 | Pasos, giros, choques | test por acción: estado → botón → `px/py/pf` en el frame de la entrada; `view_flips + 1` exactamente 3 f después; contra muro/puerta/monstruo/UP no se mueve y no hay cambio de mapa; mantener ↑ 120 f en un pasillo largo → 10 pasos; búfer: pulsar → en el enfriamiento se ejecuta al acabar |
 | **Vista == modelo** | en cada cambio de mapa (bot de exploración entero + 4 giros en cada celda de un mapa de prueba): las filas 8-19 x columnas 0-19 del mapa visible (`gb.active_bg()`) == `fpview.compose(dmap, px, py, pf)` de E11 (mismas piezas, mismo orden). Columnas 20-31 y filas 7/20 == fondo de su fila |
 | **Sin desgarro** | durante cada copia, el mapa visible no cambia ni un byte hasta el cambio de LCDC.3; el cambio ocurre con LY ≥ 144 (`vram_late == 0`) |
@@ -776,7 +787,7 @@ que tenga delante y bebe poción con PV < 8 (por el menú).
 | Puertas y llaves | A ante DOOR → DOOR_OPEN + vista nueva; LOCKED sin llave → igual y mensaje; con llave → `keys − 1` y abierta; UP → mensaje |
 | Objetos | entrar en la celda → contador + mensaje + objeto desaparece; contador a 9 → se queda; poción con PV llenos no se gasta |
 | Regeneración y muerte | sin monstruos alerta, +1 PV cada 300 f; `hp = 1` + golpe → DYING → GAMEOVER; CONTINUAR carga la partida |
-| **Guardado** | GUARDAR → SRAM con firma y suma válidas; `gb.reset(keep_sram=True)` → TITLE con CONTINUAR → todo el estado (§9.5) igual al guardado; alternancia de ranuras (2 guardados → 2 secuencias); corromper 1 byte de la ranura nueva → carga la vieja; corromper las dos → no hay CONTINUAR; SRAM deshabilitada fuera del acceso |
+| **Guardado** | GUARDAR → SRAM con firma y suma válidas; `ram = gb.power_off(); GB(rom, ram=ram)` → TITLE con CONTINUAR → todo el estado (§9.5) igual al guardado; alternancia de ranuras (2 guardados → 2 secuencias); corromper 1 byte de la ranura nueva en `ram` → carga la vieja; corromper las dos → no hay CONTINUAR; SRAM deshabilitada fuera del acceso |
 | Menús y texto | Start → MENU con 5 opciones, auto-repetición 16/6 f, vuelta de abajo a arriba, B atrás, Start cierra; OBJETOS/ESTADO muestran los valores reales (tiles del mapa visible == texto esperado); registro: 2 caracteres/frame, sube al llegar un mensaje, FIFO de 4 |
 | Automapa | Select → ventana oculta, celdas del mapa == `seen` + `dmap` (tiles del automapa), flecha según `pf`; se cierra con B/Select y la vista vuelve igual |
 | **Presupuesto de frame** | bot de exploración con `cheat_flags` invencible hasta CLEAR (~20 000 f) + bot de "giros sin parar" 5000 f: `max_frame_lines < 120`, `vram_late == 0`; perfil (`gb.profile`) de `view_compose`, `view_blit`, `bgbuf_draw_vram`, `vq_draw_vram`, IA; `gb.worst_frames()` del peor frame |
@@ -788,61 +799,21 @@ que tenga delante y bebe poción con PV < 8 (por el menú).
 
 ---
 
-## 12. Decisiones pendientes (para el usuario)
+## 12. Decisiones tomadas (2026-10-14)
 
-El documento está escrito con la recomendación de cada punto; cambiar una es barato ahora.
+El usuario eligió:
+1. **Tema y título:** **TORRE HUNDIDA** (no la recomendación CRIPTA): la torre de un mago tragada por la
+   tierra boca abajo; el aprendiz baja por sus pisos invertidos. Monstruos con las mismas mecánicas,
+   re-temáticos: FAST = diablillo, GUARD = armadura viva (de ahí su armadura 1), SLOW = ojo flotante.
+   Objetos: ESPADA → BÁCULO (STAFF), ESCUDO → AMULETO (AMULET).
+2. **Un héroe** (el aprendiz).
+3. **Combate en tiempo real lento con aviso** (preparación de 12-20 f, pausa en menús).
+4. **Vista 160x96 arriba + HUD de 6 filas abajo en la ventana.**
+5. **Automapa** a pantalla completa con Select, solo celdas vistas, en M1.
+6. **Guardar en cualquier momento** desde la pausa (+ automático al bajar escaleras en M2).
+7. **Al morir:** cargar la última partida guardada.
+8. **Progresión:** solo por objetos en M1; experiencia y niveles en M2.
+9. **Paso:** cambio instantáneo + balanceo de 3 f al andar y barrido de 3 f al girar.
+10. **Pisos de M2:** 16x16 como M1.
 
-1. **Tema y título**
-   - a) **CRIPTA** (recomendado): el caballero de CABALLERITO/GRIFO baja a la cripta bajo el castillo del
-     dragón. Monstruos: rata gigante, esqueleto, limo. Reutiliza el mundo que eligió antes.
-   - b) **LA MINA PERDIDA**: un minero enano con su farol; monstruos: murciélago, minero hechizado, golem
-     de barro. Paredes de roca y vigas.
-   - c) **TORRE HUNDIDA**: un aprendiz de mago baja por una torre enterrada; monstruos: diablillo,
-     armadura viva, ojo flotante. (Pide magia antes; encaja mejor si se elige la opción c de la decisión 2.)
-2. **Un héroe o un grupo**
-   - a) **Un héroe** (recomendado): HUD simple, combate legible, cabe en M1.
-   - b) Héroe + compañero (2 personajes, el segundo ataca con su propio enfriamiento con B): M2.
-   - c) Grupo de 4 al estilo de los crawlers de PC (retratos, magia, orden de marcha): M3 como pronto,
-     más HUD y otra vista (menor).
-3. **Combate**
-   - a) **Tiempo real lento con aviso** (recomendado): enfriamientos de 20-28 f, monstruos con
-     preparación de 12-20 f, pausa en menús. Es el sabor del género que pidió.
-   - b) Por turnos: cada acción del héroe es un turno y los monstruos responden después. Más tranquilo y
-     determinista; pierde tensión.
-   - c) Híbrido: tiempo real, pero el reloj de los monstruos solo corre mientras el héroe está a ≤ 2
-     casillas de alguno (explorar es relajado, luchar es en tiempo real).
-4. **Tamaño de la vista y lugar del HUD**
-   - a) **Vista 160x96 arriba + HUD de 6 filas abajo en la ventana** (recomendado): sin interrupciones,
-     HUD que no se mueve con los efectos, 4 líneas de registro.
-   - b) Vista 128x96 arriba a la izquierda + panel derecho de 4 columnas + registro abajo (como los
-     crawlers de PC): el HUD va en el fondo y hay que escribirlo en los dos mapas; sin balanceo ni barrido;
-     menos tiles de pared (vista más estrecha).
-   - c) Vista 160x112 + HUD de 4 filas (estado + 2 líneas de registro): más vista, menos texto; 280
-     entradas por vista (copia en 4 VBlanks).
-   (Nota: en CABALLERITO prefirió el HUD arriba; en un crawler lo natural es la vista arriba y el texto
-   abajo. Un HUD de 1 fila arriba con el corte LYC de `gbe_video` es posible pero complica la ventana.)
-5. **Automapa**
-   - a) **Sí, en M1, pantalla completa con Select y solo lo visto** (recomendado: dificultad suave y es
-     barato con el doble búfer).
-   - b) No (clásico de papel y lápiz).
-   - c) Minimapa 5x5 en el HUD (necesita más filas de HUD y tiles).
-6. **Cuándo se guarda**
-   - a) **En cualquier momento desde la pausa** (+ automático al bajar escaleras en M2) (recomendado:
-     sesiones cortas).
-   - b) Solo al bajar escaleras (más tensión).
-   - c) En altares repartidos por el piso.
-7. **Al morir**
-   - a) **Cargar la última partida guardada** (recomendado, con guardado libre es suave).
-   - b) Volver a la entrada del piso con PV llenos y conservando objetos y puertas abiertas (aún más suave).
-8. **Progresión en M1**
-   - a) **Solo por objetos (espada, escudo) en M1; experiencia y niveles en M2** (recomendado: M1 pequeño).
-   - b) Experiencia desde M1 (+5 PV y +1 de daño por nivel).
-9. **Sensación del paso**
-   - a) **Cambio instantáneo + balanceo de 3 f al andar y barrido de 3 f al girar** (recomendado; gratis
-     con el HUD en la ventana).
-   - b) Cambio instantáneo sin efectos (más "seco", como muchos crawlers clásicos).
-   - (Un paso intermedio real, con la vista medio avanzada, necesitaría otro juego de piezas: ~+100 tiles,
-     no cabe sin streaming. Descartado salvo que se pida para M3.)
-10. **Tamaño de los pisos en M2**
-    - a) **16x16 como M1** (recomendado: piso de 8-15 min, mapa a 1 tile por celda en pantalla).
-    - b) 24x24 o 32x32 (1 KB de WRAM, automapa con desplazamiento): pisos más largos.
+(Opciones descartadas: ver historial de git, versión 0.1.)

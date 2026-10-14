@@ -4,7 +4,7 @@
 ; View letters = pieces for "corridor, door two cells ahead": A/B side walls depth 0 (S0L/S0R,
 ; cols 0-3 / 16-19), C/D side walls depth 1 (S1L1/S1R1, cols 4-5 / 14-15, rows 2-9),
 ; P door front depth 2 (D2, cols 6-13, rows 3-8), '.' background (ceiling rows 0-3,
-; darkness 4-7, floor 8-11). Sprites: RATA at depth 1 would stand at x 64..95, y 30..77.
+; darkness 4-7, floor 8-11). Sprites: a monster at depth 1 would stand at x 64..95, y 30..77.
 ; HUD row 12: V=heart icon, PV 18-20 (the '-' will be the SLASH glyph, E14), E=weapon icon,
 ; S=shield icon, K=key icon + count, O=potion icon + count, compass letter at col 19.
 ; Row 13: separator. Rows 14-17: message log, 4 lines x 18 chars (cols 1-18), newest at the bottom.
@@ -30,5 +30,5 @@ V18-20 ES K1 O3    N
  PISO 1            
  ABRES LA PUERTA   
  GOLPE: 3          
- RATA MUERE        
+ DIABLILLO CAE     
 sprites:
