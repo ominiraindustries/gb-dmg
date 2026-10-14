@@ -21,18 +21,19 @@ List the files in `"common_src"`; their headers are on the include path.
 | `gbe_actors.c` `gbe_actors.s` | actor arrays (struct of arrays), `act_spawn`, asm `act_move` | `GBE_ACT_MAX` | platformer: 240 T vs 1500 T |
 | `gbe_map.c` `gbe_map.s` | 8-row metatile map in WRAM, asm `mt_at`/`solid_at`, camera follow, column streaming, queued cell redraws | `GBE_MAP_MAX_COLS`, `mt_tiles[][4]`, `mt_attr[]` | platformer |
 | `gbe_vmap.c` `gbe_vmap.s` | vertical metatile map (shmups): 10-wide rows, WRAM ring of 16 rows, 1 tile row/frame streamed (<= 8 px/f), `vmap_set` + queue, scroll stop, `VMAP_ROW_Y(r)` | `mt_tiles[][4]`, `GBE_VMAP_W` | shmup: row build ~1000 T asm, copy 24 T/tile |
-| `gbe_aim.c` | 32 directions (`dir_vx/dir_vy`), `aim_dir(dx, dy)` (error <= 1, tested vs atan2), `fire`/`fire_fan` into a pool range | `fire_first/n/t/tile/prop` | shmup |
-| `gbe_sfx.c` | register SFX with per-channel priority | `sfx_table[]` | platformer |
-| `gbe_vram.s` | `vram_col16`: 16 tiles down a BG column | - | platformer: 32 T/tile |
-| `gbe_pool.c` `gbe_pool.s` | many-object pools (bullets, shots, enemies) in 8-bit OAM coords: `pool_alloc`, asm `pool_move` (free on exit), asm `hit_first` (box vs range) | `GBE_POOL_MAX` | gbe_lab: ~130 T/object move |
-| `gbe_spr.c` (+ core in `gbe_pool.s`) | OAM groups with fixed ranges (lower range = priority) and per-frame rotation (`spr_rot`) for >10/line flicker; size 1 or 2 sprites per object | - | gbe_lab: ~4.1k T for 12 objects |
+| `gbe_aim.c` `gbe_aim.s` | 32 directions, speed tables `aim_vx/aim_vy[spd*32+dir]`, `aim_dir(dx, dy)` (error <= 1, tested vs atan2), asm `fire` / C `fire_fan` into a pool range | `fire_first/n/t/tile/prop` | shmup: fire 2000 -> ~960 T |
+| `gbe_sfx.c` + `gbe_sfx_asm.s` | register SFX with per-channel priority (`sfx` in asm; `sfx_c` documents it) | `sfx_table[]` | shmup: ~1000 -> ~300 T |
+| `gbe_vram.s` | `vram_col16` (16 tiles down a BG column), `vram_mt4_list` (queued 2x2 metatiles; used by gbe_map and gbe_vmap) | - | platformer: 32 T/tile; metatile 600 -> 100 T |
+| `gbe_pool.c` `gbe_pool.s` | many-object pools (bullets, shots, enemies) in 8-bit OAM coords: `pool_alloc`, asm `pool_move` (free on exit), asm `hit_first` (box vs range, one compare per axis) | `GBE_POOL_MAX` | shmup: move ~250 T, hit ~100 T per object |
+| `gbe_spr.c` (+ asm `spr_group` in `gbe_pool.s`) | OAM groups with fixed ranges (lower range = priority); each group starts half a group further on odd frames, so a sprite dropped on a >10 line is drawn the next frame | `spr_rot` cycling through 2 x a common multiple of the slot counts (< 64) | shmup: ~300 T per drawn object |
 | `gbe_selftest.c` | asm-vs-C equivalence of all the above, run in the ROM | call `gbe_selftest()` when `gbe_eq_request` | test: `gb.selftest()` |
 
 Header: `gbe.h` (documents every function and the rules). The game provides `src/gbe_config.h`:
 ```c
 #define GBE_ACT_MAX      14     // actor slots
 #define GBE_MAP_MAX_COLS 255    // only if gbe_map is used
-#define GBE_POOL_MAX     32     // only if gbe_pool is used
+#define GBE_POOL_MAX     32     // only if gbe_pool is used (+ 8 scratch records for the selftest)
+#define GBE_VMAP_W       10     // only if gbe_vmap is used
 #define GBE_SELFTEST_MAP 1      // which selftest sections to build: _MAP, _ACTORS, _POOL,
 #define GBE_SELFTEST_VMAP 58    //   _VMAP <metatile count>
 ```
@@ -61,9 +62,13 @@ while (1) {
 - Pool: array of 16-byte records (`pool_obj_t`, offsets fixed in `gbe_pool.s`). Measured on the
   shmup peak: C 53.7k T update / 52k draw; asm over struct-of-arrays 32.7k / 19.5k; asm over records
   26.4k / 13.5k. On the SM83 a record walked with one pointer beats one address per field.
-- Keep loop counters in registers, not WRAM (`spr_group_core`: ~470 T/object saved by that alone).
-- Collisions of many-vs-many on alternate frames (shots vs enemies `frame & 1`); player vs bullets
-  every frame. Fast shots (4 px/f) vs 8+ px enemy boxes cannot tunnel at 2-frame steps.
+- Keep loop counters in registers, not WRAM (`spr_group`: ~470 T/object saved by that alone).
+- Collisions of many-vs-many: each shot every 2nd frame, half of the shots each frame (all on one
+  frame was a 12k T peak); player vs bullets every frame. 5 px/f shots vs 14 px boxes cannot tunnel.
+- What a frame costs with pools (games/shmup peak): OAM groups ~13k T, per-enemy C logic 600-900 T
+  each, collisions ~10k, movement ~7k. `gb.worst_frames()` shows the mix of the worst frame.
+- Next step if a game needs more: a draw-friendly record layout (`t y x tile prop` first) so
+  `spr_group` copies 4 consecutive bytes instead of jumping inside the record.
 
 ## Adding to the library
 Only extract code that a game already uses and tests. Keep a C reference for every asm routine and

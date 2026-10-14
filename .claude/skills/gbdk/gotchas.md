@@ -40,7 +40,16 @@ and tests run with GBDK 4.5.0 (marked *tested*).
 - Varargs (`printf`, `sprintf`, `EMU_printf`): cast 8-bit args explicitly (`(uint8_t)x` for `%hu`/`%hx`),
   otherwise output is wrong. `EMU_printf` `%c` must *not* be cast.
 
+- **Frame timers in `uint8_t` wrap at 256 frames (4.3 s)**: any screen or phase longer than that
+  (a 10 s countdown, a 300 f results screen) needs `uint16_t` (games/shmup CONTINUAR: digits lasted
+  136 f after the wrap and Start was ignored 46 f of every 256). `t % 60` blink phases on a wrapping
+  u8 also drift (46/30 instead of 30/30).
+- **One shot per frame for spawns that cost**: several emitters firing in the same frame (fans,
+  turrets) stack into a peak; a per-frame token (`fire_busy`) with "retry next frame" is invisible.
+
 ## Graphics
+- **With gbe_video, SCX/SCY/BGP/OBP0/OBP1 are written from shadows every VBlank**: a direct
+  `SCY_REG = x` lasts one frame. The build stops on it (`gb.py check_sources`); set the shadow.
 - Never read VRAM for game state (`get_bkg_tile_xy`, `get_vram_byte`): it stalls until VRAM is
   accessible. Keep maps in WRAM.
 - Raw pointer writes to VRAM with the LCD on corrupt randomly; GBDK `set_*` functions are safe

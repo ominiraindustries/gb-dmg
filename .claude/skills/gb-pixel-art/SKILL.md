@@ -57,6 +57,14 @@ label without updating the code (grep the label).
 - Moving objects >= 4x4 px with a dark outline (ghosting).
 - Budget per scanline: 10 sprites. A 16-px-wide actor uses 2. Keep wide bosses as BG tiles.
 
+- **Sprites have no white**: shade 0 is transparent, and OBP0 0xE4 / OBP1 0xD8 map no color to
+  white. A sprite that must read over gray (a bullet over a boss in the BG) uses a black ring +
+  light core, plus a 1 px light-gray halo to separate it from dark BG (games/shmup EBULLET_BOSS).
+- Check sprites over every BG they will cross, including large BG bosses of mid gray: QA found
+  bullets and explosions vanishing over the boss wings (same shade family).
+- Blinking items (OBP0 <-> OBP1 swap) need one big area of a single shade so the swap is visible;
+  0xD8 swaps colors 1 and 2 (light <-> dark gray).
+
 ## Tile budget
 GBDK default: BG tiles 0-127 private, 128-255 shared with sprites; sprites 0-127 private.
 Count unique tiles; reuse via flips (sprites only - DMG BG tiles cannot be flipped), shared corners,

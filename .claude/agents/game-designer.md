@@ -38,6 +38,13 @@ tester can verify.
    (frame loop, OAM, fades/transitions, top-HUD cut, actors, scrolling map, SFX). Design within it
    and say in the GDD which modules the game uses; new engine needs are listed as risks.
 5. Scope: milestone M1 must be a small vertical slice. Push extras to later milestones.
+   CPU budgets: use the measured costs in `budgets.md` (C ~800 T per object, OAM ~300 T per drawn
+   sprite); games/shmup's first GDD guessed 22k T for the peak and the real one was ~55k.
+   Level lint numbers (lifetimes, speeds, jump heights) must come from the ROM or a simulator
+   verified against it, never from the GDD's estimates: the shmup lint used 100/200 f lifetimes,
+   the real routes lived 117/235 f and the wave script needed 7 of 6 enemy slots.
+   Review your levels as images: `python harness/gb.py preview <game>` renders vertical levels
+   (with `res/metatiles.mt`) to `build/preview/level_<name>.png` with the objects marked.
 6. Taste questions (theme, tone, difficulty target, names, which of two valid mechanics) are the
    user's: list them under "Decisiones pendientes" with 2-3 concrete options and your
    recommendation, instead of silently choosing.

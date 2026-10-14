@@ -153,3 +153,26 @@ compiler accesses it with a 16-bit address; only asm benefits from `ldh`).
 
 Unrolling removes `dec` + `jr` (16 T per iteration) at the cost of ROM. Use `.rept n` ...
 `.endm`. Partial unroll (x4, x8) gets most of the gain. Check the size in the build output.
+
+## Walking arrays of records (measured in games/shmup, harness/common/src/gbe_pool.s)
+- Array of 16-byte records beats struct-of-arrays on the SM83: one pointer walked with
+  `ld a,(hl+)` instead of one 16-bit address computation per field (pool_move: C ~1000 T/object,
+  asm over separate arrays ~350, asm over records ~200).
+- Keep loop counters in registers, not WRAM (`ld a,(n); dec a; ld (n),a` = 36 T per iteration);
+  spr_group saved ~470 T per object just by that.
+- Avoid `push hl / pop hl` per record: track the offset you are at and add the rest
+  (`ld a,l; add a,#13; ld l,a; jr nc,.+3; inc h`).
+- Overlap test with one compare per axis: `(uint8)(y - ky) < ry` with `ky = qy - oy - oh + 1`,
+  `ry = qh + oh - 1` precomputed once per call and kept in D/E (~100 T per object vs ~300).
+- Precompute tables instead of shifting `int16_t` at run time (speeds x 4 levels x 32 directions =
+  512 bytes of ROM, `fire` 2000 -> 960 T).
+- Rotations / modulo by small counts: subtract `n*8, n*4, n*2, n` (4 steps) instead of a loop of
+  single subtractions (up to 15 rounds for n = 2).
+
+## sdasgb details met in games/shmup
+- `jr` reaches -128..+127 bytes: long unrolled bodies need `jp` ("jr out of range" at link time).
+- `.+3` style relative targets work inside `.rept` blocks where local labels would repeat.
+- A helper shared by two .s modules must be global (`name::`); a plain `name:` is module-local and
+  the linker reports "Undefined Global".
+- Name scratch Python helper scripts carefully: a script called `token.py` next to the runner
+  shadowed the stdlib `token` module and broke `import numpy` (PyBoy).

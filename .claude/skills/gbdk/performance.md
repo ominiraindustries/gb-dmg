@@ -159,3 +159,19 @@ compile the file separately with `-c`/`-S` to keep them.
 | `set_sprite_tile` + `set_sprite_prop` + `move_sprite` per sprite | ~300 T | write `shadow_OAM[n]` fields through a pointer; `memset` ranges to hide |
 | Enemy physics every frame (5 enemies) | 5 x 3300 T | half rate (alternate halves, double step); player collision every frame |
 
+## Measured in games/shmup (pools of 16-byte records, per-object logic, sound)
+| Pattern | Cost | Better |
+|---|---|---|
+| Per-object logic in C through `pool_obj_t *o` in one big loop (6 enemies: age, route, anim, steering) | ~1500 T per object | small functions taking the pointer (`enemy_frame(o)`, `enemy_think(o)`): SDCC keeps `o` in a register pair, ~600-900 T; "think" on alternate frames per object (`(i ^ frame) & 1`) |
+| Same C even for trivial work (`tm++`, two compares) | ~470 T per object | skip the call for types that only need `o->tm++` |
+| `fire()` (alloc + 13 field writes + speed by switch/shifts) | ~2000 T per bullet | asm with precomputed speed tables (`aim_vx/aim_vy[spd*32+dir]`) ~960 T |
+| `sfx()` through `const sfx_t *` (and even with `memcpy` to the registers) | ~1000-1300 T | asm, `ldh (c),a` x5: ~300 T (gbe_sfx_asm.s) |
+| `add_score` composing 6 HUD digits every call | ~1070 T, 12x in a bomb frame | add only, mark dirty, compose once per frame in `hud_update` |
+| VBlank queue of 4-tile metatiles copied in C (`d[0..33] = q[..]`) | ~600 T per metatile (4 ran past VBlank) | asm `vram_mt4_list` ~100 T |
+| `aim_at` with `int16_t` differences + halving loop | ~1300 T | halve the coordinates first (8-bit, 1 px error) ~650 T incl. `aim_dir` |
+| struct pointer access in general | SDCC keeps the pointer on the stack in big functions: every `o->f` is ~10 instructions (`ldhl sp`, two loads, add offset) | fewer fields per function, locals for repeated fields, or asm for loops over many records |
+| 5 OAM groups (`spr_group`) per frame, 29 records | ~11-13k T (~300 T per drawn object) | the record layout (`+1 x .. +12 tile`) forces pointer jumps; a draw-friendly layout (`t y x tile prop` first) would be the next step |
+Lesson: the frame peak was 4 medium costs at once (sprites 13k, enemy logic 9-15k, collisions 11k,
+movement 7k), not one hot spot. Use `gb.worst_frames(...)` to see inside the worst frame, not
+per-call averages. A synthetic "all pools full" cheat under-reported the peak (112 vs 128 lines):
+always also run a bot through the real level.

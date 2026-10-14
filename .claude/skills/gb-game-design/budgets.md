@@ -21,6 +21,13 @@ Measured in this repo:
 | Tetris idle frame | ~23 scanlines; hard drop + lock + spawn ~93 scanlines |
 | `fits()` collision check (cached shape) | ~1000 T |
 | Copy 10 tiles to VRAM (asm) / (C loop) / (`set_bkg_tiles`) | ~228 T / ~760 T / ~5200 T |
+| Shmup peak (games/shmup towers zone: 12 bullets, 6 enemies, 4 shots, 2-4 turrets) | ~118 lines after optimizing (started at 131) |
+| OAM groups for ~29 pooled objects (5 calls) | ~11-13k T (~25-29 lines): budget it, the GDD guessed 2500 T |
+| Per-enemy logic in C (route, animation, firing) | ~600-900 T per enemy per frame even when simple |
+| Shots x enemies collisions (4 shots/frame vs 6 enemies + 4 turrets, asm hit_first) | ~10k T |
+| Move 27 pooled objects (asm) | ~7k T |
+Rule of thumb from games/shmup: estimate C per object at ~800 T and asm per drawn sprite at ~300 T;
+GDD estimates of 40-120 T per object were 3-5x too low.
 VBlank work after `vsync()`: ~3600 T total -> plan <= 4 rows of 10 tiles or 1 row of 20 + HUD per frame.
 
 ## ROM

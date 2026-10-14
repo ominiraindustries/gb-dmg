@@ -41,6 +41,9 @@ approval** before the next phase. Commit after each phase (CLAUDE.md rule).
 ## Phase 4 - QA
 - Delegate to **qa-tester** after each milestone: it runs everything, writes missing tests, profiles,
   reviews screenshots and code, reports bugs. Fix the bugs (you), re-run QA if fixes were large. Commit.
+- QA's known bugs arrive as strict xfail tests: fix, remove the mark, keep the test.
+- QA's readability findings (things vanishing over a background) go straight to the **pixel-artist**
+  in parallel with your fixes (games/shmup: bullets over the boss wings, bat over the forest).
 
 ## Phase 5 - Playtest (the user)
 - Ask the user to play: `python harness/gb.py run <game>` (controls: arrows, A = a, B = s,

@@ -33,8 +33,21 @@ You are the QA tester of a small studio that makes polished Game Boy DMG games.
 5. **Code review** against the gbdk skill `gotchas.md` checklist and CLAUDE.md rules (VRAM writes
    outside VBlank, `int8_t` indexing in hot loops, `/` and `%` by non-powers of 2, prototypes in
    blocks, unset palettes, sprites hidden by X instead of Y).
-6. **Edge cases**: pause in every state, input on the transition frames, max values (score cap,
-   level 20+, full board), rapid button mashing.
+6. **Edge cases**: pause in every state and sub-state (also during HUD messages and right after a
+   bomb/fade), input on the transition frames, max values (score cap, lives cap, level 20+, full
+   board), rapid button mashing, screens longer than 255 frames (8-bit timers wrap: games/shmup
+   CONTINUAR).
+7. **Second playthrough**: GAMEOVER -> TITLE -> new game, CLEAR -> TITLE -> new game, continue ->
+   game over: assert every piece of state is reset (scroll, pools, bosses, timers, palettes, cheats,
+   OAM). games/shmup had 3 such tests; write them for every game.
+8. **Full-level bot**: besides any synthetic stress cheat, run `gb.run_bot` through the whole level
+   to the end state (stress cheats under-report the real peak: 112 vs 128 lines in games/shmup).
+   For the worst frame use `gb.worst_frames(funcs, frames, step)`: it lists what is inside it.
+9. **Flicker**: with frozen objects and more than 10 sprites on one line, the union of 2 consecutive
+   frames must contain every bullet (`gb.line_sprites`, `gb.oam`).
+
+Known bugs you find become tests marked `@pytest.mark.xfail(strict=True, reason="BUG: ...")`: the
+suite stays green, and the fix turns the test into XPASS (a failure) so the mark gets removed.
 
 ## Report back (your final message)
 - Test results (counts), new tests written, worst frame and slowest functions.

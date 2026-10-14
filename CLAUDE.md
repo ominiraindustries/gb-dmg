@@ -68,6 +68,9 @@ Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `
   `gb.pyboy.memory` directamente salta esa protección. Hay 1 frame de latencia de entrada: un botón
   pulsado antes de `frames(1)` se procesa en la lógica que termina en el frame siguiente.
 - No dar algo por "fino" sin que el usuario lo haya probado (el feel y el hardware real no se testean aquí).
+- Bugs conocidos que aún no se arreglan: test con `@pytest.mark.xfail(strict=True, reason="BUG: ...")`
+  (al arreglarlo pasa a XPASS y falla, así se quita la marca). Un juego que arranca en el título
+  puede sobreescribir el fixture `gb` en su `tests/conftest.py` (ver games/shmup).
 
 ## Rendimiento y VRAM (aprendido en games/tetris, medido)
 - Bucle: `vsync()` → `draw_vram()` (solo copiar a VRAM) → input → `update()` → sprites → `measure_frame()`.
@@ -85,6 +88,9 @@ Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `
   contra la ROM: el diseño y el lint de niveles salen de ahí).
 - Medir antes de optimizar: `p = gb.profile(["update", "draw_vram", ...])` en un test/script y
   `print(p.report())` da T-cycles máximos/medios por función (1 frame = 70224 T, 1 línea = 456 T).
+  `gb.worst_frames(funcs, frames, step)` desglosa los peores frames: en games/shmup el pico eran 4
+  costes medianos a la vez, no una función caliente. Regla propia < 120 líneas; el límite real es
+  154 (por encima se pierde un frame).
 - Trampas medidas de SDCC: indexar con `int8_t` (`board[row_off[r] + i]`) ~466 T por acceso → usar
   punteros/`memcpy`; recalcular datos de una forma en cada llamada → cachear; `memcpy`/`memset` de
   GBDK son asm y rápidos.

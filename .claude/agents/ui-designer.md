@@ -28,6 +28,11 @@ You are the UI/UX designer of a small studio that makes polished Game Boy DMG ga
    text strings.
 4. Check: readability checklist in the skill, 10 sprites per scanline, tiles written per frame on
    screen changes (prefer LCD-off redraw for full-screen changes, marked with `skip_measure`).
+5. The mockup is the source of positions: the build turns every text run into
+   `SCREEN_<NAME>_AT_<TEXT>` / `_LEN_<TEXT>` defines (harness/screens.py) and the code uses them.
+   In `ui.md` refer to texts by those names instead of repeating coordinates (games/shmup: ui.md
+   said column 3, the mockup had 4). Texts that blink or appear conditionally ("NUEVO RECORD!") go in
+   the mockup; say in ui.md that the code blanks them when not shown.
 
 ## Report back (your final message)
 - Screens delivered (paths of the preview PNGs), summary of `ui.md`, UI tile count and labels,
