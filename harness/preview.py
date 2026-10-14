@@ -230,7 +230,9 @@ def preview(gdir):
             written.append(p)
     if mt_file.exists() and cfg.get("order") == "rows":
         import metatiles
-        mt = metatiles.parse(mt_file, sets[_mt_tileset(mt_file)].labels)
+        import screens
+        bases = screens.vram_bases(_config(gdir)["vram_order"], sets) if _config(gdir).get("vram_order") else None
+        mt = metatiles.parse(mt_file, sets[_mt_tileset(mt_file)].labels, bases)   # "@ base auto"
         for lvl in sorted((gdir / "res").glob("*.lvl")):
             p = out / f"level_{lvl.stem}.png"
             render_level(lvl, cfg, mt, sets[mt.tileset], p)

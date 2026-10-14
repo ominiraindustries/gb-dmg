@@ -307,6 +307,8 @@ void play_update(void) {
     if (bob_t) { bob_t--; scy_shadow = SCY_BASE + (bob_t > 1 ? bob_t - 1 : 0); }
     else scy_shadow = SCY_BASE;
     if (play_sub == PS_IDLE && state == ST_PLAY) {
+        if (pressed & J_START) { menu_enter(); return; }
+        if (pressed & J_SELECT) { map_enter(0); return; }
         if (pressed & J_A) act_front();
         else if (move_cd) move_cd--;
         else if (move(k)) move_cd = 12;

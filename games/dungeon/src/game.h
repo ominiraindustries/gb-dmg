@@ -5,6 +5,7 @@
 #include "walls.h"
 #include "spr.h"
 #include "ui.h"
+#include "uiscreens.h"
 #include "font.h"
 #include "view.h"
 
@@ -66,6 +67,22 @@ void hud_dirty(void);
 void say(const char *s);
 void say_num(const char *prefix, uint8_t n, const char *suffix);
 void mark_seen(void);
+
+// menus.c / screens.c: code in ROM bank 1 (#pragma bank 1, bank 0 was full), BANKED entries
+// (GBDK trampoline). They may call bank-0 helpers that switch banks (gbe_bank, view_compose):
+// those restore the bank before returning.
+extern uint8_t menu_page, load_req, save_status;
+void menu_enter(void) BANKED;
+void map_enter(uint8_t from_menu) BANKED;
+void menus_update(void) BANKED;
+void map_sprites(void) BANKED;
+void game_save(void) BANKED;
+uint8_t save_exists(void) BANKED;
+void title_update(void) BANKED;
+void dying_update(void) BANKED;
+void gameover_update(void) BANKED;
+void clear_update(void) BANKED;
+void screen_build_b(uint8_t which) BANKED;
 
 // monsters.c
 void monsters_load(void);

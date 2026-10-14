@@ -9,6 +9,7 @@
     "gbe_video.c",
     "gbe_sfx.c",
     "gbe_sfx_asm.s",
+    "gbe_screen.c",
     "gbe_bank.c",
     "gbe_save.c",
     "gbe_rng.c",

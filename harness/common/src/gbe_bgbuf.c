@@ -8,6 +8,8 @@
 uint8_t bg_front;                   // 0: $9800 visible, 1: $9C00 visible
 void bgbuf_copy_rows(uint8_t *dst, const uint8_t *src, uint8_t rows);   // asm (gbe_view.s), 20 T/tile
 uint8_t bgbuf_rows_left, bgbuf_rows_per = 4, view_flips;
+uint8_t bgbuf_flip_xor;             // extra LCDC bits toggled in the flip VBlank (e.g. the window
+                                    // off for a full-screen map), cleared after use
 static const uint8_t *bb_src;
 static uint8_t *bb_dst;
 
@@ -30,7 +32,8 @@ void bgbuf_draw_vram(void) {
     bgbuf_rows_left -= n;
     if (!bgbuf_rows_left) {
         bg_front ^= 1;
-        LCDC_REG ^= LCDCF_BG9C00;
+        LCDC_REG ^= LCDCF_BG9C00 | bgbuf_flip_xor;
+        bgbuf_flip_xor = 0;
         view_flips++;
     }
 }

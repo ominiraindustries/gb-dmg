@@ -53,6 +53,10 @@ and tests run with GBDK 4.5.0 (marked *tested*).
 - **VRAM queues must check LY themselves**: after a long frame `vsync()` returns late; gbe_vq and
   gbe_bgbuf now skip (and retry next frame) when LY < 144 or fewer than 2 lines of VBlank are left.
 
+- **Map offsets are 16-bit**: `SCREEN_<NAME>_AT_<TEXT>` = row * 32 + col reaches 573; a helper taking
+  `uint8_t at` silently truncates it (games/dungeon CLEAR values drawn in the top corner) and SDCC
+  does not warn. Map offset / address parameters: `uint16_t` or pointers.
+
 ## Graphics
 - **With gbe_video, SCX/SCY/BGP/OBP0/OBP1 are written from shadows every VBlank**: a direct
   `SCY_REG = x` lasts one frame. The build stops on it (`gb.py check_sources`); set the shadow.

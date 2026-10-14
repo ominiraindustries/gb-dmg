@@ -197,7 +197,7 @@ void view_blit_c(const uint8_t *piece);         // C reference
 // ---------------------------------------------------------------- gbe_bgbuf.c
 // Double buffer on the two BG maps (LCDC bit 3): copy a 20-wide WRAM canvas into the hidden map
 // bgbuf_rows_per rows per VBlank, then flip. bg_front = visible map (0 $9800, 1 $9C00).
-extern uint8_t bg_front, bgbuf_rows_left, bgbuf_rows_per, view_flips;
+extern uint8_t bg_front, bgbuf_rows_left, bgbuf_rows_per, view_flips, bgbuf_flip_xor;
 void bgbuf_start(const uint8_t *src, uint8_t rows, uint8_t dst_row);
 void bgbuf_draw_vram(void);                     // VBlank
 void bgbuf_fill_both(const uint8_t *src, uint8_t rows, uint8_t dst_row);   // LCD off

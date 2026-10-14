@@ -51,6 +51,6 @@ void lcd_off_redraw_begin(void) {
     HIDE_WIN;
     HIDE_SPRITES;
     SCX_REG = SCY_REG = 0;
-    scx_shadow = 0;
+    scx_shadow = scy_shadow = 0;
     skip_measure = 1;
 }
