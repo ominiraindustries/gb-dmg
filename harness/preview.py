@@ -17,8 +17,9 @@ Screen mockup format (.screen):
     sprites:
     spr:PADDLE_L 56 132          tileset:LABEL x y [flipx] [flipy]   (screen pixels, top-left)
 
-Chars without a legend entry: letters and digits map to the font tileset (if listed), space
-and '.' map to tile 0 of the first tileset.
+Chars without a legend entry: letters and digits map to the font tileset (if listed); space
+and '.' map to the tile labelled BLANK (any listed tileset), else tile 0 of the first non-font one.
+The font's punctuation has labels: DASH EXCLAM DOT COLON QUESTION (use them in the legend).
 """
 import sys
 from pathlib import Path
@@ -111,6 +112,8 @@ def render_screen(path, sets, out, scale=3):
         raise KeyError(f"{path}: tile '{ref}' not found in {[t.name for t in tilesets]}")
 
     font = next((t for t in tilesets if "DIGIT0" in t.labels and "LETTER_A" in t.labels), None)
+    blank = next(((t, t.labels["BLANK"]) for t in tilesets if "BLANK" in t.labels),
+                 next(((t, 0) for t in tilesets if t is not font), (tilesets[0], 0)))
     screen = Image.new("RGBA", (160, 144), SHADES[0] + (255,))
     for ty, row in enumerate(grid):
         for tx, ch in enumerate(row):
@@ -121,7 +124,7 @@ def render_screen(path, sets, out, scale=3):
             elif font and ch.isalpha() and ch.isupper():
                 ts, i = font, font.labels["LETTER_A"] + ord(ch) - ord("A")
             elif ch in " .":
-                ts, i = tilesets[0], 0
+                ts, i = blank
             else:
                 raise KeyError(f"{path}: char {ch!r} at ({tx},{ty}) has no legend entry")
             screen.paste(ts.images[i], (tx * 8, ty * 8))
