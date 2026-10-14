@@ -14,6 +14,22 @@ el profiling lo justifica y con una prueba de equivalencia contra la versión C.
   - Assets compartidos en `harness/common/*.tiles` (p. ej. la fuente): `"common_res": ["font"]` en game.json.
 - `tools/gbdk/` — SDK, no versionado (`python harness/gb.py setup`)
 
+## Commits
+Hacer commit automáticamente (sin preguntar) al terminar cada cosa: un juego o hito, cambios en
+skills/agentes/CLAUDE.md, mejoras del arnés. Mensajes en español, agrupados por tema.
+
+## Estudio (diseño + programación)
+Para juegos nuevos o partes grandes: skill `/game-studio <idea>` (fases con aprobación del usuario).
+Roles (subagentes en `.claude/agents/`, cada uno con memoria propia):
+- `game-designer` → `design/gdd.md` (mecánicas con números, controles, pantallas, presupuestos, hitos, plan de pruebas)
+- `pixel-artist` → `res/*.tiles` + maquetas; revisa sus PNG de preview
+- `ui-designer` → `design/screens/*.screen`, `design/ui.md`, `res/ui.tiles`
+- `qa-tester` → tests que faltan, rendimiento/VRAM, revisión visual y de código, informe de bugs
+- La sesión principal hace de productor y programador (skills `gbdk`, `gb-asm`).
+Skills de diseño: `gb-game-design` (GDD, feel, UI, presupuestos, géneros), `gb-pixel-art`.
+Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `build/preview/*.png`
+(hojas de tiles y maquetas `design/screens/*.screen`; formato al principio de `harness/preview.py`).
+
 ## Flujo de trabajo
 - Compilar: `python harness/gb.py build <juego>` (muestra uso de ROM/RAM)
 - Tests: `python harness/gb.py test <juego>`. Ejecutarlos tras cada cambio de lógica.

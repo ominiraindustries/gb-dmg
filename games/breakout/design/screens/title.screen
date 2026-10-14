@@ -1,0 +1,33 @@
+; Breakout title screen, as drawn by init() - used to test the mockup renderer
+tilesets: bg spr
+legend:
+# WALL
+[ BRICK_A_L
+] BRICK_A_R
+{ BRICK_B_L
+} BRICK_B_R
+o LIFE
+0 DIGIT0
+grid:
+ 00000          ooo 
+####################
+#                  #
+#[][][][][][][][][]#
+#{}{}{}{}{}{}{}{}{}#
+#[][][][][][][][][]#
+#{}{}{}{}{}{}{}{}{}#
+#[][][][][][][][][]#
+#{}{}{}{}{}{}{}{}{}#
+#                  #
+#                  #
+#                  #
+#                  #
+#                  #
+#                  #
+#                  #
+#                  #
+#                  #
+sprites:
+spr:PADDLE_L 68 132
+spr:PADDLE_M 76 132
+spr:PADDLE_R 84 132

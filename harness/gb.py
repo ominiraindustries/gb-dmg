@@ -6,6 +6,7 @@ Usage:
     python harness/gb.py run <game>         Build and open the ROM in a PyBoy window
     python harness/gb.py test <game> [...]  Build and run games/<game>/tests with pytest
     python harness/gb.py new <game>         Create a new game from the template
+    python harness/gb.py preview <game>     Render tilesets and design/screens/*.screen to PNG
 """
 import json
 import os
@@ -160,6 +161,15 @@ def new(name):
     print(f"Created {dst.relative_to(ROOT)}")
 
 
+def preview_cmd(name):
+    import preview
+    try:
+        for p in preview.preview(game_dir(name)):
+            print(p.relative_to(ROOT))
+    except (KeyError, ValueError) as e:
+        die(str(e))
+
+
 def main():
     args = sys.argv[1:]
     if not args:
@@ -168,11 +178,12 @@ def main():
     cmd, rest = args[0], args[1:]
     if cmd == "setup":
         setup()
-    elif cmd in ("build", "run", "test", "new") and rest:
+    elif cmd in ("build", "run", "test", "new", "preview") and rest:
         {"build": lambda: build(rest[0]),
          "run": lambda: run(rest[0]),
          "test": lambda: test(rest[0], rest[1:]),
-         "new": lambda: new(rest[0])}[cmd]()
+         "new": lambda: new(rest[0]),
+         "preview": lambda: preview_cmd(rest[0])}[cmd]()
     else:
         print(__doc__)
         sys.exit(1)
