@@ -746,4 +746,13 @@ perfilar (`gb.profile`) y llevar a asm la colisión de actores contra el mapa.
 9. **Jefe:** no; el 1-4 acaba en el estandarte.
 10. **Torreones con warp / salas de bonus:** no antes de terminar M4.
 
+Fase de arte e interfaz (2026-10-14, el usuario aprobó el arte tal cual):
+11. **Runa:** flecha hacia arriba. **Pluma de Teo pequeño:** la actual, pequeña. **Colinas:** gris claro con borde.
+12. **Logo grande** en el título ya en M1 (tiles en `res/ui.tiles`).
+13. **Récord** se actualiza también en GAMEOVER, no solo en CLEAR.
+14. **Sprites apagados en las líneas 0-15** (detrás del HUD), en la misma escritura de LCDC que apaga la ventana.
+15. **Teo sobre la muralla** en el título; **reloj de arena parpadea** con tiempo ≤ 100; sin línea separadora bajo el HUD.
+16. **Final tras el 1-4:** se decide en M2.
+17. **Caracteres de decorado en `.lvl`:** los de la tabla de metatiles de `res/bg.tiles` (`( ) < > J A K / M \ T W N D O F ^`).
+
 Pendiente solo de playtest: los valores marcados "ajustar en playtest".
