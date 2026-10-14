@@ -1,0 +1,38 @@
+; GAMEOVER - after DYING (fade to black 32 f): LCD-off redraw, SCX=SCY=0, window and sprites off.
+; Same backdrop as TITLE. Box rows 4-12, cols 2-17. Menu: CONTINUAR (load the last save; with
+; no save, restart the floor) / TITULO. BG cursor at col 5, starts on CONTINUAR.
+tilesets: ui uiscreens font
+legend:
+% EARTH
+( EARTH_EDGE_A
+) EARTH_EDGE_B
+= BRICK
+v MERLON_DOWN
+[ FRAME_TL
+_ FRAME_T
+] FRAME_TR
+{ FRAME_L
+} FRAME_R
+\ FRAME_BL
+- FRAME_B
+/ FRAME_BR
+* CURSOR
+grid:
+%%%%%%%%%%%%%%%%%%%%
+()()()()()()()()()()
+....................
+....................
+..[______________]..
+..{..............}..
+..{...HAS.CAIDO..}..
+..{..............}..
+..{..*CONTINUAR..}..
+..{..............}..
+..{...TITULO.....}..
+..{..............}..
+..\--------------/..
+....................
+....................
+....................
+====================
+vvvvvvvvvvvvvvvvvvvv

@@ -1,0 +1,42 @@
+; CLEAR - after "BAJAS LA ESCALERA" + fade out: LCD-off redraw, SCX=SCY=0, window and sprites off.
+; Box rows 3-13, cols 0-19. Labels at col 2, values right-aligned ending at col 17
+; (right end = SCREEN_CLEAR_AT_x + SCREEN_CLEAR_LEN_x - 1). Values are written by the code
+; into its copy of the map before the LCD comes back on (or with the queue after the fade-in).
+; '/' is DASH here until the font gets SLASH (gdd E14). "FIN DE LA DEMO" only in M1.
+; "PULSA START" blinks 30/30 f. Start (or A) -> TITLE.
+tilesets: ui uiscreens font
+legend:
+% EARTH
+( EARTH_EDGE_A
+) EARTH_EDGE_B
+= BRICK
+v MERLON_DOWN
+[ FRAME_TL
+_ FRAME_T
+] FRAME_TR
+{ FRAME_L
+} FRAME_R
+\ FRAME_BL
+- FRAME_B
+| FRAME_BR
+/ DASH
+: COLON
+grid:
+%%%%%%%%%%%%%%%%%%%%
+()()()()()()()()()()
+....................
+[__________________]
+{.PISO.1.SUPERADO..}
+{..................}
+{.TIEMPO.....04:12.}
+{..................}
+{.DERROTADOS...6/8.}
+{..................}
+{.OBJETOS......5/6.}
+{..................}
+{..FIN.DE.LA.DEMO..}
+\------------------|
+....................
+.....PULSA.START....
+====================
+vvvvvvvvvvvvvvvvvvvv

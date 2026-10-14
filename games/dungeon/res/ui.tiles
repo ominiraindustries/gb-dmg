@@ -1,0 +1,247 @@
+; TORRE HUNDIDA - UI tiles (ui-designer). BG indices 0-23 (vram_order: ui first, gdd 7.1).
+; 24 tiles = the GDD budget. Consecutive runs (code relies on them, APPEND ONLY):
+;   FRAME_TL..FRAME_BR (8, order TL T TR L R BL B BR), ICON_HP..ICON_COMPASS (7),
+;   AM_WALL..AM_OPEN (7, automap cells in dmap cell-type order, see ui.md).
+; BLANK (0) is also the box fill and the "not seen" automap cell (9-piece frame = 8 + BLANK).
+; No HUD separator tile: the user prefers no separator line (CABALLERITO/GRIFO).
+
+; ---------------- blank / box fill / unseen map cell (must stay index 0)
+@ BLANK
+........
+........
+........
+........
+........
+........
+........
+........
+
+; ---------------- box frame: thick black line + thin dark gray inner line, white outer
+; margin (separates the box from the view). Corners carry a black stud (GRIFO frame + rivet).
+@ FRAME_TL
+........
+.#######
+.#######
+.##.....
+.##.++++
+.##.+##.
+.##.+##.
+.##.+...
+@ FRAME_T
+........
+########
+########
+........
+++++++++
+........
+........
+........
+@ FRAME_TR
+........
+#######.
+#######.
+.....##.
+++++.##.
+.##+.##.
+.##+.##.
+...+.##.
+@ FRAME_L
+.##.+...
+.##.+...
+.##.+...
+.##.+...
+.##.+...
+.##.+...
+.##.+...
+.##.+...
+@ FRAME_R
+...+.##.
+...+.##.
+...+.##.
+...+.##.
+...+.##.
+...+.##.
+...+.##.
+...+.##.
+@ FRAME_BL
+.##.+...
+.##.+##.
+.##.+##.
+.##.++++
+.##.....
+.#######
+.#######
+........
+@ FRAME_B
+........
+........
+........
+++++++++
+........
+########
+########
+........
+@ FRAME_BR
+...+.##.
+.##+.##.
+.##+.##.
+++++.##.
+.....##.
+#######.
+#######.
+........
+
+; ---------------- menu cursor (BG tile, written beside the selected option)
+@ CURSOR
+.#......
+.##.....
+.###....
+.####...
+.###....
+.##.....
+.#......
+........
+
+; ---------------- HUD icons (window row 0). Drawn on rows 0-6 like the font glyphs.
+; PV: heart
+@ ICON_HP
+.##.##..
+#-+#++#.
+#++++++#
+#++++++#
+.#++++#.
+..#++#..
+...##...
+........
+; weapon DAGA: dagger, point up-right
+@ ICON_DAGGER
+......#.
+.....#-#
+....#-#.
+.#.#-#..
+..#+#...
+.#+##...
+#.#.....
+........
+; weapon BACULO: staff with a round orb, orb up-right, long diagonal shaft
+@ ICON_STAFF
+.....##.
+....#--#
+....#-+#
+.....##.
+....#...
+...#....
+..#.....
+.#......
+; AMULETO: gem on a chain (blank tile when not owned)
+@ ICON_AMULET
+.#...#..
+..#.#...
+...#....
+..###...
+.#-.+#..
+.#++##..
+..###...
+........
+; LLAVE: key, vertical, bow on top, teeth right
+@ ICON_KEY
+..###...
+.#...#..
+.#...#..
+..###...
+...#....
+...##...
+...#....
+...##...
+; POCION: round flask with cork
+@ ICON_POTION
+..###...
+...#....
+..#.#...
+.#-..#..
+#+++++#.
+#+++++#.
+.#####..
+........
+; compass rose (the facing letter N/E/S/O follows it)
+@ ICON_COMPASS
+...#....
+...#....
+..#-#...
+###.###.
+..#+#...
+...#....
+...#....
+........
+
+; ---------------- automap cells (1 tile per cell, map 16x16 at screen cols 2-17, rows 1-16)
+; not seen = BLANK. Seen floor is a light dither (distinct from unseen white),
+; walls solid dark, special cells have black symbols.
+@ AM_WALL
+++++++++
++++#++++
+++++++++
+#+++++++
+++++++++
+++++++#+
+++++++++
+++++++++
+@ AM_FLOOR
+-.-.-.-.
+.-.-.-.-
+-.-.-.-.
+.-.-.-.-
+-.-.-.-.
+.-.-.-.-
+-.-.-.-.
+.-.-.-.-
+; closed door: dark door slab with a knob
+@ AM_DOOR
+-.-.-.-.
+.######-
+-#++++#.
+.#++++#-
+-#++.+#.
+.#++++#-
+-######.
+.-.-.-.-
+; locked door: door slab with a white keyhole
+@ AM_LOCKED
+-.-.-.-.
+.######-
+-#+..+#.
+.#+..+#-
+-#++.+#.
+.#++.+#-
+-######.
+.-.-.-.-
+; stairs down (goal): solid black steps over the floor dither (the strongest mark on the map)
+@ AM_DOWN
+##.-.-.-
+##-.-.-.
+####.-.-
+####-.-.
+######.-
+######-.
+########
+########
+; sealed entrance (UP): earth plug, cross-hatched
+@ AM_UP
+#-#-#-#-
+-#+#+#+#
+#+#+#+#-
+-#+#+#+#
+#+#+#+#-
+-#+#+#+#
+#+#+#+#-
+-#-#-#-#
+; open door: floor with the two door posts (orientation-free brackets)
+@ AM_OPEN
+##.-.-##
+#-.-.-.#
+-.-.-.-.
+.-.-.-.-
+-.-.-.-.
+.-.-.-.-
+#.-.-.-#
+##-.-.##

@@ -1,0 +1,53 @@
+; TITLE - LCD-off redraw (gbe_screen) in the BG map, SCX=SCY=0, window off, sprites off.
+; Rows 0-1: earth ceiling (the tower is underground). Rows 3-4: "TORRE" logo (16 LOGO tiles,
+; cols 5-14). Row 6: "H U N D I D A" in the font, spaced. Row 8: the master's staff.
+; Rows 10/12: menu, BG cursor tile at col 3 beside the selected option. CONTINUAR only if
+; save_load() found a valid game: otherwise the code blanks it (SCREEN_TITLE_LEN_CONTINUAR
+; tiles) and the cursor stays on NUEVA PARTIDA. With a save the cursor starts on CONTINUAR.
+; Row 14: year. Rows 15-17: the tower's top, upside down (bricks, battlements hanging down).
+tilesets: ui uiscreens font
+legend:
+a LOGO_00
+b LOGO_01
+c LOGO_02
+d LOGO_03
+e LOGO_04
+f LOGO_05
+g LOGO_06
+h LOGO_07
+i LOGO_08
+j LOGO_09
+k LOGO_10
+l LOGO_11
+m LOGO_12
+n LOGO_13
+o LOGO_14
+p LOGO_15
+% EARTH
+( EARTH_EDGE_A
+) EARTH_EDGE_B
+= BRICK
+v MERLON_DOWN
+< STAFF_ORB
+~ STAFF_SHAFT
+> STAFF_END
+* CURSOR
+grid:
+%%%%%%%%%%%%%%%%%%%%
+()()()()()()()()()()
+....................
+.....abefijijmn.....
+.....cdghklklop.....
+....................
+....H.U.N.D.I.D.A...
+....................
+....<~~~~~~~~~~~>...
+....................
+....NUEVA.PARTIDA...
+....................
+...*CONTINUAR.......
+....................
+........2026........
+....................
+====================
+vvvvvvvvvvvvvvvvvvvv

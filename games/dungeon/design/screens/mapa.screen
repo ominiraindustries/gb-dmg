@@ -1,0 +1,41 @@
+; MAPA (automap) - Select in PLAY (or MAPA in the pause menu). Full screen: the window is hidden
+; and the back buffer is drawn with 18 rows (BG map rows 8-25, SCY 64, SCX 0); 5 frames of copy.
+; Row 0 title "MAPA - PISO 1" (floor digit = SCREEN_MAPA_AT_MAPA_PISO_1 + 12). Rows 1-16, cols
+; 2-17: one tile per cell: (x, y) -> screen row 1 + y, col 2 + x. Row 17 "B: VOLVER".
+; Cell tiles: not seen BLANK, WALL AM_WALL, FLOOR AM_FLOOR, DOOR AM_DOOR, LOCKED AM_LOCKED,
+; DOOR_OPEN AM_OPEN, UP AM_UP, DOWN AM_DOWN. Hero = arrow SPRITE (OAM 0, spr.tiles arrows,
+; pixel-artist) at screen x = (2 + px) * 8, y = (1 + py) * 8, 8x16 mode: top half = arrow,
+; bottom half blank. The sprite below is a stand-in (ui:CURSOR = facing E).
+; Sample: start of the floor explored, door (7,3) opened.
+tilesets: ui font
+legend:
+w AM_WALL
+, AM_FLOOR
+d AM_DOOR
+l AM_LOCKED
+u AM_UP
+x AM_DOWN
+o AM_OPEN
+- DASH
+: COLON
+grid:
+...MAPA - PISO 1....
+..wwwwwwwwwwww    ..
+..wwwwwuwwwwww    ..
+..w,,,w,ww,       ..
+..w,,,d,,o,       ..
+..w,,,w,ww,       ..
+..ww,ww,wwwwww    ..
+..ww,ww,wwwwww    ..
+..ww,ww,wwwwwww,ww..
+..w,,,,,,,,,,,,,,w..
+..wwdwwwwwdwww,www..
+..w,,,w      w,www..
+..w,,,w      wlwww..
+..w,,,w      w,,ww..
+..           w,,xw..
+..           w,,ww..
+..                ..
+.....B: VOLVER......
+sprites:
+ui:CURSOR 56 72

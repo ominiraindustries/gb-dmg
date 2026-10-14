@@ -1,0 +1,47 @@
+; MENU / PAUSA - overlay composed into the view canvas (view_buf 20x12) over the CURRENT view and
+; copied with the double buffer (3 frames); the HUD window stays visible (the log shows the
+; result of GUARDAR / using items). Box cols 4-15, rows 2-10 (canvas rows = screen rows).
+; Options at col 7, rows 4-8; BG cursor tile at col 6 on the selected row. Monster, item and
+; effect sprites are HIDDEN while any menu is open (they would draw over the box).
+tilesets: ui font
+legend:
+w AM_WALL
+u AM_UP
+, AM_FLOOR
+& ICON_HP
+^ ICON_STAFF
+$ ICON_AMULET
+[ ICON_KEY
+] ICON_POTION
+@ ICON_COMPASS
+/ DASH
+: COLON
+< FRAME_TL
+_ FRAME_T
+> FRAME_TR
+{ FRAME_L
+} FRAME_R
+( FRAME_BL
+= FRAME_B
+) FRAME_BR
+* CURSOR
+grid:
+wwww,,,,,,,,,,,,wwww
+wwww,,,,,,,,,,,,wwww
+wwww<__________>wwww
+wwww{..........}wwww
+wwww{.*OBJETOS.}wwww
+wwww{..ESTADO..}wwww
+wwww{..MAPA....}wwww
+wwww{..GUARDAR.}wwww
+wwww{..VOLVER..}wwww
+wwww{..........}wwww
+wwww(==========)wwww
+wwww,,,,,,,,,,,,wwww
+.&18/20.^$.[1.]3.@N.
+....................
+.PISO 1.............
+.ABRES LA PUERTA....
+.GOLPE: 3...........
+.DIABLILLO CAE......
+sprites:
