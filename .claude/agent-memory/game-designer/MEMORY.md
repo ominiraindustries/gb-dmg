@@ -1,0 +1,1 @@
+- [User taste](user_taste.md) — classic-game clones (breakout, tetris, Mario-like), copy mechanics, no Nintendo IP, Spanish UI pending
