@@ -35,7 +35,8 @@ Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `
 (hojas de tiles y maquetas `design/screens/*.screen`; formato al principio de `harness/preview.py`).
 
 ## Flujo de trabajo
-- Compilar: `python harness/gb.py build <juego>` (muestra uso de ROM/RAM)
+- Compilar: `python harness/gb.py build <juego>` (muestra uso de ROM/RAM). El build se para a propósito
+  si hay funciones sin declarar (dice qué `#include` falta) o prototipos dentro de bloques.
 - Tests: `python harness/gb.py test <juego>`. Ejecutarlos tras cada cambio de lógica.
 - Jugar: `python harness/gb.py run <juego>` (ventana PyBoy)
 - Las capturas de los tests van a `games/<juego>/build/shots/*.png`: mirarlas con Read

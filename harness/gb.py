@@ -94,6 +94,30 @@ def fetch_references():
     print(f"References in {ref}")
 
 
+# Functions whose header people forget (gb/gb.h does not include these)
+KNOWN_HEADERS = {
+    "hide_sprites_range": "gb/metasprites.h", "move_metasprite": "gb/metasprites.h",
+    "move_metasprite_ex": "gb/metasprites.h", "move_metasprite_flipx": "gb/metasprites.h",
+    "memcpy": "string.h", "memset": "string.h", "strlen": "string.h",
+    "rand": "rand.h", "randw": "rand.h", "initrand": "rand.h", "arand": "rand.h",
+    "EMU_printf": "gbdk/emu_debug.h",
+}
+
+
+def check_warnings(output):
+    """SDCC warnings that compile but are always bugs in our code: turn them into errors."""
+    import re
+    problems = []
+    for m in re.finditer(r"(\S+):(\d+): warning 112: function '(\w+)' implicit declaration", output):
+        f = m.group(3)
+        hint = f" -> #include <{KNOWN_HEADERS[f]}>" if f in KNOWN_HEADERS else " (missing prototype/#include)"
+        problems.append(f"{Path(m.group(1)).name}:{m.group(2)}: {f}() not declared{hint}")
+    for m in re.finditer(r"(\S+):(\d+): warning 84: 'auto' variable '(\w+)' may be used before", output):
+        problems.append(f"{Path(m.group(1)).name}:{m.group(2)}: '{m.group(3)}' - if it is a function, "
+                        "move its prototype to file scope (SDCC treats block-scope prototypes as variables)")
+    return problems
+
+
 def build(name):
     if not LCC.exists():
         die("GBDK not found, run: python harness/gb.py setup")
@@ -133,6 +157,9 @@ def build(name):
     output = (res.stdout + res.stderr).strip()
     if output:
         print(output)
+    problems = check_warnings(output)
+    if problems:
+        die("build stopped on warnings that are always bugs here:\n  " + "\n  ".join(problems))
     if res.returncode != 0 or not out.exists():
         die("build failed")
     print(f"OK {out.relative_to(ROOT)} ({out.stat().st_size} bytes)")

@@ -113,7 +113,10 @@ void main(void) {
 ## Harness reminders (this repo)
 - Build `python harness/gb.py build <game>`; extra flags in `games/<game>/game.json` `"lcc_flags"`.
   The harness already passes `-Wl-m -Wl-j -Wm-yS -Wf--max-allocs-per-node50000 -Wm-yn<title>`
-  and `-I build/gen`.
+  and `-I build/gen -I src` (generated files can include game headers).
+- The build **fails on purpose** on `warning 112` (implicit declaration: names the missing header,
+  e.g. `gb/metasprites.h`, `string.h`, `rand.h`) and `warning 84` (prototype inside a block).
+  Fix the include/prototype; do not work around the check (`harness/gb.py check_warnings`).
 - Art: `games/<game>/res/*.tiles` (ASCII 8x8 tiles, see `harness/asciitiles.py`) become
   `build/gen/<stem>.c/.h` with `<stem>_tiles[]`, `<STEM>_COUNT` and `<STEM>_<LABEL>` defines.
 - Tests read non-`static` globals by name from the `.noi`. Put a `frame_lines`/`max_frame_lines`
