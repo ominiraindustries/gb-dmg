@@ -25,6 +25,7 @@
 #define MAX_LOCK_RESETS 15          // moves/rotations that restart the lock delay
 #define CLEAR_FRAMES  24            // line clear flash duration
 #define CURTAIN_RATE  2             // frames per row of the game over curtain
+#define MAX_LEVEL     99
 #define ROWS_PER_FRAME 4            // well rows copied to VRAM per VBlank
 
 #define TILE_DIGIT0   (BG_COUNT + FONT_DIGIT0)
@@ -99,6 +100,7 @@ uint8_t piece_type, piece_rot, next_type;
 int8_t piece_x, piece_y, lowest_y;
 uint8_t bag[7], bag_pos;
 uint8_t gravity_timer, lock_timer, lock_resets, das_timer, down_locked;
+int8_t das_dir;
 uint8_t start_level, level, lines_to_next;
 uint8_t score[3];                   // packed BCD, little-endian (score[0] = lowest 2 digits)
 uint8_t lines[3];
@@ -240,14 +242,15 @@ void draw_row(uint8_t r) {
 
 // Runs right after vsync(), while the PPU is in VBlank
 void draw_vram(void) {
-    uint8_t r, n = 1;
+    uint8_t r, n = 0;
     if (dirty_count) {              // well rows first
         do {
             r = dirty_list[dirty_head];
             if (++dirty_head == WELL_H) dirty_head = 0;
             row_dirty[r] = 0;
             draw_row(r);
-        } while (--dirty_count && ++n < ROWS_PER_FRAME);
+            n++;
+        } while (--dirty_count && n < ROWS_PER_FRAME);
     } else if (hud_dirty) {         // then the HUD, then one text per frame
         draw_hud();
         hud_dirty = 0;
@@ -280,12 +283,18 @@ void add_points(uint8_t n) {        // drop points, n < 100
 }
 
 void score_lines(void) {
-    uint8_t i, add[3] = {0, 0, 0};
-    for (i = 0; i <= level; i++) bcd_add3(score, clear_points[clear_count - 1]);
+    uint8_t i, m, add[3] = {0, 0, 0}, term[3];
+    // points x (level + 1) by double-and-add: at most 7 doublings instead of level+1 additions
+    // (QA measured a 4-line clear at level 99 using 149 of 154 scanlines with the plain loop)
+    for (i = 0; i < 3; i++) term[i] = clear_points[clear_count - 1][i];
+    for (m = level + 1; m; m >>= 1) {
+        if (m & 1) bcd_add3(score, term);
+        if (m > 1) bcd_add3(term, term);
+    }
     add[2] = clear_count;
     add_bcd(lines, 3, add);
     if (lines_to_next <= clear_count) {
-        level++;
+        if (level < MAX_LEVEL) level++;  // the HUD shows 2 digits
         lines_to_next += 10;
     }
     lines_to_next -= clear_count;
@@ -299,7 +308,9 @@ uint8_t bag_next(void) {
     if (bag_pos >= 7) {
         for (i = 0; i < 7; i++) bag[i] = i;
         for (i = 6; i > 0; i--) {   // Fisher-Yates
-            do j = rand() & 7; while (j > i);
+            // smallest mask covering 0..i halves the rejected rand() calls
+            t = i >= 4 ? 7 : (i >= 2 ? 3 : 1);
+            do j = rand() & t; while (j > i);
             t = bag[i]; bag[i] = bag[j]; bag[j] = t;
         }
         bag_pos = 0;
@@ -499,6 +510,7 @@ void new_game(void) {
     level = start_level;
     lines_to_next = 10;
     update_hud();
+    text_head = text_count = 0;     // drop pending title texts: the 5 clears below cover them
     for (i = 0; i < 4; i++) queue_text(WELL_X, 4 + (i << 2), WELL_W, 0);   // clear title texts
     queue_text(WELL_X, 9, WELL_W, 0);
     bag_pos = 7;
@@ -525,12 +537,17 @@ void update_play(void) {
     if (pressed & J_A) rotate(1);
     if (pressed & J_B) rotate(0);
 
-    if (pressed & J_LEFT) { das_timer = 0; shift(-1); }
-    else if (pressed & J_RIGHT) { das_timer = 0; shift(1); }
+    // Auto-repeat follows the most recently pressed direction
+    if (pressed & J_LEFT) { das_dir = -1; das_timer = 0; shift(-1); }
+    else if (pressed & J_RIGHT) { das_dir = 1; das_timer = 0; shift(1); }
     else if (keys & (J_LEFT | J_RIGHT)) {
+        if (!(keys & (das_dir < 0 ? J_LEFT : J_RIGHT))) {   // released it, the other is still held
+            das_dir = -das_dir;
+            das_timer = 0;
+        }
         if (++das_timer >= DAS_DELAY) {
             das_timer = DAS_DELAY - DAS_RATE;
-            shift((keys & J_LEFT) ? -1 : 1);
+            shift(das_dir);
         }
     }
 
@@ -565,9 +582,9 @@ void update_play(void) {
     }
     if (grounded()) {
         if (++lock_timer >= LOCK_DELAY) lock_piece();
-    } else {
-        lock_timer = 0;
-    }
+    } else if (lock_resets < MAX_LOCK_RESETS) {
+        lock_timer = 0;             // airborne: restart, unless resets are used up (else a floor
+    }                               // kick that lifts the piece one row could stall it forever)
 }
 
 void update(void) {
