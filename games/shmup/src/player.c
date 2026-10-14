@@ -199,6 +199,7 @@ void player_collide(void) {
     {
         uint8_t turrets = pool[P_TURRET].t | pool[P_TURRET + 1].t | pool[P_TURRET + 2].t |
                           pool[P_TURRET + 3].t;
+        uint8_t boss_on = boss_state == BOSS_FIGHT || boss_state == BOSS_INTRO;   // skip the call
         hit_ox = 1; hit_oy = 1; hit_ow = 14; hit_oh = 14;    // enemies and turrets: 14x14
         // half of the shots each frame: every shot is checked every 2nd frame, and the cost
         // is the same every frame (all 8 on one frame was a 12k T peak)
@@ -209,7 +210,7 @@ void player_collide(void) {
             else { hit_qx = o->x + 2; hit_qw = 4; dmg = power == 1 || o->s == 2 ? 1 : 2; }
             hit_qy = o->y + 2; hit_qh = o->s == 2 ? 8 : 12;
             if ((e = hit_enemy(P_ENEMY)) != 0xFF) { o->t = 0; enemy_damage(e, dmg); continue; }
-            if (boss_overlaps(hit_qx, hit_qy, hit_qw, hit_qh)) { o->t = 0; boss_damage(dmg); continue; }
+            if (boss_on && boss_overlaps(hit_qx, hit_qy, hit_qw, hit_qh)) { o->t = 0; boss_damage(dmg); continue; }
             if (turrets && (e = hit_first(P_TURRET, N_TURRET)) != 0xFF) { o->t = 0; turret_damage(e, dmg); }
         }
     }
@@ -219,7 +220,8 @@ void player_collide(void) {
     hit_ox = 2; hit_oy = 2; hit_ow = 4; hit_oh = 4;                          // bullet 4x4
     if (hit_first(P_BULLET, N_BULLET) != 0xFF) { kill_player(); return; }
     hit_ox = 2; hit_oy = 2; hit_ow = 12; hit_oh = 12;
-    if (hit_enemy(P_ENEMY) != 0xFF || boss_overlaps(player_x + 6, player_y + 6, 4, 4)) kill_player();
+    if (hit_enemy(P_ENEMY) != 0xFF || (boss_state && boss_overlaps(player_x + 6, player_y + 6, 4, 4)))
+        kill_player();
 }
 
 void player_sprites(void) {

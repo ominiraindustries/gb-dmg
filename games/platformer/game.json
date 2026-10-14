@@ -63,7 +63,7 @@
     "gbe_actors.s",
     "gbe_map.c",
     "gbe_map.s",
-    "gbe_sfx.c",
+    "gbe_sfx.c", "gbe_sfx_asm.s",
     "gbe_vram.s",
     "gbe_selftest.c"
   ],

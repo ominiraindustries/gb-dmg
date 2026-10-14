@@ -15,7 +15,8 @@ void sound_init(void) {
 // trigger (NRx4) last. Field-by-field through the struct pointer cost ~1300 T (shmup profile).
 static uint8_t * const sfx_regs[5] = { 0, (uint8_t *)0xFF10, (uint8_t *)0xFF15, 0, (uint8_t *)0xFF1F };
 
-void sfx(uint8_t id) {
+// Reference only: games link gbe_sfx_asm.s (sfx in asm, ~300 T); kept to document the behaviour.
+void sfx_c(uint8_t id) {
     const uint8_t *p = (const uint8_t *)&sfx_table[id];
     uint8_t ch = p[0];
     if (ch_busy[ch] && p[1] < ch_prio[ch]) return;

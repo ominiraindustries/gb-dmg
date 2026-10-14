@@ -80,7 +80,7 @@ void draw_sprites(void) {
     spr_group(2, 12, P_BULLET, N_BULLET, 1);                    // enemy bullets: priority 2
     spr_group(14, 12, P_ENEMY, N_ENEMY, 2);                     // enemies
     spr_group(26, 8, P_SHOT, N_SHOT, 1);                        // player shots: lowest priority
-    spr_rot++;
+    if (++spr_rot == 48) spr_rot = 0;
 }
 
 void main(void) {

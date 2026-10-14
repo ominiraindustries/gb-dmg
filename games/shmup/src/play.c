@@ -96,9 +96,13 @@ void play_sprites(void) {
     player_sprites();
     spr_group(OAM_BULLET, 12, P_BULLET, N_BULLET, 1);
     spr_group(OAM_ENEMY, 12, P_ENEMY, N_ENEMY, 2);
-    spr_group(OAM_ITEM, 2, P_ITEM, N_ITEM, 2);
+    // tiny groups: when empty just hide their slots (a spr_group call has ~400 T of setup)
+    if (pool[P_ITEM].t) spr_group(OAM_ITEM, 2, P_ITEM, N_ITEM, 2);
+    else shadow_OAM[OAM_ITEM].y = shadow_OAM[OAM_ITEM + 1].y = 0;
     spr_group(OAM_SHOT, 8, P_SHOT, N_SHOT, 1);
-    spr_group(OAM_EXPLO, 4, P_EXPLO, N_EXPLO, 2);
+    if (pool[P_EXPLO].t | pool[P_EXPLO + 1].t) spr_group(OAM_EXPLO, 4, P_EXPLO, N_EXPLO, 2);
+    else shadow_OAM[OAM_EXPLO].y = shadow_OAM[OAM_EXPLO + 1].y =
+         shadow_OAM[OAM_EXPLO + 2].y = shadow_OAM[OAM_EXPLO + 3].y = 0;
     if (++spr_rot == 48) spr_rot = 0;                // groups of 12, 6, 1, 8, 2 slots: 2 x 24
 }
 
