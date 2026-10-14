@@ -1,0 +1,38 @@
+; CONTINUAR - drawn in the WINDOW map ($9C00 rows 0-17) with the LCD off; window full
+; screen (hud_cut = 0, WY = 0), sprites off. The stage stays untouched in the BG ($9800),
+; so continuing only needs hud_cut = 1 again. Resident tiles only (font + HUD group).
+; Row 0 = HUD (live values). Box rows 3-14. Countdown digit (8,9) in a 3x3 box (cols 8-10,
+; rows 7-9), 9 -> 0 one per 60 f. "QUEDAN 3" = continues left. "PULSA START" blinks 30/30.
+tilesets: ui font
+legend:
+v ICON_LIFE
+b ICON_BOMB
+p ICON_POWER
+[ FRAME_TL
+_ FRAME_T
+] FRAME_TR
+( FRAME_L
+) FRAME_R
+{ FRAME_BL
+= FRAME_B
+} FRAME_BR
+? QUESTION
+grid:
+012340.v0.b2.p1.....
+....................
+....................
+.[________________].
+.(................).
+.(...CONTINUAR?...).
+.(................).
+.(......[_].......).
+.(......(9).......).
+.(......{=}.......).
+.(................).
+.(....QUEDAN.3....).
+.(................).
+.(..PULSA.START...).
+.{================}.
+....................
+....................
+....................

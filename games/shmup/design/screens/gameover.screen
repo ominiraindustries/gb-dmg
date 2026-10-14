@@ -1,0 +1,35 @@
+; GAMEOVER - LCD-off redraw in the BG map ($9800), SCX=SCY=0, window and sprites off.
+; Box rows 3-13 cols 1-18. "FIN DEL JUEGO" row 5, score row 7, record (already updated)
+; row 9, "NUEVO RECORD!" row 11 only if beaten (blinks 30/30 f). Wall rows 15-17.
+tilesets: ui uiscreens font
+legend:
+[ FRAME_TL
+_ FRAME_T
+] FRAME_TR
+( FRAME_L
+) FRAME_R
+{ FRAME_BL
+= FRAME_B
+} FRAME_BR
+~ WALL_TOP
+# WALL_BRICK
+! EXCLAM
+grid:
+....................
+....................
+....................
+.[________________].
+.(................).
+.(.FIN.DEL.JUEGO..).
+.(................).
+.(.PUNTOS..012340.).
+.(................).
+.(.RECORD..012340.).
+.(................).
+.(..NUEVO.RECORD!.).
+.(................).
+.{================}.
+....................
+~~~~~~~~~~~~~~~~~~~~
+####################
+####################

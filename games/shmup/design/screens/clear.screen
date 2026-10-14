@@ -1,0 +1,38 @@
+; CLEAR - LCD-off redraw in the BG map ($9800), SCX=SCY=0, window and sprites off.
+; Box rows 0-14 cols 0-19 (full width so the 15-char lines are centred). Bonus count:
+; bomb digit (4,9) goes down 1 per 2000 moved, SIN MORIR (6,12-16) goes down 100/f,
+; TOTAL (8,11-16) goes up 100/f, tick every 4 f. Record (10,11-16) updated at the end;
+; "NUEVO RECORD!" row 12 cols 3-15 only if beaten (blinks 30/30 f).
+tilesets: ui uiscreens font
+legend:
+[ FRAME_TL
+_ FRAME_T
+] FRAME_TR
+( FRAME_L
+) FRAME_R
+{ FRAME_BL
+= FRAME_B
+} FRAME_BR
+~ WALL_TOP
+# WALL_BRICK
+! EXCLAM
+x ICON_TIMES
+grid:
+[__________________]
+(..................)
+(.FASE.COMPLETADA..)
+(..................)
+(.BOMBAS.2.x.2000..)
+(..................)
+(.SIN.MORIR.10000..)
+(..................)
+(.TOTAL....045670..)
+(..................)
+(.RECORD...045670..)
+(..................)
+(..NUEVO.RECORD!...)
+(..................)
+{==================}
+~~~~~~~~~~~~~~~~~~~~
+####################
+####################
