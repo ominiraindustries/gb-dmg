@@ -1,17 +1,31 @@
 ---
 name: game-studio
-description: Run the studio pipeline to make a Game Boy DMG game from an idea - design (game-designer), art and UI (pixel-artist, ui-designer), implementation, QA (qa-tester) and playtest - with the user approving each phase. Use when the user wants to start a new game or a major new part of a game, e.g. "/game-studio un plataformas de un ninja".
+description: Run the studio pipeline to make a Game Boy DMG game from an idea - design (game-designer), art and UI (pixel-artist, ui-designer), implementation, QA (qa-tester), bot playtest (playtester) and the user's playtest - stopping only for the user's taste decisions. Use when the user wants to start a new game or a major new part of a game, e.g. "/game-studio un plataformas de un ninja".
 ---
 
 # Studio pipeline
 
 You (the main session) are the producer and the programmer. The studio roles are subagents in
-`.claude/agents/`: **game-designer**, **pixel-artist**, **ui-designer**, **qa-tester**. Delegate
+`.claude/agents/`: **game-designer**, **pixel-artist**, **ui-designer**, **qa-tester**, **playtester**. Delegate
 with the Agent tool (`subagent_type` = the agent name); give each a self-contained brief (they do
 not see this conversation): game folder, what to deliver, decisions already taken by the user.
 
-Talk to the user in Spanish. Each phase ends with a short report to the user and **their
-approval** before the next phase. Commit after each phase (CLAUDE.md rule).
+Talk to the user in Spanish. Commit after each phase (CLAUDE.md rule).
+
+## Autonomy: when to stop for the user
+The pipeline runs on its own from the idea to a playable, QA'd, bot-playtested milestone. Stop and
+ask (AskUserQuestion, 2-3 options + your recommendation first) **only for taste**:
+- theme, tone, names, story; which of two valid core mechanics; the difficulty target;
+- visual style choices, always with a comparison image (see Phase 2);
+- scope cuts that change what the game is.
+Batch them: one round of questions per phase, not one question at a time. Everything technical
+(numbers inside the GDD's ranges, engine choices, budgets, art iterations against the skill
+checklists, bug fixes, tuning the playtester backs with measurements) you decide, and say what
+you decided in the phase note. Each phase ends with a short note to the user (what was done, the
+key image paths, decisions you took) and you continue without waiting. The user's playtest
+(Phase 6) is the one real stop: ask them to play and wait for their feedback.
+If the user said "aprueba tú" / "no preguntes", skip the taste questions too and take your
+recommendations, listing them in the note.
 
 ## Phase 0 - Setup
 - Pick a folder name (lowercase, no spaces). New game: `python harness/gb.py new <game>`.
@@ -22,14 +36,16 @@ approval** before the next phase. Commit after each phase (CLAUDE.md rule).
 - Show the user: pitch, core loop, controls, screens, M1 scope, budget verdict.
 - Resolve "Decisiones pendientes" with the user (AskUserQuestion, 2-3 options + recommendation).
   Send answers back to the designer (SendMessage) to update the GDD, or edit it yourself if tiny.
-- Mark the GDD "aprobado" with the date. Commit.
+- Ask only the taste items of "Decisiones pendientes" (batched); decide the technical ones yourself
+  with the designer's recommendation. Mark the GDD "aprobado" with the date. Commit.
 
 ## Phase 2 - Art and UI (in parallel, one message with two Agent calls)
 - **pixel-artist**: asset list from the GDD -> `res/*.tiles` (+ mockups showing art in context).
 - **ui-designer**: every screen of the flow -> `design/screens/*.screen`, `design/ui.md`, `res/ui.tiles`.
 - They must not edit the same files (artist: game tilesets; ui: `ui.tiles` + screens).
-- Run `python harness/gb.py preview <game>` yourself and look at the PNGs; give the user the paths
-  of the key previews and collect feedback. Route feedback back to the right agent. Commit.
+- Run `python harness/gb.py preview <game>` yourself and look at the PNGs against the skill
+  checklists; send problems back to the right agent yourself. Give the user the paths of the key
+  previews in the phase note (feedback can arrive any time later). Commit.
 - Visual taste questions ("windows on the walls or not?") go to the user WITH a comparison image:
   ask the artist for the variants side by side in the same scenes (games/dungeon:
   `variant_windows.png`); the user could not choose from text alone.
@@ -48,13 +64,23 @@ approval** before the next phase. Commit after each phase (CLAUDE.md rule).
 - QA's readability findings (things vanishing over a background) go straight to the **pixel-artist**
   in parallel with your fixes (games/shmup: bullets over the boss wings, bat over the forest).
 
-## Phase 5 - Playtest (the user)
+## Phase 5 - Bot playtest
+- Delegate to **playtester** once the milestone is playable end to end and QA is green: bots with
+  human-like reaction times (expert/average/novice, several seeds) measure difficulty per section,
+  pacing, stuck points, exploits and feel numbers, and it proposes tuning with numbers in
+  `design/playtest.md`.
+- Apply the proposals that are measured and inside the GDD's intent (update the GDD numbers too);
+  re-run the playtester if the changes were large. Proposals that change the game's character
+  (a new mechanic, a different difficulty target) are taste: batch them for the user. Commit.
+
+## Phase 6 - Playtest (the user)
 - Ask the user to play: `python harness/gb.py run <game>` (controls: arrows, A = a, B = s,
-  Start = Enter, Select = Backspace).
+  Start = Enter, Select = Backspace). Tell them what the bots found and what to try first
+  (from `design/playtest.md`): fun, feel and looks are what only they can judge.
 - Route feedback: feel/difficulty -> parameters in the GDD + code; looks -> pixel-artist;
   layout/menus -> ui-designer; bugs -> you + a regression test. Iterate.
 
-## Phase 6 - Retrospective (always, before the next milestone or game)
+## Phase 7 - Retrospective (always, before the next milestone or game)
 The games exist to improve the harness. Go through `retro.md` in this skill's folder: what was
 learned, what moves into `harness/common/` (engine code, assets), which mistakes become automatic
 checks (build checks, lint rules, tests), what changes in skills/agents/templates. Update the GDD

@@ -233,6 +233,37 @@ class GB:
                 "worst_lines": self.u8("max_frame_lines") if "max_frame_lines" in self.syms else None,
                 "vram_late": self.u8("vram_late") if "vram_late" in self.syms else None}
 
+    BUTTONS = ("up", "down", "left", "right", "a", "b", "start", "select")
+    SKILL = {"expert": (8, 0.0), "average": (14, 0.05), "novice": (22, 0.12)}   # (reaction f, miss)
+
+    @staticmethod
+    def human(policy, reaction=14, miss=0.05, seed=0):
+        """Human-like step for run_bot (playtests). policy(gb, f) -> set of buttons the player wants
+        now ({"right", "a"}); the buttons actually held are that decision `reaction` frames late,
+        and each new press is missed with probability `miss` (until the policy re-decides).
+        GB.SKILL has presets: GB.human(policy, *GB.SKILL["novice"], seed=3). Compare outcomes over
+        several seeds and skills to estimate difficulty: one perfect bot says nothing about players."""
+        import random
+        rnd, queue, held, missed = random.Random(seed), [], set(), set()
+
+        def step(gb, f):
+            want = set(policy(gb, f))
+            queue.append(want)
+            now = queue.pop(0) if len(queue) > reaction else set()
+            missed.intersection_update(now)              # a released button can be pressed again
+            for b in now - held - missed:
+                if rnd.random() < miss:
+                    missed.add(b)
+            now = now - missed
+            for b in GB.BUTTONS:
+                if b in now and b not in held:
+                    gb.pyboy.button_press(b)
+                elif b in held and b not in now:
+                    gb.pyboy.button_release(b)
+            held.clear()
+            held.update(now)
+        return step
+
     # --- gbe engine selftest ---
     def selftest(self, max_frames=60000):
         """Run the gbe library's asm-vs-C equivalence checks inside the ROM (gbe_selftest.c; the
