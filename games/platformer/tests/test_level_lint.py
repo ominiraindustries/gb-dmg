@@ -13,7 +13,7 @@ LEVELS = sorted((GAME / "res").glob("*.lvl"))
 SOLID = set("#BH?PU[]{}")           # solid map cells (U only from below, but blocks paths too)
 ENEMIES = set("wsph")
 MAX_PIT = 3                         # metatiles, walking jump (GDD §2.2); running allows 5
-MAX_STEP_UP = 4                     # metatiles, running jump height
+MAX_STEP_UP = 3                     # metatiles: the measured running jump is 62 px (< 4 * 16)
 ENEMY_WINDOW = 11                   # 176 px / 16
 
 
@@ -50,9 +50,15 @@ def surface(lvl, c):
     return h
 
 
+JUMP_REACH = 3                      # metatiles a jump covers horizontally (walking, GDD §2.2)
+
+
 def test_steps_are_climbable(lvl):
+    """Every column must be reachable from the highest surface within jump reach on its left
+    (stair tops separated by a gap are reached at the same height, not climbed from the gap)."""
     for c in range(1, lvl.width):
-        rise = surface(lvl, c) - surface(lvl, c - 1)
+        start = max(surface(lvl, k) for k in range(max(0, c - JUMP_REACH), c))
+        rise = surface(lvl, c) - start
         assert rise <= MAX_STEP_UP, f"step of {rise} metatiles at column {c}"
 
 

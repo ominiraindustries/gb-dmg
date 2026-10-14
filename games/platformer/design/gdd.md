@@ -693,6 +693,8 @@ perfilar (`gb.profile`) y llevar a asm la colisión de actores contra el mapa.
   monedas; proyectil; hoyos, tiempo, vidas, puntuación, 100 monedas = vida; checkpoint; asta y cuenta
   de tiempo; pantallas TITLE (solo texto), INTRO, PAUSE, DYING, GAMEOVER, CLEAR (→ TITLE); efectos de
   sonido básicos por registros; tests de §11.
+- **Antes de M2 — bancos de ROM (obligatorio, hallazgo de QA):** hoy el código ocupa 0x0000-0x5FFF
+  plano; organizar código fijo en banco 0 y datos (niveles, tilesets, música) en bancos conmutables.
 - **M2 — contenido:** niveles 1-2, 1-3, 1-4 (2 tilesets más); PLANT, HOPPER; ITEM_STAR y ladrillo
   multi-moneda (si se aprueban); logo de título; flujo CLEAR → siguiente nivel; final del mundo.
 - **M3 — música:** integración de hUGEDriver (banco propio), 9 pistas de §8.2, efectos con prioridad

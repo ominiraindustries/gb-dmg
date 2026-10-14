@@ -4,6 +4,7 @@
 #include "level1_1.h"
 
 uint8_t level[LEVEL_MAX_COLS * LEVEL_ROWS];   // column-major: (col << 3) | row
+uint8_t coin_cols[32];                        // bit per column: the column holds map coins
 uint8_t level_cols;
 uint16_t level_px_w;                          // level_cols * 16
 uint16_t camera_x, camera_max;
@@ -36,20 +37,23 @@ uint8_t solid_at_c(uint16_t x, uint8_t y) {
 }
 
 // Fills col_buf with world tile column tc and sets its VRAM destination (ring of 32 columns)
-void prepare_column(uint16_t tc) {
+void column_tiles(const uint8_t *m, uint8_t h);   // asm (vram.s): fills col_buf
+
+// Reference C version of the column fill (equivalence test in main.c eq_run)
+void prepare_column_c(uint16_t tc) {
     uint8_t r, h = tc & 1;
-    const uint8_t *m, *t;
+    const uint8_t *m = &level[(tc >> 1) << 3], *t;
     uint8_t *dst = col_buf;
-    if ((tc >> 1) >= level_cols) {
-        memset(col_buf, BG_BLANK, 16);
-    } else {
-        m = &level[(tc >> 1) << 3];
-        for (r = 0; r < LEVEL_ROWS; r++) {
-            t = mt_tiles[m[r]] + h;
-            *dst++ = t[0];
-            *dst++ = t[2];
-        }
+    for (r = 0; r < LEVEL_ROWS; r++) {
+        t = mt_tiles[m[r]] + h;
+        *dst++ = t[0];
+        *dst++ = t[2];
     }
+}
+
+void prepare_column(uint16_t tc) {
+    if ((tc >> 1) >= level_cols) memset(col_buf, BG_BLANK, 16);
+    else column_tiles(&level[(tc >> 1) << 3], tc & 1);
     col_dst = (uint8_t *)(0x9800u + (tc & 31));
     col_pending = 1;
 }
@@ -61,6 +65,9 @@ void level_load(uint16_t cam) {
     level_px_w = (uint16_t)level_cols << 4;
     camera_max = level_px_w - 160;
     memcpy(level, level1_1_map, (uint16_t)level_cols * LEVEL_ROWS);
+    memset(coin_cols, 0, sizeof(coin_cols));
+    for (c = 0; c < (uint16_t)level_cols * LEVEL_ROWS; c++)
+        if (level[c] == MT_COIN) coin_cols[c >> 6] |= 1 << ((c >> 3) & 7);
     if (cam > camera_max) cam = camera_max;
     camera_x = cam;
     scx_shadow = (uint8_t)cam;
@@ -92,7 +99,7 @@ void level_update_camera(void) {
 
 // Metatile redraw queue: changed blocks already on screen (GDD §2.5). Addresses and tiles are
 // prepared here; the VBlank only copies 4 tiles per entry.
-#define BLK_QUEUE 4
+#define BLK_QUEUE 8                  // QA: 4 could drop redraws (e.g. a 2x3 coin group)
 uint8_t *blk_dst[BLK_QUEUE];
 uint8_t blk_tiles[BLK_QUEUE][4];
 uint8_t blk_count;

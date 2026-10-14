@@ -12,6 +12,7 @@
 #define T_DIGIT0 (TILE_FONT + FONT_DIGIT0)
 
 uint8_t record[3];                       // packed BCD like score (RAM only in M1)
+uint8_t blink60;                         // 0..59, the 30/30 f blink of screen texts
 uint8_t new_record;
 uint8_t screen_timer;
 uint8_t bgp_shadow = 0xE4, obp0_shadow = 0xE4, obp1_shadow = 0xD8;   // written in VBlank
@@ -130,7 +131,8 @@ static void update_title(void) {
             return;
         }
     } else {
-        on = (t % 60) < 30;
+        if (++blink60 == 60) blink60 = 0;
+        on = blink60 < 30;
     }
     if ((t & 3) == 0 || t == 1) queue_job(BG_MAP + 10 * 32 + 4, on ? (const uint8_t *)press_tiles : blanks, 11);
 }
@@ -210,8 +212,9 @@ static void build_result(uint8_t clear) {
 
 static void update_result(void) {
     uint8_t t = ++screen_timer;
-    if (state == STATE_CLEAR && new_record && (t % 30) == 0)
-        queue_job(BG_MAP + 12 * 32 + 4, (t % 60) < 30 ? (const uint8_t *)nr_tiles : blanks, 13);
+    if (++blink60 == 60) blink60 = 0;
+    if (state == STATE_CLEAR && new_record && (blink60 == 0 || blink60 == 30))
+        queue_job(BG_MAP + 12 * 32 + 4, blink60 < 30 ? (const uint8_t *)nr_tiles : blanks, 13);
     if (t >= 180 || (t >= 30 && (pressed & (J_START | J_A)))) transition(SCR_TITLE);
 }
 
@@ -301,14 +304,17 @@ uint8_t goal_check(void) {
     uint16_t right = player_x + HB_X + HB_W - 1, pole_l = ((uint16_t)pole_col << 4) + 6;
     uint8_t row;
     if (!pole_col || right < pole_l || player_x + HB_X > pole_l + 3) return 0;
-    row = (uint8_t)(player_y + hb_y + hb_h - 1 - Y_BIAS) >> 4;
+    row = (uint8_t)(player_y + hb_y + hb_h - 1);
+    row = (row < Y_BIAS || row >= 0xC0) ? 0 : (uint8_t)(row - Y_BIAS) >> 4;   // above the level: top
     if (row > 6) row = 6;
     add_score(goal_pts[row]);
     sfx(SFX_POWER_GET);
-    player_x = ((uint16_t)pole_col << 4) - 6;
+    // same x as the banner sprite: equal X -> lower OAM index (Teo, 0-3) is drawn in front
+    player_x = ((uint16_t)pole_col << 4) - 8;
     player_vx = player_vy = 0;
     player_facing = 0;
     goal_phase = 0;
+    hud_time_icon(1);
     state = STATE_GOAL;
     return 1;
 }
@@ -321,8 +327,9 @@ void update_goal(void) {
         if (banner_y < POLE_BASE - 16) { banner_y += 2; done = 0; }
         if (done) goal_phase = 1;
         break;
-    case 1:                                       // walk to the castle door
+    case 1:                                       // walk to the castle door (falls off the base)
         player_x++;
+        if (!solid_at(player_x + 8, player_y + hb_y + hb_h)) player_y += 2;
         player_vx = 0x0100;
         player_on_ground = 1;
         if (player_x >= ((uint16_t)DOOR_COL << 4)) {

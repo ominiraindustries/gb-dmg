@@ -81,7 +81,10 @@ void new_game(void) {
     transition(SCR_INTRO);
 }
 
+uint8_t blink_tick;
+
 void update_timer(void) {
+    if (time_units <= TIME_HURRY) hud_time_icon(!((++blink_tick) & 16));   // blink every 16 f
     if (cheat_flags & CHEAT_NO_TIMER) return;
     if (++time_tick >= FRAMES_PER_TIME_UNIT) {
         time_tick = 0;
@@ -96,6 +99,7 @@ void update_timer(void) {
 
 void start_dying(void) {
     state = STATE_DYING;
+    hud_time_icon(1);
     sfx(SFX_DEATH);
     if (player_dead == 1) {                       // pit: no animation, just wait
         dying_timer = PIT_WAIT;
@@ -135,6 +139,7 @@ void update_play(void) {
     if (pressed & J_START) {                      // pause (ui.md §5)
         state = STATE_PAUSE;
         pause_timer = 0;
+        hud_time_icon(1);
         hud_pause(1);
         sfx(SFX_PAUSE);
         return;
@@ -209,6 +214,53 @@ static void eq_act_move(void) {
     act_type[s] = T_NONE;
 }
 
+void prepare_column(uint16_t tc);
+void prepare_column_c(uint16_t tc);
+extern uint8_t col_buf[], col_pending;
+extern uint8_t level_cols;
+
+// column fill asm vs C over every tile column of the level
+static void eq_columns(void) {
+    uint16_t tc;
+    uint8_t ref[16], r;
+    for (tc = 0; tc < (uint16_t)level_cols << 1; tc++) {
+        prepare_column_c(tc);
+        for (r = 0; r < 16; r++) ref[r] = col_buf[r];
+        prepare_column(tc);
+        for (r = 0; r < 16; r++) if (col_buf[r] != ref[r]) { eq_mismatch++; break; }
+        eq_count++;
+    }
+    col_pending = 0;
+}
+
+// walk_on_map asm vs C on the real level: positions, heights, velocities, single/double step
+void walk_on_map(uint8_t i, uint8_t dbl);
+void walk_on_map_c(uint8_t i, uint8_t dbl);
+static const uint8_t eq_ys[4] = { 64, 112, 120, 127 };
+static const int16_t eq_vx[5] = { -0x0300, -0x0080, 0, 0x0080, 0x0300 };
+static const int16_t eq_vy[4] = { -0x0100, 0, 0x0040, 0x0280 };
+
+static void eq_walk(void) {
+    uint8_t s = A_ENEMY0 + 4, a, b, c, d, xs1, ys1, y1;
+    uint16_t x, x1;
+    int16_t vx1, vy1;
+    for (x = 0; x < level_px_w; x += 7) {
+        for (a = 0; a < 4; a++) for (b = 0; b < 5; b++) for (c = 0; c < 4; c++) for (d = 0; d < 2; d++) {
+            act_x[s] = x; act_xs[s] = (uint8_t)x; act_y[s] = eq_ys[a]; act_ys[s] = (uint8_t)(x >> 3);
+            act_vx[s] = eq_vx[b]; act_vy[s] = eq_vy[c];
+            walk_on_map(s, d);
+            x1 = act_x[s]; xs1 = act_xs[s]; y1 = act_y[s]; ys1 = act_ys[s]; vx1 = act_vx[s]; vy1 = act_vy[s];
+            act_x[s] = x; act_xs[s] = (uint8_t)x; act_y[s] = eq_ys[a]; act_ys[s] = (uint8_t)(x >> 3);
+            act_vx[s] = eq_vx[b]; act_vy[s] = eq_vy[c];
+            walk_on_map_c(s, d);
+            if (act_x[s] != x1 || act_xs[s] != xs1 || act_y[s] != y1 || act_ys[s] != ys1
+                || act_vx[s] != vx1 || act_vy[s] != vy1) eq_mismatch++;
+            eq_count++;
+        }
+    }
+    act_type[s] = T_NONE;
+}
+
 void eq_run(void) {
     uint16_t x;
     uint8_t y;
@@ -221,6 +273,8 @@ void eq_run(void) {
         } while (++y);
     }
     eq_act_move();
+    eq_columns();
+    eq_walk();
     eq_done = 1;
 }
 

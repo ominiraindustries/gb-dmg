@@ -117,7 +117,9 @@ class GB:
 
     # --- screen ---
     def screenshot(self, name):
-        """Render the current frame and save it as shots/<name>.png. Returns the path."""
+        """Render and save shots/<name>.png. Returns the path. Advances 2 frames: PyBoy draws the
+        window one line off on the first rendered frame after unrendered ticks (QA finding)."""
+        self._tick(1, True)
         self._tick(1, True)
         self.shots_dir.mkdir(parents=True, exist_ok=True)
         path = self.shots_dir / f"{name}.png"

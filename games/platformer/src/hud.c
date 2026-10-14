@@ -116,6 +116,14 @@ void hud_init(void) {
     hud_dirty = 0;
 }
 
+// Low time: the hourglass alternates with blank every 16 f (ui.md §2); on = 1 forces it visible
+void hud_time_icon(uint8_t on) {
+    uint8_t t = on ? TILE_UI + UI_ICON_TIME : T_BLANK;
+    if (hud_buf[1][COL_TIMEICON] == t) return;
+    hud_buf[1][COL_TIMEICON] = t;
+    hud_dirty |= HUD_TIMEICON;
+}
+
 // PAUSE: row 0 becomes "PAUSA" at cols 7-11, blinking; restored from hud_buf (ui.md §5)
 void hud_pause(uint8_t mode) {
     uint8_t i;
@@ -134,5 +142,6 @@ void hud_draw_vram(void) {
     if (d & HUD_COINS) copy(WIN_MAP + COL_COINS, &hud_buf[0][COL_COINS], 2);
     if (d & HUD_LIVES) copy(WIN_MAP + 32 + COL_LIVES, &hud_buf[1][COL_LIVES], 2);
     if (d & HUD_TIME) copy(WIN_MAP + 32 + COL_TIME, &hud_buf[1][COL_TIME], 3);
+    if (d & HUD_TIMEICON) WIN_MAP[32 + COL_TIMEICON] = hud_buf[1][COL_TIMEICON];
     hud_dirty = 0;
 }

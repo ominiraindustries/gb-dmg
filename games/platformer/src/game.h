@@ -75,6 +75,7 @@ void hud_draw_vram(void);
 void hud_set_time(uint16_t units);
 void hud_set_lives(void);
 void hud_pause(uint8_t mode);
+void hud_time_icon(uint8_t on);
 void add_score(const uint8_t *bcd);                // packed BCD, 3 bytes little-endian
 void add_coin(void);
 void add_life(void);

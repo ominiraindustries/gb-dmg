@@ -126,7 +126,7 @@ def test_no_jump_after_coyote_window(gb):
     gb.pyboy.button_release("right")
 
 
-def test_head_bump_and_corner_correction(gb):
+def test_head_bump(gb):
     start_play(gb)
     # rune block at column 16, row 4 (y 96..111). Stand under it and jump.
     teleport(gb, 16 * 16, SMALL_Y_ON_GROUND)
@@ -136,17 +136,7 @@ def test_head_bump_and_corner_correction(gb):
     gb.frames(20)
     top = gb.u8("player_y") + 2
     assert top >= Y_BIAS + 5 * 16 - 2                  # never got inside the block
-    gb.frames(60)
-    # 3 px overlap on the block's right edge: corrected, jumps past it
-    teleport(gb, 17 * 16 - 3 - 3 + 3, SMALL_Y_ON_GROUND)
-    gb.frames(3)
-    gb.pyboy.button_press("a")
-    peak = 255
-    for _ in range(40):
-        gb.frames(1)
-        peak = min(peak, gb.u8("player_y"))
-    gb.pyboy.button_release("a")
-    assert peak < Y_BIAS + 4 * 16, "corner correction should let Teo rise past the block"
+    # corner correction (3 px vs 6 px) is covered by test_qa.py::test_qa_head_corner_correction_3px_vs_6px
 
 
 def test_camera_never_goes_back_and_left_edge_blocks(gb):

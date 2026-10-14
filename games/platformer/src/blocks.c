@@ -47,8 +47,16 @@ static void try_coin(uint16_t x, uint8_t y) {
 }
 
 // Corners of the player's hitbox (coins are 16x16 cells; corners are enough for a 10 px box)
+extern uint8_t coin_cols[];
+
+static uint8_t col_has_coin(uint16_t x) {
+    uint8_t c = x >> 4;
+    return coin_cols[c >> 3] & (1 << (c & 7));
+}
+
 void collect_coins(void) {
     uint16_t l = player_x + HB_X, r = player_x + HB_X + HB_W - 1;
+    if (!col_has_coin(l) && !col_has_coin(r)) return;   // most columns have no coins
     uint8_t t = player_y + hb_y, b = player_y + hb_y + hb_h - 1;
     try_coin(l, t); try_coin(r, t);
     try_coin(l, b); try_coin(r, b);

@@ -345,7 +345,9 @@ void player_update(void) {
     }
     if (player_on_ground) player_coyote = COYOTE_FRAMES;
     else if (player_coyote) player_coyote--;
-    if ((uint8_t)(player_y + hb_y) >= PIT_Y && player_y < 0xF0) player_dead = 1;
+    // y is u8 with Y_BIAS 32: a high jump from row 1 wraps below 0 to 0xC0-0xFF (above the
+    // screen), which must not count as a pit (QA bug: jumping from the top row killed Teo)
+    if (player_y < 0xC0 && (uint8_t)(player_y + hb_y) >= PIT_Y) player_dead = 1;
     player_animate();
 }
 

@@ -82,8 +82,25 @@ Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `
     jugador sí cada frame. Como mucho 1 aparición de enemigo por frame (evita picos al reaparecer).
   - Sprites: escribir directo en `shadow_OAM` (`oam16`) y vaciar rangos con `memset`, no
     `set_sprite_tile/prop + move_sprite` por sprite.
+- Interacciones entre muchos objetos (games/platformer, 5 enemigos de 150 → ~100 líneas): una vez por
+  frame calcular la x **relativa a la cámara en 8 bits** (`x - camera_x + 32`; los objetos solo existen
+  cerca de la pantalla) y hacer todas las colisiones y el dibujado en 8 bits. Solape simétrico
+  |d| < N: `(uint8_t)(d + N - 1) < 2N - 1` (con `+N < 2N` el lado negativo choca y el positivo no).
+  Pares una sola vez (`j > i`) y en frames alternos si los objetos son lentos.
+- Bots de rendimiento: deben **comprobar que avanzan** (un bot atascado en la columna 45 dio un "85
+  líneas" falso). El peor caso real está en las zonas con más enemigos y al cargar columnas.
+- Números de diseño vs. realidad: medir la física (altura real de salto 62 px, no los 64 del GDD) y que
+  el lint de niveles use lo medido; si no, el nivel puede ser imposible de terminar.
+- `y` en u8 con sesgo: un salto alto puede pasar por debajo de 0 (0xC0-0xFF = encima de la pantalla);
+  ninguna comprobación (fosos, filas) debe interpretar eso como "abajo".
 - Profiler (`gb.profile`): solo ve funciones **no static**; una función que acaba con llamada final
   (`jp`) se atribuye a la llamada. Para perfilar el interior de un módulo, quitar `static`.
+
+## Bancos de ROM (pendiente antes de más contenido)
+games/platformer ya enlaza código de forma plana en 0x0000-0x5FFF (banco 0 al 98%) confiando en que el
+banco 1 de MBC5 queda mapeado. En cuanto haya `SWITCH_ROM` (música, más niveles, `-autobank`) el código
+del banco 1 desaparecería y el juego se colgaría. Plan: código del juego y ISRs en banco 0/fijo,
+datos de niveles/tilesets/música en bancos con `#pragma bank 255`, cargados con el LCD apagado.
 
 ## Reglas de hardware DMG
 Detalle completo: skill `gb-hardware`. Lo imprescindible:

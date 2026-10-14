@@ -1,5 +1,6 @@
 """Equivalence of the asm routines in vram.s with their C references: mt_at / solid_at (exhaustive
-over the level) and act_move (signed velocities, carries, 16-bit wrap)."""
+over the level), act_move (signed velocities, carries, 16-bit wrap), the column fill and
+walk_on_map (enemy physics on the real level)."""
 import sys
 from pathlib import Path
 
@@ -10,7 +11,7 @@ from helpers import start_play
 def test_asm_routines_equal_c_references(gb):
     start_play(gb)
     gb.write_u8("eq_request", 1)
-    for _ in range(300):                      # ~840k comparisons = ~12000 frames
+    for _ in range(600):                      # ~840k map + 73k walk comparisons
         gb.frames(100)
         if gb.u8("eq_done"):
             break

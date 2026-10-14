@@ -6,7 +6,6 @@
 
 void act_move(uint8_t i);
 void act_spawn(uint8_t i, uint8_t type, uint16_t x, uint8_t y);
-uint8_t player_touches(uint8_t i, uint8_t ox, uint8_t oy, uint8_t w, uint8_t h);
 extern uint8_t act_flip[], act_xs[], act_ys[];
 
 enum { E_WALK, E_SQUASH, E_FLIP, E_BALL, E_BALL_MOVE };
@@ -20,6 +19,7 @@ enum { E_WALK, E_SQUASH, E_FLIP, E_BALL, E_BALL_MOVE };
 #define BALL_WAIT     300
 #define BALL_TREMBLE  60
 #define KICK_GRACE    8
+#define STOP_GRACE    16                      // frames a stopped ball ignores contact
 #define FLIP_VY       (-0x0200)
 #define SPAWN_AHEAD   (160 + 16)
 
@@ -41,11 +41,13 @@ static void award_chain(uint8_t *chain) {
     if (*chain < 10) (*chain)++;
 }
 
-// Hitbox per enemy state (GDD §2.8): x offset, y offset, w, h
-void hitbox(uint8_t i, uint8_t *hb) {
-    hb[0] = 2; hb[2] = 12;
-    if (act_type[i] == T_SHELL && act_state[i] == E_WALK) { hb[1] = 2; hb[3] = 14; }
-    else { hb[1] = 4; hb[3] = 12; }
+// Kicked ball kills: 500 800 1000 2000 4000 5000 8000, then 1UP (GDD §2.10)
+static const uint8_t ball_pts[7][3] = {
+    {0x00,0x05,0}, {0x00,0x08,0}, {0x00,0x10,0}, {0x00,0x20,0}, {0x00,0x40,0}, {0x00,0x50,0}, {0x00,0x80,0} };
+
+static void award_ball(uint8_t *chain) {
+    if (*chain < 7) { add_score(ball_pts[*chain]); (*chain)++; }
+    else add_life();
 }
 
 void enemies_reset(uint16_t from_x) {
@@ -85,9 +87,11 @@ void kill_flip(uint8_t i) {
 }
 
 // One physics step. dbl = 1: a 2-frame step (walking enemies update every other frame,
-// half of them per frame - measured ~3300 T per call, so this halves the enemy cost).
-// Locals instead of act_*[i] on every access.
-void walk_on_map(uint8_t i, uint8_t dbl) {
+// half of them per frame). The game uses the asm walk_on_map in vram.s (~1300 T);
+// this C version (~3700 T) is the reference for the equivalence test.
+void walk_on_map(uint8_t i, uint8_t dbl);
+
+void walk_on_map_c(uint8_t i, uint8_t dbl) {
     uint16_t x, front;
     uint8_t y, feet;
     int16_t vx = act_vx[i], vy = act_vy[i] + (dbl ? 2 * ENEMY_GRAV : ENEMY_GRAV);
@@ -114,21 +118,30 @@ void walk_on_map(uint8_t i, uint8_t dbl) {
     act_vy[i] = vy;
 }
 
+// ---------------------------------------------------------------- interactions in 8-bit space
+// Once per frame every enemy, Teo and the shots get a camera-relative x (+REL so -32..223 fits
+// a u8). Collisions and drawing then use 8-bit math: the 16-bit compares against camera_x and
+// player_x for every enemy and every pair cost ~7000 T per enemy (QA measurement, M1).
+#define REL 32
+uint8_t enemy_rx[ENEMY_COUNT];
+uint8_t pl_l, pl_r, pl_t, pl_b, pl_c;   // Teo's hitbox: left, right (excl), top, bottom (excl), centre
+uint8_t shot_rx[2];
+
 void kick(uint8_t i) {
-    int16_t d = (int16_t)(act_x[i] + 8) - (int16_t)(player_x + 8);
-    uint8_t left = d < 0 || (d == 0 && player_facing);
+    uint8_t k = i - A_ENEMY0, c = enemy_rx[k] + 8;
+    uint8_t left = c < pl_c || (c == pl_c && player_facing);
     act_state[i] = E_BALL_MOVE;
     act_vx[i] = left ? -BALL_SPEED : BALL_SPEED;
-    enemy_grace[i - A_ENEMY0] = KICK_GRACE;
-    enemy_chain[i - A_ENEMY0] = 0;
+    enemy_grace[k] = KICK_GRACE;
+    enemy_chain[k] = 0;
     add_score(PTS_400);
     sfx(SFX_KICK);
 }
 
-// Player contact: stomp from above or damage (GDD §2.8 "Pisotón")
-void touch_player(uint8_t i, const uint8_t *hb) {
-    uint8_t feet = player_y + hb_y + hb_h - 1;
-    uint8_t stomp = player_vy > 0 && feet < act_y[i] + hb[1] + (hb[3] >> 1);
+// Player contact: stomp from above or damage (GDD 2.8 "Pisoton")
+void touch_player(uint8_t i, uint8_t ht, uint8_t hh) {
+    uint8_t k = i - A_ENEMY0;
+    uint8_t stomp = player_vy > 0 && (uint8_t)(pl_b - 1) < (uint8_t)(act_y[i] + ht + (hh >> 1));
     switch (act_state[i]) {
     case E_WALK:
         if (stomp) {
@@ -141,14 +154,15 @@ void touch_player(uint8_t i, const uint8_t *hb) {
             } else {
                 act_state[i] = E_BALL;
                 act_vx[i] = 0;
-                enemy_wait[i - A_ENEMY0] = BALL_WAIT + BALL_TREMBLE;
-                enemy_grace[i - A_ENEMY0] = 0;
+                enemy_wait[k] = BALL_WAIT + BALL_TREMBLE;
+                enemy_grace[k] = STOP_GRACE;    // the same contact must not kick it
             }
         } else {
             player_hurt();
         }
         break;
     case E_BALL:
+        if (enemy_grace[k]) break;              // just stopped/curled: ignore this contact
         if (stomp) player_bounce();
         kick(i);
         break;
@@ -158,46 +172,59 @@ void touch_player(uint8_t i, const uint8_t *hb) {
             player_bounce();
             act_state[i] = E_BALL;
             act_vx[i] = 0;
-            enemy_wait[i - A_ENEMY0] = BALL_WAIT + BALL_TREMBLE;
-        } else if (!enemy_grace[i - A_ENEMY0]) {
+            enemy_wait[k] = BALL_WAIT + BALL_TREMBLE;
+            enemy_grace[k] = STOP_GRACE;
+        } else if (!enemy_grace[k]) {
             player_hurt();
         }
         break;
     }
 }
 
-uint8_t boxes_overlap(uint8_t a, uint8_t b) {
-    return act_x[a] + 2 < act_x[b] + 14 && act_x[b] + 2 < act_x[a] + 14
-        && act_y[a] + 4 < act_y[b] + 16 && act_y[b] + 4 < act_y[a] + 16;
+// Pairs (each once: m > k): walking enemies turn around, a moving ball kills the other one.
+// 8-bit 12x12 boxes. Called on alternate frames (enemies move <= 0.5 px/f, the ball 3 px/f:
+// 6 px between checks is still less than the 12 px boxes).
+static uint8_t pair_active(uint8_t j) {
+    uint8_t s = act_state[j];
+    return act_type[j] != T_NONE && s != E_FLIP && s != E_SQUASH;
 }
 
-void enemy_vs_enemy(uint8_t i) {
-    uint8_t j;
-    for (j = A_ENEMY0; j < A_ENEMY0 + ENEMY_COUNT; j++) {
-        if (j == i || act_type[j] == T_NONE || act_state[j] == E_FLIP || act_state[j] == E_SQUASH)
-            continue;
-        if ((uint16_t)(act_x[j] - act_x[i] + 12) >= 24) continue;   // cheap x reject first
-        if (!boxes_overlap(i, j)) continue;
-        if (act_state[i] == E_BALL_MOVE) {         // moving ball kills everything (chain)
-            act_state[j] = E_FLIP;
-            act_vy[j] = FLIP_VY;
-            award_chain(&enemy_chain[i - A_ENEMY0]);
-            sfx(SFX_KICK);
-        } else if (act_state[i] == E_WALK && act_state[j] != E_BALL_MOVE) {
-            // both turn around: i walks away from j
-            act_vx[i] = act_x[i] < act_x[j] ? -ENEMY_SPEED : ENEMY_SPEED;
+static void ball_kills(uint8_t ball, uint8_t victim) {
+    act_state[victim] = E_FLIP;
+    act_vy[victim] = FLIP_VY;
+    award_ball(&enemy_chain[ball - A_ENEMY0]);
+    sfx(SFX_KICK);
+}
+
+void enemy_vs_enemy(uint8_t k) {
+    uint8_t i = A_ENEMY0 + k, j, m, si, sj;
+    uint8_t rx = enemy_rx[k], y = act_y[i];
+    for (m = k + 1, j = i + 1; m < ENEMY_COUNT; m++, j++) {
+        if (!pair_active(j)) continue;
+        // |d| < 12 on both axes: (d + 11) < 23 is symmetric ((d + 12) < 24 was not: -12 hit, +12 missed)
+        if ((uint8_t)(enemy_rx[m] - rx + 11) >= 23) continue;
+        if ((uint8_t)(act_y[j] - y + 11) >= 23) continue;
+        si = act_state[i];
+        sj = act_state[j];
+        if (si == E_BALL_MOVE && sj != E_BALL_MOVE) ball_kills(i, j);
+        else if (sj == E_BALL_MOVE && si != E_BALL_MOVE) ball_kills(j, i);
+        else if (si == E_WALK && sj == E_WALK) {   // both turn around, away from each other
+            if (rx < enemy_rx[m]) { act_vx[i] = -ENEMY_SPEED; act_vx[j] = ENEMY_SPEED; }
+            else { act_vx[i] = ENEMY_SPEED; act_vx[j] = -ENEMY_SPEED; }
         }
+        if (act_state[i] == E_FLIP) return;
     }
 }
 
-void shots_vs_enemy(uint8_t i, const uint8_t *hb) {
-    uint8_t s;
-    for (s = A_SHOT0; s < A_SHOT0 + 2; s++) {
-        if (act_type[s] != T_SHOT) continue;
-        if (act_x[s] + 7 > act_x[i] + hb[0] && act_x[s] + 1 < act_x[i] + hb[0] + hb[2]
-            && act_y[s] + 7 > act_y[i] + hb[1] && act_y[s] + 1 < act_y[i] + hb[1] + hb[3]) {
-            act_type[s] = T_PUF;
-            act_timer[s] = 8;
+void shots_vs_enemy(uint8_t i, uint8_t ht, uint8_t hh) {
+    uint8_t s, k = i - A_ENEMY0, l = enemy_rx[k] + 2, t = act_y[i] + ht;
+    for (s = 0; s < 2; s++) {
+        if (act_type[A_SHOT0 + s] != T_SHOT) continue;
+        if ((uint8_t)(shot_rx[s] + 7) > l && (uint8_t)(shot_rx[s] + 1) < (uint8_t)(l + 12)
+            && (uint8_t)(act_y[A_SHOT0 + s] + 7) > t
+            && (uint8_t)(act_y[A_SHOT0 + s] + 1) < (uint8_t)(t + hh)) {
+            act_type[A_SHOT0 + s] = T_PUF;
+            act_timer[A_SHOT0 + s] = 8;
             kill_flip(i);
             return;
         }
@@ -214,73 +241,102 @@ void bump_enemies_on_block(uint16_t x, uint8_t top) {
 }
 
 void enemies_update(void) {
-    uint8_t i, hb[4];
-    uint8_t mine;
+    uint8_t i, k, st, ht, hh, l, t, any_shot;
     if (player_on_ground) stomp_chain = 0;
     spawn_enemies();
     enemy_phase ^= 1;
-    for (i = A_ENEMY0; i < A_ENEMY0 + ENEMY_COUNT; i++) {
+
+    // Pass 1: physics, despawn, relative x
+    for (k = 0, i = A_ENEMY0; k < ENEMY_COUNT; k++, i++) {
         if (act_type[i] == T_NONE) continue;
         act_flip[i]++;
-        mine = ((i ^ enemy_phase) & 1) == 0;     // this enemy's physics frame
+        if (enemy_grace[k]) enemy_grace[k]--;
         switch (act_state[i]) {
         case E_SQUASH:
-            if (--act_timer[i] == 0) act_type[i] = T_NONE;
-            continue;
+            if (--act_timer[i] == 0) { act_type[i] = T_NONE; continue; }
+            break;
         case E_FLIP:                               // falls off the screen without collision
             act_vy[i] += ENEMY_GRAV;
             act_move(i);
-            if (act_y[i] >= PIT_Y + 16) act_type[i] = T_NONE;
-            continue;
+            break;
         case E_BALL:
-            if (--enemy_wait[i - A_ENEMY0] == 0) { // wakes up and walks towards Teo
+            if (--enemy_wait[k] == 0) {            // wakes up and walks towards Teo
                 act_state[i] = E_WALK;
                 act_vx[i] = player_x < act_x[i] ? -ENEMY_SPEED : ENEMY_SPEED;
             }
-            if (mine) walk_on_map(i, 1);
+            if (((k ^ enemy_phase) & 1) == 0) walk_on_map(i, 1);
             break;
         case E_BALL_MOVE:                          // fast: full rate so it does not judder
-            if (enemy_grace[i - A_ENEMY0]) enemy_grace[i - A_ENEMY0]--;
             walk_on_map(i, 0);
             break;
-        default:
-            if (mine) walk_on_map(i, 1);
+        default:                                   // half rate (GDD budget, see walk_on_map)
+            if (((k ^ enemy_phase) & 1) == 0) walk_on_map(i, 1);
         }
-        if (act_x[i] + 32 < camera_x || act_y[i] >= PIT_Y + 16) {
+        // Enemies only exist from camera-32 to camera+200, so x - camera + REL always fits a u8
+        if (act_x[i] + 32 < camera_x || act_x[i] > camera_x + 200 || act_y[i] >= PIT_Y + 16) {
             act_type[i] = T_NONE;
             continue;
         }
-        hitbox(i, hb);
-        if (player_touches(i, hb[0], hb[1], hb[2], hb[3])) touch_player(i, hb);
+        enemy_rx[k] = (uint8_t)(act_x[i] - camera_x) + REL;
+    }
+
+    // Pass 2: interactions (8-bit)
+    pl_l = (uint8_t)(player_x - camera_x) + (REL + HB_X);
+    pl_r = pl_l + HB_W;
+    pl_c = pl_l + (HB_W >> 1);
+    pl_t = player_y + hb_y;
+    pl_b = pl_t + hb_h;
+    shot_rx[0] = (uint8_t)(act_x[A_SHOT0] - camera_x) + REL;
+    shot_rx[1] = (uint8_t)(act_x[A_SHOT0 + 1] - camera_x) + REL;
+    any_shot = act_type[A_SHOT0] == T_SHOT || act_type[A_SHOT0 + 1] == T_SHOT;
+    for (k = 0, i = A_ENEMY0; k < ENEMY_COUNT; k++, i++) {
+        if (act_type[i] == T_NONE) continue;
+        st = act_state[i];
+        if (st == E_FLIP || st == E_SQUASH) continue;
+        if (act_type[i] == T_SHELL && st == E_WALK) { ht = 2; hh = 14; } else { ht = 4; hh = 12; }
+        l = enemy_rx[k] + 2;
+        t = act_y[i] + ht;
+        if (l < pl_r && pl_l < (uint8_t)(l + 12) && t < pl_b && pl_t < (uint8_t)(t + hh))
+            touch_player(i, ht, hh);
         if (act_type[i] == T_NONE || act_state[i] == E_FLIP) continue;
-        shots_vs_enemy(i, hb);
-        if (act_state[i] == E_WALK || act_state[i] == E_BALL_MOVE) enemy_vs_enemy(i);
+        if (any_shot) shots_vs_enemy(i, ht, hh);
+        if (enemy_phase && pair_active(i)) enemy_vs_enemy(k);
     }
 }
 
+// Writes the two 8x16 sprites per enemy through one OAM pointer: oam16() takes 5 arguments and
+// SDCC passes the 3rd+ on the stack (measured ~1400 T per enemy with the call).
 void enemies_draw(void) {
-    uint8_t i, k, s, ox, tile, prop, f;
+    uint8_t i, k, rx, tile, t2, prop, f, type, st, y;
+    OAM_item_t *o;
     memset(&shadow_OAM[4], 0, ENEMY_COUNT * 2 * sizeof(OAM_item_t));   // hide the whole range
     if (++enemy_rot == ENEMY_COUNT) enemy_rot = 0;
-    for (k = 0; k < ENEMY_COUNT; k++) {
-        i = A_ENEMY0 + k;
-        if (act_type[i] == T_NONE || act_x[i] + 16 < camera_x || act_x[i] > camera_x + 168) continue;
-        s = 4 + ((k + enemy_rot >= ENEMY_COUNT ? k + enemy_rot - ENEMY_COUNT : k + enemy_rot) << 1);
+    o = &shadow_OAM[4 + (enemy_rot << 1)];         // rotating start slot: overflow flickers
+    for (k = 0, i = A_ENEMY0; k < ENEMY_COUNT; k++, i++) {
+        if (o == &shadow_OAM[4 + 2 * ENEMY_COUNT]) o = &shadow_OAM[4];
+        type = act_type[i];
+        rx = enemy_rx[k];
+        if (type == T_NONE || rx < 16 || rx >= 192) { o += 2; continue; }   // off screen
+        st = act_state[i];
         f = act_flip[i];
         prop = 0;
-        if (act_type[i] == T_WALKER) {
-            tile = act_state[i] == E_SQUASH ? SPR_LIMO_SQUASH : SPR_LIMO_WALK;
-            if (act_state[i] == E_WALK && (f & 8)) prop = S_FLIPX;
-        } else if (act_state[i] == E_WALK || act_state[i] == E_FLIP) {
+        if (type == T_WALKER) {
+            tile = st == E_SQUASH ? SPR_LIMO_SQUASH : SPR_LIMO_WALK;
+            if (st == E_WALK && (f & 8)) prop = S_FLIPX;
+        } else if (st == E_WALK || st == E_FLIP) {
             tile = (f & 8) ? SPR_ARMADIN_WALK2 : SPR_ARMADIN_WALK1;
             if (act_vx[i] < 0) prop = S_FLIPX;
         } else {
             tile = SPR_ARMADIN_BALL;
-            if (act_state[i] == E_BALL && enemy_wait[k] < BALL_TREMBLE && (f & 4)) tile = SPR_ARMADIN_PEEK;
-            if (act_state[i] == E_BALL_MOVE && (f & 4)) prop = S_FLIPX;
+            if (st == E_BALL && enemy_wait[k] < BALL_TREMBLE && (f & 4)) tile = SPR_ARMADIN_PEEK;
+            if (st == E_BALL_MOVE && (f & 4)) prop = S_FLIPX;
         }
-        if (act_state[i] == E_FLIP) prop |= S_FLIPY;
-        ox = (uint8_t)(act_x[i] - camera_x) + 8;
-        oam16(s, ox, act_y[i], tile, prop);
+        if (st == E_FLIP) prop |= S_FLIPY;
+        t2 = tile + 2;
+        if (prop & S_FLIPX) { t2 = tile; tile += 2; }
+        y = act_y[i];
+        rx -= REL - 8;                             // OAM x = screen x + 8
+        o->y = y; o->x = rx; o->tile = tile; o->prop = prop; o++;
+        o->y = y; o->x = rx + 8; o->tile = t2; o->prop = prop; o++;
     }
 }

@@ -10,9 +10,13 @@
 - HUD fields with fewer digits than the value can reach (level 100 rendered as 'A0').
 - Auto-repeat (DAS) using a fixed priority instead of the last pressed direction.
 - Off-by-one in "N per frame" loops (rows per VBlank was 3 instead of 4).
+- [Platformer patterns](platformer_bug_patterns.md) - u8 y wrap above top = pit death, GDD jump
+  height vs level, stuck bots, 5-actor CPU budget, contact re-trigger, cutscenes without physics.
 
 ## Harness notes
 - PyBoy tick returns at LY 0, possibly mid-update(); allow ±1 frame or require a condition for
   2 consecutive frames.
 - Bot tests must include the heaviest events (line clears, refills, transitions); a random bot
   that never clears lines does not test the worst frame.
+- [Harness gotchas](qa_harness_notes.md) - screenshot twice (window 1 line off on first render),
+  writes land mid-update, pyboy.memory writes bypass the WRAM snapshot.

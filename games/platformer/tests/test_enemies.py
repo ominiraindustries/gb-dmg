@@ -1,5 +1,4 @@
 """M1 step 3a: enemies, stomps and chains, damage, ball kick, shots, deaths, lives, checkpoint."""
-import random
 import sys
 from pathlib import Path
 
@@ -215,23 +214,5 @@ def test_game_over_when_no_lives(gb):
     gb.frames(20)
     gb.screenshot("game_over")
 
-
-def test_frame_budget_bot(gb):
-    """Bot runs and jumps through 1-1 (invincible): GDD budget < 120 lines, no late VRAM."""
-    start_play(gb)
-    gb.write_u8("cheat_flags", 3)
-    rng = random.Random(5)
-    gb.pyboy.button_press("right")
-    gb.pyboy.button_press("b")
-    for f in range(6000):
-        if f % 14 == 0:
-            gb.pyboy.button_press("a")
-        if f % 14 == 6 + rng.randrange(7):
-            gb.pyboy.button_release("a")
-        gb.frames(1)
-        if gb.u16("camera_x") >= 200 * 16 - 160:
-            break
-    worst = gb.u8("max_frame_lines")
-    print(f"bot: x {gb.u16('player_x')}, worst {worst}/154 lines, vram_late {gb.u8('vram_late')}")
-    assert gb.u8("vram_late") == 0
-    assert worst < 120
+# The gameplay frame budget is tested by test_qa.py::test_qa_bot_frame_budget_through_whole_level
+# (a bot that really finishes 1-1); the old bot here got stuck at column 45 and measured nothing.
