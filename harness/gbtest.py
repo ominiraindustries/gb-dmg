@@ -13,7 +13,7 @@ BOOT_FRAMES = 180  # PyBoy's boot animation + game init
 def load_noi(path):
     """Parse the linker .noi file: 'DEF _player_x 0xC0A2' -> {'player_x': 0xC0A2}."""
     syms = {}
-    for line in Path(path).read_text().splitlines():
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
         parts = line.split()
         if len(parts) == 3 and parts[0] == "DEF":
             name = parts[1][1:] if parts[1].startswith("_") else parts[1]
@@ -68,6 +68,22 @@ class GB:
         a = self.addr(name)
         return self.pyboy.memory[a] | (self.pyboy.memory[a + 1] << 8)
 
+    def write_u16(self, name, value):
+        a = self.addr(name)
+        self.pyboy.memory[a] = value & 0xFF
+        self.pyboy.memory[a + 1] = (value >> 8) & 0xFF
+
+    def bytes(self, name, n):
+        a = self.addr(name)
+        return [self.pyboy.memory[a + i] for i in range(n)]
+
+    # --- profiling ---
+    def profile(self, funcs):
+        """Start measuring T-cycles per call of the given C functions (by name).
+        Returns a Profiler; call .report() later. Includes time spent in callees and in
+        interrupts that fire during the call. Uses PyBoy's private _cycles() (PyBoy 2.8)."""
+        return Profiler(self, funcs)
+
     # --- screen ---
     def screenshot(self, name):
         """Render the current frame and save it as shots/<name>.png. Returns the path."""
@@ -76,3 +92,65 @@ class GB:
         path = self.shots_dir / f"{name}.png"
         self.pyboy.screen.image.save(path)
         return path
+
+
+def _bank(addr):
+    return 0 if addr < 0x4000 else 1  # no-MBC ROMs; banked code would need the active bank
+
+
+class Profiler:
+    """Hooks function entries; on entry reads the return address from the stack and hooks it
+    to catch the return. Stats per function: calls, total, max, and the state of
+    `context_var` (a game global, e.g. "state") at the slowest call."""
+
+    def __init__(self, gb, funcs, context_var=None):
+        self.gb, self.pb = gb, gb.pyboy
+        self.stats = {f: {"calls": 0, "total": 0, "max": 0, "ctx": None} for f in funcs}
+        self.pending = {}      # return address -> list of (func, start cycles, context)
+        self.ret_hooks = set()
+        self.context_var = context_var or ("state" if "state" in gb.syms else None)
+        for f in funcs:
+            addr = gb.addr(f)
+            self.pb.hook_register(_bank(addr), addr, self._on_entry, f)
+
+    def _ctx(self):
+        return self.gb.u8(self.context_var) if self.context_var else None
+
+    def _on_entry(self, func):
+        pb = self.pb
+        sp = pb.register_file.SP
+        ret = pb.memory[sp] | (pb.memory[sp + 1] << 8)
+        if func not in self.stats:
+            return
+        self.pending.setdefault(ret, []).append((func, pb._cycles(), self._ctx()))
+        if ret not in self.ret_hooks:
+            self.ret_hooks.add(ret)
+            pb.hook_register(_bank(ret), ret, self._on_return, ret)
+
+    def _on_return(self, ret):
+        stack = self.pending.get(ret)
+        if not stack:
+            return
+        func, start, ctx = stack.pop()
+        s = self.stats[func]
+        t = self.pb._cycles() - start
+        s["calls"] += 1
+        s["total"] += t
+        if t > s["max"]:
+            s["max"], s["ctx"] = t, ctx
+
+    def stop(self):
+        for f in self.stats:
+            addr = self.gb.addr(f)
+            self.pb.hook_deregister(_bank(addr), addr)
+        for ret in self.ret_hooks:
+            self.pb.hook_deregister(_bank(ret), ret)
+        self.ret_hooks.clear()
+
+    def report(self):
+        """Text table sorted by worst case. 70224 T = 1 frame, 456 T = 1 scanline."""
+        lines = [f"{'function':<20}{'calls':>7}{'avg T':>9}{'max T':>9}{'max lines':>11}  ctx"]
+        for f, s in sorted(self.stats.items(), key=lambda kv: -kv[1]["max"]):
+            avg = s["total"] // s["calls"] if s["calls"] else 0
+            lines.append(f"{f:<20}{s['calls']:>7}{avg:>9}{s['max']:>9}{s['max'] / 456:>11.1f}  {s['ctx']}")
+        return "\n".join(lines)

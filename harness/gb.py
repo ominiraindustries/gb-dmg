@@ -16,6 +16,8 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
+import asciitiles
+
 ROOT = Path(__file__).resolve().parent.parent
 GBDK_VERSION = "4.5.0"
 GBDK_URL = f"https://github.com/gbdk-2020/gbdk-2020/releases/download/{GBDK_VERSION}/gbdk-win64.zip"
@@ -40,7 +42,7 @@ def load_config(gdir):
     cfg = {"title": gdir.name.upper()[:15], "lcc_flags": []}
     path = gdir / "game.json"
     if path.exists():
-        cfg.update(json.loads(path.read_text()))
+        cfg.update(json.loads(path.read_text(encoding="utf-8")))
     return cfg
 
 
@@ -100,8 +102,16 @@ def build(name):
         die(f"no sources in {gdir / 'src'}")
     out = rom_path(gdir)
     out.parent.mkdir(exist_ok=True)
+    gen = out.parent / "gen"
+    shared = [ROOT / "harness" / "common" / f"{n}.tiles" for n in cfg.get("common_res", [])]
+    for tiles in shared + sorted((gdir / "res").glob("*.tiles")):
+        try:
+            sources.append(asciitiles.convert(tiles, gen))
+        except ValueError as e:
+            die(str(e))
     cmd = [
         str(LCC),
+        f"-I{gen}",  # generated asset headers
         "-Wl-m",  # .map file (memory usage)
         "-Wl-j",  # .noi file (symbols, used by tests)
         "-Wm-yS",  # .sym file (symbols for Emulicious/BGB)
@@ -146,7 +156,7 @@ def new(name):
         die(f"{dst} already exists")
     shutil.copytree(ROOT / "harness" / "template", dst)
     cfg = dst / "game.json"
-    cfg.write_text(cfg.read_text().replace("TEMPLATE", name.upper()[:15]))
+    cfg.write_text(cfg.read_text(encoding="utf-8").replace("TEMPLATE", name.upper()[:15]), encoding="utf-8")
     print(f"Created {dst.relative_to(ROOT)}")
 
 

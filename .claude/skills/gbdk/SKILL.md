@@ -15,7 +15,7 @@ Trust these files over memory: many web tutorials use pre-4.x APIs (`wait_vbl_do
    tiles of HUD) right after `vsync()` with the GBDK `set_*` functions. Never raw-write VRAM with LCD on.
 4. Never read VRAM for game logic; keep maps/collision in WRAM or ROM.
 5. Sprites: `move_sprite` etc. write shadow OAM (safe anytime). Coordinates are screen + (8,16).
-   Max 40 sprites, 10 per scanline. Hide with `hide_sprite` / `hide_sprites_range`.
+   Max 40 sprites, 10 per scanline. Hide with `hide_sprite` / `hide_sprites_range` (the latter needs `#include <gb/metasprites.h>`).
 6. `uint8_t` by default, unsigned, globals over stack locals, `const` for all tables (ROM).
 7. No `*`, `/`, `%` by variables per frame; for `uint8_t` write shifts/masks explicitly
    (`x >> 3`, not `x / 8`: the latter is a 16-bit loop). Constant multiplies are fine.
@@ -87,7 +87,7 @@ void main(void) {
 - `set_bkg_tile_xy(x, y, t)`, `fill_bkg_rect(x, y, w, h, t)`, `init_bkg(t)`, `move_bkg(x, y)`, `scroll_bkg(dx, dy)`
 - `set_win_tiles(...)`, `move_win(x + 7, y)`
 - `set_sprite_data(first, n, data)`, `set_sprite_tile(nb, t)`, `set_sprite_prop(nb, S_FLIPX|S_FLIPY|S_PRIORITY|S_PALETTE)`
-- `move_sprite(nb, x, y)`, `hide_sprite(nb)`, `hide_sprites_range(from, to)`
+- `move_sprite(nb, x, y)`, `hide_sprite(nb)`, `hide_sprites_range(from, to)` (needs `<gb/metasprites.h>`)
 - `move_metasprite_ex(ms, base_tile, base_prop, base_sprite, x, y)` and `_flipx/_flipy/_flipxy` (return #sprites;
   `#include <gb/metasprites.h>`)
 - `joypad()` with `J_UP J_DOWN J_LEFT J_RIGHT J_A J_B J_START J_SELECT`
@@ -112,6 +112,9 @@ void main(void) {
 
 ## Harness reminders (this repo)
 - Build `python harness/gb.py build <game>`; extra flags in `games/<game>/game.json` `"lcc_flags"`.
-  The harness already passes `-Wl-m -Wl-j -Wm-yn<title>`; recommended extra:
-  `-Wf--max-allocs-per-node50000`.
-- Tests read non-`static` globals by name from the `.noi`. Generated asset `.c` files must be under `src/`.
+  The harness already passes `-Wl-m -Wl-j -Wm-yS -Wf--max-allocs-per-node50000 -Wm-yn<title>`
+  and `-I build/gen`.
+- Art: `games/<game>/res/*.tiles` (ASCII 8x8 tiles, see `harness/asciitiles.py`) become
+  `build/gen/<stem>.c/.h` with `<stem>_tiles[]`, `<STEM>_COUNT` and `<STEM>_<LABEL>` defines.
+- Tests read non-`static` globals by name from the `.noi`. Put a `frame_lines`/`max_frame_lines`
+  global (LY after the frame's work, see games/breakout) to test the frame budget.

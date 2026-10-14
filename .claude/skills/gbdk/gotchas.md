@@ -103,3 +103,12 @@ and tests run with GBDK 4.5.0 (marked *tested*).
 - Windows: SDCC can fail when run from folders with spaces on non-C drives (`08_faq.md`).
 - Slow compile = big non-const array or `#include "x.c"`; never include .c files.
 - Functions written in asm before GBDK 4.1 assume the old calling convention: declare them `OLDCALL`.
+- `warning 158: overflow in implicit constant conversion` on an inline call such as
+  `move_sprite(0, x, PADDLE_Y + 16)` with a constant > 127 is spurious (SDCC inlining); silence it
+  with an explicit cast `(uint8_t)(PADDLE_Y + 16)`.
+- `warning 84: 'auto' variable 'f' may be used before initialization` after declaring a function
+  prototype inside a block (`case X: { void f(void); f(); }`): SDCC treats it as a variable. Put
+  prototypes at file scope.
+- `set_bkg_tiles` / `set_bkg_tile_xy` cost ~130 M-cycles per tile and wait for STAT mode outside
+  VBlank: fine for a few tiles, ruinous for whole rows every frame (games/tetris measured 4 rows +
+  HUD going to 120 scanlines). In VBlank write the map directly (`0x9800 + y*32 + x`).

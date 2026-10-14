@@ -8,7 +8,10 @@ el profiling lo justifica y con una prueba de equivalencia contra la versión C.
   - `gb.py` — CLI: `setup`, `new`, `build`, `run`, `test`
   - `gbtest.py` — driver headless (PyBoy) para tests: botones, frames, leer variables, capturas
   - `template/` — plantilla que copia `gb.py new`
-- `games/<juego>/` — `src/` (.c/.s), `tests/` (pytest), `game.json` (título, flags de lcc)
+- `games/<juego>/` — `src/` (.c/.s), `res/` (assets), `tests/` (pytest), `game.json` (título, flags de lcc)
+  - `res/*.tiles`: tiles en arte ASCII 8x8 (`.` `-` `+` `#` = colores 0-3, `@ NOMBRE` etiqueta el
+    siguiente tile). Se convierten al compilar a `build/gen/<nombre>.c/.h` (`#include "bg.h"`).
+  - Assets compartidos en `harness/common/*.tiles` (p. ej. la fuente): `"common_res": ["font"]` en game.json.
 - `tools/gbdk/` — SDK, no versionado (`python harness/gb.py setup`)
 
 ## Flujo de trabajo
@@ -17,9 +20,27 @@ el profiling lo justifica y con una prueba de equivalencia contra la versión C.
 - Jugar: `python harness/gb.py run <juego>` (ventana PyBoy)
 - Las capturas de los tests van a `games/<juego>/build/shots/*.png`: mirarlas con Read
   para comprobar visualmente los cambios, no fiarse solo de los asserts.
+- Presupuesto de frame: el juego expone `max_frame_lines` (scanlines usadas tras `vsync()`) y un
+  test con bot juega miles de frames y comprueba que no se pasa (ver `games/breakout`, `games/tetris`).
 - Cada mecánica nueva lleva un test: estado inicial → entrada → assert sobre variables.
   Los tests leen globales **no static** por nombre (`gb.u8("player_x")`), vía el fichero .noi.
 - No dar algo por "fino" sin que el usuario lo haya probado (el feel y el hardware real no se testean aquí).
+
+## Rendimiento y VRAM (aprendido en games/tetris, medido)
+- Bucle: `vsync()` → `draw_vram()` (solo copiar a VRAM) → input → `update()` → sprites → `measure_frame()`.
+  `vsync()` vuelve en LY≈146: quedan ~3600 T de VBlank para `draw_vram()`.
+- **Preparar tiles fuera del VBlank, dentro solo copiar**: convertir números/textos a tiles en `update()`
+  (buffers), y en `draw_vram()` copiar con un presupuesto fijo por frame (colas FIFO, nada de recorrer
+  arrays buscando trabajo: recorrer 18 filas costaba más que copiarlas).
+- `set_bkg_tiles` es lento (~520 T/tile y espera STAT fuera de VBlank); en VBlank escribir directo a
+  VRAM. Bucle C de copia ~76 T/tile; asm desenrollado 20 T/tile (`games/tetris/src/vram.s`).
+- Guardia obligatoria: contador `vram_late` (LY < 144 al acabar `draw_vram()`) y un test que exige 0;
+  los tiles escritos fuera de VBlank se pierden en silencio.
+- Medir antes de optimizar: `p = gb.profile(["update", "draw_vram", ...])` en un test/script y
+  `print(p.report())` da T-cycles máximos/medios por función (1 frame = 70224 T, 1 línea = 456 T).
+- Trampas medidas de SDCC: indexar con `int8_t` (`board[row_off[r] + i]`) ~466 T por acceso → usar
+  punteros/`memcpy`; recalcular datos de una forma en cada llamada → cachear; `memcpy`/`memset` de
+  GBDK son asm y rápidos.
 
 ## Reglas de hardware DMG
 Detalle completo: skill `gb-hardware`. Lo imprescindible:
