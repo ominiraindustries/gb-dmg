@@ -1,6 +1,7 @@
 // world_lab: test bench of gbe_world (4-way scrolling world of 16x16 metatiles in sectors).
 // The player walks cell by cell (1 px/f, B held = 2 px/f like the bike); the camera keeps it at
 // screen cell (4, 4). Tests compare the visible BG with the map (tests/test_world.py).
+#include <string.h>
 #include "gbe.h"
 #include "bg.h"
 #include "spr.h"
@@ -13,6 +14,7 @@
 #include "font_es.h"
 #include "script_test.h"
 #include "script_ids.h"
+#include "tbl_items.h"
 
 
 static const int8_t dir_dx[4] = { 0, 0, -1, 1 };    // 0 down, 1 up, 2 left, 3 right
@@ -21,7 +23,7 @@ static const int8_t dir_dy[4] = { 1, -1, 0, 0 };
 uint8_t px, py, pdir, pstep_px, moving, pspeed;
 uint16_t steps;
 uint8_t actors_on = 1;
-uint8_t given_item, given_count, spin_left, npc, tq_test;
+uint8_t given_item, given_count, spin_left, npc, tq_test, list_mode, list_chosen = 0xFF;
 static void ui_init(void);
 
 const sfx_t sfx_table[1] = { { 0, 0, 0, { 0, 0, 0, 0, 0 } } };                 // tests may clear it before the first frame
@@ -42,16 +44,16 @@ static void camera(void) {
 
 void init(void) {
     DISPLAY_OFF;
-    set_bkg_data(VRAM_BG, BG_COUNT, bg_tiles);
-    set_bkg_data(VRAM_UI, UI_COUNT, ui_tiles);
-    set_bkg_data(VRAM_FONT, FONT_COUNT, font_tiles);
-    set_bkg_data(VRAM_FONT_LOWER, FONT_LOWER_COUNT, font_lower_tiles);
-    set_bkg_data(VRAM_FONT_ES, FONT_ES_COUNT, font_es_tiles);
+    bank_set_bkg_data(BANK(bg), VRAM_BG, BG_COUNT, bg_tiles);
+    bank_set_bkg_data(BANK(ui), VRAM_UI, UI_COUNT, ui_tiles);
+    bank_set_bkg_data(BANK(font), VRAM_FONT, FONT_COUNT, font_tiles);
+    bank_set_bkg_data(BANK(font_lower), VRAM_FONT_LOWER, FONT_LOWER_COUNT, font_lower_tiles);
+    bank_set_bkg_data(BANK(font_es), VRAM_FONT_ES, FONT_ES_COUNT, font_es_tiles);
     ui_init();
     LCDC_REG |= LCDCF_WIN9C00;
     WX_REG = 7;
     WY_REG = 144;
-    set_sprite_data(0, SPR_COUNT, spr_tiles);
+    bank_set_sprite_data(BANK(spr), 0, SPR_COUNT, spr_tiles);
     SPRITES_8x16;
     video_init(0, 0xE4, 0xE4, 0xE4);
     px = 34; py = 34; pdir = 0;
@@ -109,6 +111,29 @@ static void ui_init(void) {
     tbox_name[0] = 'L'; tbox_name[1] = 'e'; tbox_name[2] = 'o'; tbox_name[3] = 0;
 }
 
+// gbe_list: the items table in the window (Select opens it)
+static void item_row(uint8_t item, uint8_t *buf) {
+    items_t r;
+    bank_memcpy(BANK(tbl_items), &r, &tbl_items[item], sizeof(r));
+    txt_tiles(buf + 1, r.name, 15);
+}
+
+static void list_start(void) {
+    uint8_t row[20];
+    memset(row, VRAM_UI + UI_BLANK, 20);
+    for (row[0] = 0; row[0] < 5; row[0]++) ;
+    vq_push_fill((uint8_t *)0x9C00, VRAM_UI + UI_FRAME_T, 20);
+    vq_push_fill((uint8_t *)0x9C00 + 4 * 32, VRAM_UI + UI_FRAME_B, 20);
+    list_cursor = VRAM_UI + UI_CURSOR;
+    list_blank = VRAM_UI + UI_BLANK;
+    list_arrow_up = list_arrow_down = VRAM_UI + UI_ARROW;
+    list_border = VRAM_UI + UI_FRAME_T;
+    list_up_at = (uint8_t *)0x9C00 + 18;
+    list_down_at = 0;
+    list_open(ITEM_COUNT, 0, 3, (uint8_t *)0x9C00 + 32 + 1, 32, 16, item_row);
+    list_mode = 1;
+}
+
 static uint8_t held_dir(void) {
     if (keys & J_DOWN) return 0;
     if (keys & J_UP) return 1;
@@ -130,6 +155,13 @@ static void try_start(void) {
 void update(void) {
     uint8_t a;
     if (script_active) { camera(); return; }          // total pause while a script runs
+    if (list_mode) {
+        a = list_update();
+        if (a != MENU_NONE) { list_chosen = a; list_mode = 0; }
+        camera();
+        return;
+    }
+    if (!moving && (pressed & J_SELECT)) { list_start(); camera(); return; }
     if (!moving && (pressed & J_A)) {                 // talk to the actor in front
         a = gact_at(px + dir_dx[pdir], py + dir_dy[pdir]);
         if (a == npc && gact[a].type) {
@@ -168,12 +200,12 @@ void main(void) {
         world_draw_vram();
         vq_draw_vram();
         tiles_draw_vram();
-        WY_REG = tbox_visible ? 96 : 144;
+        WY_REG = tbox_visible ? 96 : list_mode ? 104 : 144;
         frame_vram_check();
         frame_begin();
         if (gbe_eq_request) { gbe_eq_request = 0; gbe_selftest(); skip_measure = 1; }
         update();
-        if (tq_test) { tq_test = 0; tiles_push((uint8_t *)0x8000 + 60 * 16, 0, spr_tiles, 6); }
+        if (tq_test) { tq_test = 0; tiles_push((uint8_t *)0x8000 + 60 * 16, BANK(spr), spr_tiles, 6); }
         tiles_prepare();
         tbox_update();
         script_update();

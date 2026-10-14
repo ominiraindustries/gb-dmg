@@ -47,27 +47,8 @@ void world_metatiles(uint8_t bank, const uint8_t *tiles, const uint8_t *attr, ui
     bank_memcpy(bank, wmt_attr, attr, n);
 }
 
-// C reference of the query (the asm wmt_at in gbe_world.s must match it: selftest)
-uint8_t wmt_at_c(uint8_t x, uint8_t y) {
-    uint8_t rx = (uint8_t)((x >> 4) - wosx), ry = (uint8_t)((y >> 4) - wosy), s;
-    if (rx > 2 || ry > 2) return wmap.border;
-    s = wslot[ry * 3 + rx];
-    if (s >= SLOT_OUT) return wmap.border;
-    return wcache[((uint16_t)s << 8) | (uint8_t)((y << 4) | (x & 15))];
-}
-
 uint8_t wprep_cell(uint8_t x, uint8_t y);           // asm (gbe_world.s)
 void wcopy128(uint8_t *dst, const uint8_t *src);    // asm
-
-// C reference of wprep_cell (selftest)
-uint8_t wprep_cell_c(uint8_t x, uint8_t y) {
-    uint8_t rx = (uint8_t)((x >> 4) - wosx), ry = (uint8_t)((y >> 4) - wosy);
-    if (rx <= 2 && ry <= 2 && wslot[ry * 3 + rx] == SLOT_NONE) return 0;
-    wprep_dst[wprep_n] = (uint8_t *)0x9800u + ((uint16_t)(y & 15) << 6) + ((x & 15) << 1);
-    memcpy(wprep_tiles[wprep_n], wmt_tiles[wmt_at_c(x, y)], 4);
-    wprep_n++;
-    return 1;
-}
 
 uint8_t wattr_at(uint8_t x, uint8_t y) {
     return wmt_attr[wmt_at(x, y)];

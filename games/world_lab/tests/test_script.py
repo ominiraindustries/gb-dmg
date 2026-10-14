@@ -136,3 +136,26 @@ def test_tile_queue_copies_rom_data_over_two_frames(gb):
     got = bytes(gb.pyboy.memory[0x8000 + 60 * 16 + k] for k in range(6 * 16))
     src = bytes(gb.pyboy.memory[0x8000 + k] for k in range(6 * 16))   # spr tiles were loaded at 0
     assert got == src
+
+
+def test_list_scrolls_and_chooses(gb):
+    import tables
+    names = [r["name"] for r in tables.load_all(GAME / "res" / "data")["items"].rows]
+    gb.frames(2)
+    gb.tap("select")
+    gb.frames(6)
+    assert gb.u8("list_mode") == 1
+    rows = lambda: [win_line(gb, r) for r in (1, 2, 3)]
+    assert rows() == names[:3]
+    for _ in range(3):
+        gb.tap("down")
+        gb.frames(1)
+    gb.frames(6)
+    assert gb.u8("list_sel") == 3 and gb.u8("list_top") == 1 and rows() == names[1:4]
+    gb.screenshot("list")
+    gb.hold("down", 40)                                   # repeat: wraps around to the top
+    gb.frames(6)
+    assert gb.u8("list_top") <= gb.u8("list_sel") < gb.u8("list_top") + 3
+    gb.tap("a")
+    gb.frames(2)
+    assert gb.u8("list_mode") == 0 and gb.u8("list_chosen") == gb.u8("list_sel")

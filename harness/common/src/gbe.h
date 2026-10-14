@@ -284,7 +284,7 @@ void world_camera(int16_t x, int16_t y);
 void world_prepare(void);
 void world_draw_vram(void);                                           // VBlank
 uint8_t wmt_at(uint8_t x, uint8_t y);    // metatile at a cell (cache; border outside the map)
-uint8_t wmt_at_c(uint8_t x, uint8_t y);
+uint8_t wmt_at_c(uint8_t x, uint8_t y);      // C reference (gbe_selftest.c, GBE_SELFTEST_WORLD)
 uint8_t wattr_at(uint8_t x, uint8_t y);
 void world_set_cell(uint8_t x, uint8_t y, uint8_t mt);   // temporary patch (until the sector reloads)
 
@@ -371,6 +371,18 @@ uint8_t tiles_pending(void);
 void tiles_prepare(void);
 void tiles_draw_vram(void);
 
+// ---------------------------------------------------------------- gbe_list.c
+// Scrolling list: n items, k visible rows; the game renders a row with list_row(item, buf) (list_w
+// tiles; buf[0] is the cursor column). Set list_cursor/blank/arrow tiles and list_up_at/down_at.
+// Call it from the bank that holds the row callback. list_update(): MENU_NONE / index / MENU_BACK.
+extern uint8_t list_n, list_sel, list_top, list_k, list_w;
+extern uint8_t *list_up_at, *list_down_at;
+extern uint8_t list_cursor, list_blank, list_arrow_up, list_arrow_down, list_border;
+void list_open(uint8_t n, uint8_t sel, uint8_t k, uint8_t *dst0, uint8_t stride, uint8_t w,
+               void (*row)(uint8_t item, uint8_t *buf));
+void list_redraw(void);                 // after the items changed (n may shrink)
+uint8_t list_update(void);
+
 // ---------------------------------------------------------------- gbe_selftest.c
 // Equivalence of every asm routine with its C reference (gb-asm procedure). Tests call
 // gb.selftest() (sets gbe_eq_request; the game calls gbe_selftest()). Which modules are checked
@@ -380,4 +392,9 @@ void tiles_draw_vram(void);
 // GBE_SELFTEST_VIEW (every piece of the game's view.pcs).
 extern uint8_t gbe_eq_request, gbe_eq_done;
 extern uint16_t gbe_eq_mismatch, gbe_eq_count;
-void gbe_selftest(void);
+#ifdef GBE_SELFTEST_BANKED
+#define GBE_SELFTEST_ATTR BANKED
+#else
+#define GBE_SELFTEST_ATTR
+#endif
+void gbe_selftest(void) GBE_SELFTEST_ATTR;

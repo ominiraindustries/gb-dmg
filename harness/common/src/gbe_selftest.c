@@ -1,5 +1,11 @@
 // gbe: equivalence of the engine asm with its C references, run inside the ROM on request.
 // Python side: harness/gbtest.py GB.selftest(). Modules are enabled in the game's gbe_config.h.
+// GBE_SELFTEST_BANKED in gbe_config.h puts this file (and the C references of gbe_world/gbe_gact
+// it holds) in a switchable bank: needs -autobank (games/world_lab: bank 0 was 93 % full).
+#include "gbe_config.h"
+#ifdef GBE_SELFTEST_BANKED
+#pragma bank 255
+#endif
 #include <string.h>
 #include "gbe.h"
 
@@ -200,11 +206,33 @@ static void eq_view(void) {
 #endif
 
 #ifdef GBE_SELFTEST_WORLD
+// ---- C references of gbe_world.s (specification of the asm)
+#define SLOT_OUT  0xFE
+#define SLOT_NONE 0xFF
+extern uint8_t wosx, wosy, wslot[], wcache[], wprep_n, wprep_tiles[][4], *wprep_dst[];
+extern world_map_t wmap;
+
+// C reference of the query (the asm wmt_at in gbe_world.s must match it: selftest)
+uint8_t wmt_at_c(uint8_t x, uint8_t y) {
+    uint8_t rx = (uint8_t)((x >> 4) - wosx), ry = (uint8_t)((y >> 4) - wosy), s;
+    if (rx > 2 || ry > 2) return wmap.border;
+    s = wslot[ry * 3 + rx];
+    if (s >= SLOT_OUT) return wmap.border;
+    return wcache[((uint16_t)s << 8) | (uint8_t)((y << 4) | (x & 15))];
+}
+
+// C reference of wprep_cell (selftest)
+uint8_t wprep_cell_c(uint8_t x, uint8_t y) {
+    uint8_t rx = (uint8_t)((x >> 4) - wosx), ry = (uint8_t)((y >> 4) - wosy);
+    if (rx <= 2 && ry <= 2 && wslot[ry * 3 + rx] == SLOT_NONE) return 0;
+    wprep_dst[wprep_n] = (uint8_t *)0x9800u + ((uint16_t)(y & 15) << 6) + ((x & 15) << 1);
+    memcpy(wprep_tiles[wprep_n], wmt_tiles[wmt_at_c(x, y)], 4);
+    wprep_n++;
+    return 1;
+}
+
 // wmt_at and wprep_cell: every cell of the 256x256 u8 plane (cache, border, outside, loading)
 uint8_t wprep_cell(uint8_t x, uint8_t y);
-uint8_t wprep_cell_c(uint8_t x, uint8_t y);
-extern uint8_t wprep_n, wprep_tiles[][4], *wprep_dst[];
-extern uint8_t wslot[];
 static void eq_world_pass(void) {
     uint8_t x = 0, y = 0, a, b, ta[4], *da;
     do {
@@ -234,6 +262,63 @@ static void eq_world(void) {
 #endif
 
 #ifdef GBE_SELFTEST_GACT
+// ---- C references of gbe_gact.s (specification of the asm)
+#define N GBE_GACT_MAX
+// C reference of gact_at: actor standing on or walking into (x, y), else 0xFF
+uint8_t gact_at_c(uint8_t x, uint8_t y) {
+    uint8_t i;
+    gact_t *a = gact;
+    for (i = 0; i < N; i++, a++) {
+        if (!a->type) continue;
+        if ((a->x == x && a->y == y) || (a->tx == x && a->ty == y)) return i;
+    }
+    return 0xFF;
+}
+
+// C reference of gact_move_all: timers, walking, arrival, walk animation
+void gact_move_all_c(void) {
+    uint8_t i, t;
+    gact_t *a = gact;
+    for (i = 0; i < N; i++, a++) {
+        if (!a->type) continue;
+        if (a->timer) a->timer--;
+        if (!a->moving) continue;
+        t = a->sub + a->rate_lo;
+        a->step += a->rate_hi + (t < a->sub);
+        a->sub = t;
+        if (a->step >= 16) {
+            a->x = a->tx;
+            a->y = a->ty;
+            a->step = a->sub = 0;
+            a->moving = 0;
+            a->prio = GACT_PRIO_DIRTY;
+        }
+        if ((a->step & 7) == 0) a->anim ^= 1;
+    }
+}
+
+// C reference of gact_draw: every slot from OAM `first` (2 sprites each), 16x16; free and
+// off-screen ones hidden (y = 0). Tile: GACT_ANIM2 = 2 frames 0/4 facing right, else the NPC
+// layout; left = the side frame flipped. PRIO cells (tall grass) set the OAM priority bit.
+void gact_draw_c(uint8_t first) {
+    uint8_t i, tile, prop;
+    int16_t sx, sy;
+    gact_t *a = gact;
+    OAM_item_t *o = &shadow_OAM[first];
+    for (i = 0; i < N; i++, a++, o += 2) {
+        if (!a->type) { o[0].y = o[1].y = 0; continue; }
+        sx = gact_wx(i) - cam_x;
+        sy = gact_wy(i) - cam_y;
+        if ((uint16_t)(sx + 16) >= 176 || (uint16_t)(sy + 16) >= 160) { o[0].y = o[1].y = 0; continue; }
+        if (a->prio == GACT_PRIO_DIRTY) a->prio = (wattr_at(a->x, a->y) & gact_prio_mask) ? S_PRIORITY : 0;
+        prop = a->prop | a->prio;
+        if (a->dir == 2) prop |= S_FLIPX;
+        if (a->type & GACT_ANIM2) tile = a->tile + (a->anim ? 4 : 0);
+        else tile = a->tile + gact_npc_frame[a->dir] + ((a->moving && a->anim) ? 4 : 0);
+        oam16(first + (i << 1), (uint8_t)sx + 8, (uint8_t)sy + 16, tile, prop);
+    }
+}
+
 // gact_move_all / gact_draw / gact_at: random records around the camera, C vs asm on copies
 // (records and the OAM range compared); uses OAM 20-39 as scratch
 static gact_t eq_gsave[GBE_GACT_MAX], eq_gref[GBE_GACT_MAX];
@@ -284,7 +369,7 @@ static void eq_gact(void) {
 }
 #endif
 
-void gbe_selftest(void) {
+void gbe_selftest(void) GBE_SELFTEST_ATTR {
     gbe_eq_mismatch = gbe_eq_count = 0;
 #ifdef GBE_SELFTEST_MAP
     eq_map();

@@ -8,8 +8,8 @@
 // Behaviours are generic and parameterised (STILL, LOOK, WANDER around home, CHASE / FLEE the
 // player, HOME, FOLLOW a leader's trail); game logic (sight, alerts, emotes) changes beh.
 // At most one actor thinks per frame (round robin; the rule of games/dungeon and the platformer).
-// Moving, drawing and gact_at are asm (gbe_gact.s); the _c functions here are their references
-// (selftest GBE_SELFTEST_GACT). Measured in world_lab with 12 actors: C 51k T, asm see README.
+// Moving, drawing and gact_at are asm (gbe_gact.s); their C references live in gbe_selftest.c
+// (section GBE_SELFTEST_GACT), which can sit in a switchable bank. Measured in world_lab with 12 actors: C 51k T, asm see README.
 #include <string.h>
 #include "gbe.h"
 
@@ -60,17 +60,6 @@ uint8_t gact_spawn(uint8_t type, uint8_t x, uint8_t y, uint8_t tile, uint8_t beh
 
 void gact_free(uint8_t i) {
     gact[i].type = 0;
-}
-
-// C reference of gact_at: actor standing on or walking into (x, y), else 0xFF
-uint8_t gact_at_c(uint8_t x, uint8_t y) {
-    uint8_t i;
-    gact_t *a = gact;
-    for (i = 0; i < N; i++, a++) {
-        if (!a->type) continue;
-        if ((a->x == x && a->y == y) || (a->tx == x && a->ty == y)) return i;
-    }
-    return 0xFF;
 }
 
 uint8_t gact_free_cell(uint8_t i, uint8_t x, uint8_t y) {
@@ -146,28 +135,6 @@ static void think(uint8_t i) {
     }
 }
 
-// C reference of gact_move_all: timers, walking, arrival, walk animation
-void gact_move_all_c(void) {
-    uint8_t i, t;
-    gact_t *a = gact;
-    for (i = 0; i < N; i++, a++) {
-        if (!a->type) continue;
-        if (a->timer) a->timer--;
-        if (!a->moving) continue;
-        t = a->sub + a->rate_lo;
-        a->step += a->rate_hi + (t < a->sub);
-        a->sub = t;
-        if (a->step >= 16) {
-            a->x = a->tx;
-            a->y = a->ty;
-            a->step = a->sub = 0;
-            a->moving = 0;
-            a->prio = GACT_PRIO_DIRTY;
-        }
-        if ((a->step & 7) == 0) a->anim ^= 1;
-    }
-}
-
 // Once per frame: move every walking actor, count timers, and let one idle actor think
 void gact_update(void) {
     uint8_t i, k;
@@ -197,24 +164,3 @@ int16_t gact_wy(uint8_t i) {
     return v;
 }
 
-// C reference of gact_draw: every slot from OAM `first` (2 sprites each), 16x16; free and
-// off-screen ones hidden (y = 0). Tile: GACT_ANIM2 = 2 frames 0/4 facing right, else the NPC
-// layout; left = the side frame flipped. PRIO cells (tall grass) set the OAM priority bit.
-void gact_draw_c(uint8_t first) {
-    uint8_t i, tile, prop;
-    int16_t sx, sy;
-    gact_t *a = gact;
-    OAM_item_t *o = &shadow_OAM[first];
-    for (i = 0; i < N; i++, a++, o += 2) {
-        if (!a->type) { o[0].y = o[1].y = 0; continue; }
-        sx = gact_wx(i) - cam_x;
-        sy = gact_wy(i) - cam_y;
-        if ((uint16_t)(sx + 16) >= 176 || (uint16_t)(sy + 16) >= 160) { o[0].y = o[1].y = 0; continue; }
-        if (a->prio == GACT_PRIO_DIRTY) a->prio = (wattr_at(a->x, a->y) & gact_prio_mask) ? S_PRIORITY : 0;
-        prop = a->prop | a->prio;
-        if (a->dir == 2) prop |= S_FLIPX;
-        if (a->type & GACT_ANIM2) tile = a->tile + (a->anim ? 4 : 0);
-        else tile = a->tile + gact_npc_frame[a->dir] + ((a->moving && a->anim) ? 4 : 0);
-        oam16(first + (i << 1), (uint8_t)sx + 8, (uint8_t)sy + 16, tile, prop);
-    }
-}
