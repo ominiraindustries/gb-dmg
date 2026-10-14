@@ -1,6 +1,6 @@
 // FARO kit - placeholders of modules that do not exist yet (each one is replaced by its real
 // module; delete the stub when that happens). Bank 1.
-#pragma bank 1
+#pragma bank 255
 #include "rpg.h"
 
 void survival_step(void) BANKED { }

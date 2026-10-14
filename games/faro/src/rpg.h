@@ -127,7 +127,7 @@ enum { EV_USE,          // who, kind, id
        EV_END };        // result
 #define B_EV_MAX 24
 extern uint8_t b_species, b_level, b_cpv, b_cpv_max, b_catk, b_cdef, b_cagi, b_cst, b_cst_t;
-extern uint8_t b_ent_t, b_calm_t, b_lit_t, b_def_t, b_deb_t, b_down, b_fly, b_bait, b_flee_tries;
+extern uint8_t b_ent_t, b_calm_t, b_lit_t, b_def_t, b_pdeb_t, b_cdeb_t, b_down, b_fly, b_bait, b_flee_tries;
 extern uint8_t b_aim, b_turn, b_result, b_free, b_seen, b_new_species, b_levelups;
 extern uint8_t b_loot_n, b_loot_item[3], b_loot_cnt[3];
 extern uint16_t b_xp;

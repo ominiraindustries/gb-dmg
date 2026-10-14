@@ -18,6 +18,20 @@
 #include "fx.h"
 
 uint8_t state, field_sub, cheat_flags;   // cheat_flags: written by tests only
+// tests drive the battle core directly (tests/test_battle.py vs tests/battle_model.py):
+// bt_cmd 1 = battle_begin(a, b, c), 2 = battle_turn(a, b, c), 3 = battle_open_turn(), 4 = player_new(),
+// 5 = player_stats()
+uint8_t bt_cmd, bt_a, bt_b, bt_c;
+
+static void test_hook(void) {
+    if (bt_cmd == 1) battle_begin(bt_a, bt_b, bt_c);
+    else if (bt_cmd == 2) battle_turn(bt_a, bt_b, bt_c);
+    else if (bt_cmd == 3) battle_open_turn();
+    else if (bt_cmd == 4) player_new();
+    else if (bt_cmd == 5) player_stats();
+    bt_cmd = 0;
+    skip_measure = 1;
+}
 extern uint8_t warp_map, warp_x, warp_y, warp_dir, warp_pending;
 
 const sfx_t sfx_table[SFX_COUNT] = {
@@ -115,6 +129,7 @@ void main(void) {
         frame_vram_check();
         frame_begin();
         if (gbe_eq_request) { gbe_eq_request = 0; gbe_selftest(); skip_measure = 1; }
+        if (bt_cmd) test_hook();
         if (!transition_update()) {
             switch (state) {
             case ST_TITLE:

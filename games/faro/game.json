@@ -35,7 +35,7 @@
   "lcc_flags": [
     "-autobank",
     "-Wm-yt0x1B",
-    "-Wm-yo8",
+    "-Wm-yo16",
     "-Wm-ya1"
   ],
   "vram_order": [

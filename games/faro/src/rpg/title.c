@@ -1,6 +1,6 @@
 // FARO kit - TITLE (ui.md 2): logo, the lighthouse beam sweeping, "Pulsa Start", then the menu
 // Continuar / Nueva partida / Opciones. Bank 1.
-#pragma bank 1
+#pragma bank 255
 #include "rpg.h"
 #include "title.h"
 #include "uispr.h"

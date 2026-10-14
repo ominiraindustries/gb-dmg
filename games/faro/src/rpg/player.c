@@ -1,6 +1,6 @@
 // FARO kit - Leo's state: plevel, stats from player.tbl, XP, money, equipment, the inventory with its
 // caps (caps.tbl), the bestiary bits, captured lanterns. GDD 3.2, 3.9, 5.3, 8.7. Bank 1.
-#pragma bank 1
+#pragma bank 255
 #include "rpg.h"
 
 uint8_t plevel, pv, pv_max, en, en_max, patk, pdef, pagi, sac, buff, p_st, p_st_t, armor, lamp_ring;

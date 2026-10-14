@@ -5,12 +5,14 @@
 // Determinism: the Python model (games/faro/tests/battle_model.py) reproduces every number with the
 // same rng_next() calls IN THE SAME ORDER. Change one, change the other (test_battle.py checks it).
 // RNG order per attack: accuracy (unless sure) -> crit -> damage spread -> status chance -> wake.
-#pragma bank 1
+#pragma bank 255
 #include "rpg.h"
 
 uint8_t b_species, b_level, b_cpv, b_cpv_max, b_catk, b_cdef, b_cagi;
 uint8_t b_cst, b_cst_t;                         // creature main status (0xFF none) and turns
-uint8_t b_ent_t, b_calm_t, b_lit_t, b_def_t, b_def_sh, b_deb_t, b_deb_sh, b_down, b_fly;
+uint8_t b_ent_t, b_calm_t, b_lit_t, b_def_t, b_def_sh, b_down, b_fly;
+uint8_t b_pdeb_t, b_pdeb_sh;                     // Leo's ATQ lowered (a creature move DEBUFF)
+uint8_t b_cdeb_t, b_cdeb_sh;                     // the creature's ATQ lowered (Leo's technique)
 uint8_t b_bait, b_flee_tries, b_last_move, b_aim, b_turn, b_result, b_free, b_seen;
 uint8_t b_new_species, b_loot_n, b_loot_item[3], b_loot_cnt[3], b_levelups;
 uint16_t b_xp;
@@ -61,7 +63,7 @@ void battle_begin(uint8_t species, uint8_t lvl, uint8_t free) BANKED {
     b_cdef = cstat(3, b_sp.tdf, 4);
     b_cagi = cstat(2, b_sp.tag, 4);
     b_cst = 0xFF; b_cst_t = 0;
-    b_ent_t = b_calm_t = b_lit_t = b_def_t = b_deb_t = b_down = 0;
+    b_ent_t = b_calm_t = b_lit_t = b_def_t = b_pdeb_t = b_cdeb_t = b_down = 0;
     b_fly = b_sp.vuela;
     b_bait = (uint8_t)R(RULE_QBAIT_NONE);
     b_flee_tries = 0;
@@ -82,7 +84,7 @@ void battle_begin(uint8_t species, uint8_t lvl, uint8_t free) BANKED {
 static uint8_t p_atk(void) {
     uint8_t a = patk;
     if (buff == BUFF_FUERZA) a += a >> 2;
-    if (b_deb_t) a -= a >> b_deb_sh;
+    if (b_pdeb_t) a -= a >> b_pdeb_sh;
     return a;
 }
 static uint8_t p_def(void) { return buff == BUFF_CORAZA ? pdef + (pdef >> 2) : pdef; }
@@ -292,8 +294,8 @@ static void do_skill(uint8_t id, uint8_t weapon) {
         ev(EV_AIM, 0, 0, 0);
         break;
     case SKILLS_EFECTO_DEBUFF:
-        b_deb_t = s.turnos;                          // the creature's ATQ (GDD: Grito)
-        b_deb_sh = s.val;
+        b_cdeb_t = s.turnos;                         // the creature's ATQ (GDD: Grito)
+        b_cdeb_sh = s.val;
         b_catk -= b_catk >> s.val;
         ev(EV_DEBUFF, 1, 0, 0);
         break;
@@ -486,7 +488,7 @@ static void creature_act(void) {
         ev(EV_DEFUP, 1, 0, 0);
         break;
     case MOVES_EFECTO_DEBUFF:
-        b_deb_t = mv->turnos; b_deb_sh = mv->val;
+        b_pdeb_t = mv->turnos; b_pdeb_sh = mv->val;
         ev(EV_DEBUFF, 0, 0, 0);
         break;
     case MOVES_EFECTO_CURA:
@@ -546,7 +548,8 @@ static void end_turn(void) {
     tick_flag(&b_calm_t, ST_CALMADO);
     tick_flag(&b_lit_t, ST_ILUMINADO);
     if (b_def_t) b_def_t--;
-    if (b_deb_t && !--b_deb_t) b_catk = cstat(4, b_sp.tat, 4);
+    if (b_pdeb_t) b_pdeb_t--;
+    if (b_cdeb_t && !--b_cdeb_t) b_catk = cstat(4, b_sp.tat, 4);
     b_turn++;
 }
 
