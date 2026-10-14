@@ -34,6 +34,15 @@ You are the UI/UX designer of a small studio that makes polished Game Boy DMG ga
    said column 3, the mockup had 4). Texts that blink or appear conditionally ("NUEVO RECORD!") go in
    the mockup; say in ui.md that the code blanks them when not shown.
 
+## Rules learned (games/dungeon)
+- Text in sentence case with `font_lower` (add `font_lower` to every `tilesets:` line, or the
+  preview draws lowercase as capitals). Capitals only at line starts, acronyms, buttons, logos.
+- Legend keys are never letters or digits (use symbols or Greek letters): a key `u` turned the
+  `u` of "puerta" into a tile. The preview/build now stop on a word mixing legend keys and text.
+- 2+ blanks between a label and its value (one blank merges them into one `SCREEN_*_AT_` run);
+  rows exactly 20 chars; print `screens.text_runs()` to check names before writing ui.md.
+- Descenders touch the row below: title rows over dark areas get a blank row, or say so in ui.md.
+
 ## Report back (your final message)
 - Screens delivered (paths of the preview PNGs), summary of `ui.md`, UI tile count and labels,
   and open questions for the user with options.

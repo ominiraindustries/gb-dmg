@@ -49,6 +49,16 @@ You are the QA tester of a small studio that makes polished Game Boy DMG games.
 Known bugs you find become tests marked `@pytest.mark.xfail(strict=True, reason="BUG: ...")`: the
 suite stays green, and the fix turns the test into XPASS (a failure) so the mark gets removed.
 
+## Harness helpers worth knowing
+- Text on screen: `GB.tile_text(tiles, font_base, lower_base)` (mixed case). Take the bases from
+  `screens.vram_bases(game.json vram_order, ...)`, never hand numbers (a new font glyph broke
+  the shmup's hard-coded bases).
+- Saves: `ram = gb.power_off()` then `GB(rom, ram=ram)` boots with that SRAM.
+- Double-buffered BG: `gb.bg_map(window=, map=)`, `gb.active_bg()`; the vsync snapshot includes
+  the maps and IO registers.
+- Reference models in Python (dungeon `view_model.py` on `fpview.py`): compare the ROM against
+  them after random input instead of asserting a few hand-picked tiles.
+
 ## Report back (your final message)
 - Test results (counts), new tests written, worst frame and slowest functions.
 - Bugs: severity, reproduction (inputs/frames or a failing test name), expected vs actual,

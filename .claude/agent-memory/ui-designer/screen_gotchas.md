@@ -16,3 +16,8 @@ metadata:
 **Why:** found on games/dungeon (2026-10-14); defines are the code's positions, so a wrong run
 name or shifted row becomes a bug.
 **How to apply:** every new mockup: check runs and row widths before writing ui.md. See [[ui-language]].
+- Lowercase letters are text now (font_lower): legend keys must never be letters (a legend `u`
+  turned the `u` of "puerta" into a map tile). Use symbols or Greek/Cyrillic chars, and add
+  `font_lower` to the `tilesets:` line or lowercase renders as uppercase in the preview.
+- Descenders (g j p q y) touch whatever is in the row below: check titles sitting right on a dark
+  area (dungeon "Mapa" over the automap).

@@ -48,7 +48,10 @@ label without updating the code (grep the label).
 - BG tiles: design to tile seamlessly (check edges of repeating tiles in a mockup), vary repeating
   textures with 2-3 alternate tiles to break the grid.
 - Leave the playfield calm: busy backgrounds hide actors and bullets.
-- Text/UI: black on white, 1 px gaps between letters (the shared font is 5x7 in 8x8).
+- Text/UI: black on white. The shared fonts are bold (2 px vertical stems, 1 px bars): capitals 7x7,
+  lowercase x-height 5 with descenders 1 px into row 7 (`harness/common/font*.tiles`). The user
+  called the old thin 5x7 font "basura": thin 1 px strokes look spindly at 1x. New text art
+  (logos, labels) matches this weight. Never reorder a font's tiles (code indexes by label order).
 
 ## Sprites and animation
 - Hitbox != art: draw slightly bigger than the collision box.
@@ -69,6 +72,21 @@ label without updating the code (grep the label).
 GBDK default: BG tiles 0-127 private, 128-255 shared with sprites; sprites 0-127 private.
 Count unique tiles; reuse via flips (sprites only - DMG BG tiles cannot be flipped), shared corners,
 symmetric designs. Report the count against the GDD budget when delivering.
+
+## Pieced first-person views and big BG art (games/dungeon)
+- Paint with a scratch script in SCREEN coordinates (one painter per piece), slice into tiles and
+  dedupe globally: textures line up across pieces and dedup does the budget work.
+- Same scale on all faces: near and far walls with different brick sizes looked disconnected
+  (user). 4 courses per face ~58 tiles, 8 courses ~114 (measured).
+- Lines that straddle tile rows double the tiles; keep side-wall courses inside one tile row.
+- The background behind the pieces must be periodic in 16 px (2 tiles per row) or the count explodes.
+- Bayer gradients on a narrow piece read as a dotted column: flat tones per depth instead.
+- Monsters drawn as layered shapes, each with its own black outline, plus a light-gray halo, read
+  over both black darkness and light walls.
+
+## Visual questions to the user
+When the user must choose between looks ("sin ejemplos visuales no puedo decidir"), render the
+options side by side in one PNG (A/B, 1x and 3x) and let them pick from the image.
 
 ## Logos and title screens
 Big text logos from BG tiles (each letter 2x2 or 3x3 tiles), drawn with thick strokes and a

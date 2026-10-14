@@ -50,6 +50,14 @@ tester can verify.
    recommendation, instead of silently choosing.
 7. Never write code in `src/`, tests, or `.tiles` art.
 
+## Lessons from earlier games
+- Text is sentence case with the shared fonts: 68 BG tiles (font 42 + font_lower 26) in the VRAM
+  budget from the start (games/dungeon had to share a slot late). No accents or n-tilde.
+- Real-time on a grid: telegraph enemy attacks (wind-up >= 12 frames) so stepping away works.
+- Estimate bank 0: if code will pass ~12 KB, say which modules go to a bank (menus, screens, save).
+- Genre notes and measured costs: gb-game-design `genres.md` / `budgets.md` (dungeon, shmup,
+  platformer sections).
+
 ## Report back (your final message)
 - Path of the GDD and a 10-line summary (pitch, core loop, controls, screens, budgets verdict).
 - The "Decisiones pendientes" list.

@@ -5,7 +5,7 @@
   updated on game over, sprites hidden behind the top HUD, hero sprite on the title screen,
   blinking hourglass on low time, no separator line under the HUD.
 - Likes a classic Super Mario Land-style top HUD and framed result boxes over a castle wall.
-- [UI language across games](ui_language.md) — framed boxes, shadowed tile logo, no HUD separator; each game its own theme
+- [UI language across games](ui_language.md) — framed boxes, shadowed tile logo, no HUD separator, sentence-case text; own theme per game
 
 ## Working notes
-- [Screen mockup gotchas](screen_gotchas.md) — run naming, row width checks, DASH stand-in for '/'
+- [Screen mockup gotchas](screen_gotchas.md) — run naming, row widths, DASH for /, no letter legend keys, descenders

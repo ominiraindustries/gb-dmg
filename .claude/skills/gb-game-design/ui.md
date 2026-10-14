@@ -15,17 +15,23 @@ Look at the PNG (Read tool) before calling a screen done.
 - Icons (hearts, lives) beat digits for small counts (<= 5).
 
 ## Text
-- Shared 8x8 font in `harness/common/font.tiles` (digits + A-Z). Add punctuation/lowercase there if
-  a game needs it (keep it shared).
+- Shared fonts: `harness/common/font.tiles` (digits, A-Z, `- ! . : ? /`, bold 7x7, 42 tiles) and
+  `font_lower.tiles` (a-z, 26 tiles, same baseline). Missing glyphs go there (shared), never per game.
+  No accents or n-tilde: write "Pocion", and rephrase words that need the n-tilde.
+- **Sentence case** (user preference since games/dungeon): "Nueva partida", "Pulsa Start",
+  "Coges una llave". Capitals only at the start of a line/label, acronyms (PV), button names, and
+  title logos. Budget both fonts (68 BG tiles) in the GDD from the start.
+- Descenders g j p q y drop 1 px into row 7: in lines stacked every 8 px they can touch the line
+  below (accepted in the dungeon log); a title right over a dark area needs a blank row.
 - 18 characters per line inside a 1-tile border; dialogue boxes 3-4 lines at the bottom (rows 13-17).
 - Text appears letter by letter (1 char / 1-2 frames), A speeds up / advances, blinking arrow when
   waiting. Never more than ~20 tiles written per frame.
-- Use uppercase, short words; DMG blur makes dense text hard to read.
+- Short words; DMG blur makes dense text hard to read.
 
 ## Menus
 - Cursor sprite (arrow) beside options, wrap-around, D-pad with auto-repeat, A confirm, B back.
 - Highlight by cursor, not by color (we have none).
-- Title screen: logo (big tiles), "PRESS START" blinking at ~1 Hz (30 frames on/off), options below.
+- Title screen: logo (big tiles), "Pulsa Start" blinking at ~1 Hz (30 frames on/off), options below.
 
 ## Screen flow
 Every game needs: title, gameplay, pause, game over (and/or win), optional options/high scores.

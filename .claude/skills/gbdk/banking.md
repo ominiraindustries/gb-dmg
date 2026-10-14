@@ -77,6 +77,16 @@ source in one lcc call, so bankpack re-evaluates all autobanked files every buil
   - banked code: may call bank 0 and `BANKED` functions; may use data only from bank 0 and its
     own bank; **must never `SWITCH_ROM` itself** (it would unmap its own code).
 
+## Game code in a bank (games/dungeon, verified)
+- When bank 0 fills (the build check stops it), move whole modules that run rarely (menus, screens,
+  save/load) to `#pragma bank 1` and mark their entry points `BANKED` in the header. Keep per-frame
+  hot code in bank 0 (every BANKED call goes through the trampoline).
+- Library code in bank 0 that calls the game back with a near call (gbe_screen's `screen_build()`)
+  needs a bank-0 wrapper: `void screen_build(uint8_t w) { screen_build_b(w); }` in main.c.
+- Banked code may call bank-0 helpers that switch banks (`gbe_bank`, `view_compose`) because they
+  restore the bank before returning; it must never `SWITCH_ROM` itself (build check).
+- `static` helpers inside the banked file are near calls within the same bank: fine.
+
 ## Verified multi-file example (autobank + SRAM)
 ```c
 // file: level.h

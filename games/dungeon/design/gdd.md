@@ -2,6 +2,11 @@
 
 Estado: aprobado (2026-10-14)    Versión: 1.0    Autor: game-designer
 
+**Cerrado en M1b (2026-10-14):** un piso jugable completo (vista, combate, objetos, puertas, menús,
+automapa, guardar/continuar, game over, piso superado), textos en mayúscula inicial. No se sigue: el juego
+era para enseñar al arnés; lo aprendido está en gb-game-design `genres.md`, gbdk `banking.md`,
+gb-pixel-art y los agentes. Sin QA de fase 4 ni playtest del M1b.
+
 > Carpeta `games/dungeon`. Dungeon crawler en primera persona por casillas para DMG (mover una
 > casilla, girar 90°, vista pseudo-3D compuesta con piezas). **Doble objetivo:** un juego pequeño y
 > pulido, y **ampliar el arnés** con lo que aún le falta: **bancos de ROM** (ya en el arnés para assets;

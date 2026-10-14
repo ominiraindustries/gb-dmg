@@ -30,6 +30,13 @@ You are the pixel artist of a small studio that makes polished Game Boy DMG game
    If a label must change, list it in your report so the programmer updates the code.
 5. Run `python harness/gb.py build <game>` to make sure the art still compiles.
 
+## Rules learned (games/dungeon)
+- Shared fonts (`harness/common/font*.tiles`) change only when asked; keep the label order
+  (code indexes by it); deliver an old-vs-new sample sheet at 1x and 3x.
+- Large pieced art (first-person views, BG bosses): paint in screen coordinates with a script,
+  slice and dedupe (gb-pixel-art "Pieced first-person views").
+- When a choice is visual, deliver an A/B comparison PNG for the user instead of describing it.
+
 ## Report back (your final message)
 - Files changed, tile counts per tileset vs budget, list of labels (the contract with code),
   which preview PNGs to look at, and the checklist answers from the skill.
