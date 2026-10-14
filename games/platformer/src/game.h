@@ -31,6 +31,25 @@ extern uint8_t cheat_flags;                        // written by tests only
 #define CHEAT_INVINCIBLE 1
 #define CHEAT_NO_TIMER   2
 
+extern uint8_t hud_cut;                            // LYC ISR cuts the window at line 15
+extern uint8_t bgp_shadow, obp0_shadow, obp1_shadow;   // palettes written in VBlank (fades)
+void new_game(void);
+void load_level(void);                             // LCD off: level, enemies, Teo, HUD
+
+// --- flow.c (screens, transitions, goal)
+enum { SCR_TITLE, SCR_INTRO, SCR_CLEAR, SCR_GAMEOVER };
+void transition(uint8_t next);                     // fade out, rebuild with LCD off, fade in
+void show_screen_now(uint8_t which);
+uint8_t update_transition(void);                   // 1 while a transition owns the frame
+void update_screens(void);
+void ui_draw_vram(void);
+void set_fade(uint8_t k);
+void goal_reset(void);
+uint8_t goal_check(void);
+void update_goal(void);
+void draw_banner(void);
+extern uint8_t record[3];
+
 // --- level.c
 extern uint8_t level[];
 extern uint8_t level_cols;                         // N metatile columns
@@ -55,6 +74,7 @@ void hud_init(void);                               // LCD off: draws both window
 void hud_draw_vram(void);
 void hud_set_time(uint16_t units);
 void hud_set_lives(void);
+void hud_pause(uint8_t mode);
 void add_score(const uint8_t *bcd);                // packed BCD, 3 bytes little-endian
 void add_coin(void);
 void add_life(void);
@@ -76,6 +96,7 @@ void player_power_up(uint8_t item_type);
 void player_hurt(void);
 void player_bounce(void);                          // after a stomp
 void player_kill(void);                            // time over
+void player_animate(void);
 extern uint8_t player_dead;                        // 1 = pit, 2 = killed
 
 // --- actors.c  (struct of arrays, fixed slot ranges = fixed OAM ranges, GDD §7.3)

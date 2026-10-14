@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from helpers import (PLAY, Y_BIAS, expected_tile_column, level_cols, level_map, mt_tiles,
+from helpers import (PLAY, Y_BIAS, wait_state, expected_tile_column, level_cols, level_map, mt_tiles,
                      s16, start_play, teleport, vram_tile_column)
 
 GROUND_FEET = Y_BIAS + 7 * 16          # top of the ground row
@@ -239,7 +239,6 @@ def test_fall_in_pit_costs_a_life_and_restarts(gb):
     gb.write_u16("camera_x", 60 * 16)
     gb.frames(20)
     assert gb.u8("state") == 4                    # DYING
-    gb.frames(80)
-    assert gb.u8("state") == 2
+    assert wait_state(gb, PLAY)                   # fade -> INTRO card -> PLAY
     assert gb.u8("lives") == lives - 1
     assert gb.u16("player_x") == 2 * 16           # no checkpoint yet: back to the start

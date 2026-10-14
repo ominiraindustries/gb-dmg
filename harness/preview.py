@@ -76,7 +76,9 @@ def render_sheet(ts, out, scale=4, cols=8):
     img.save(out)
 
 
-def render_screen(path, sets, out, scale=3):
+def parse_screen(path, sets):
+    """Read a .screen mockup. Returns (cells, sprites):
+    cells: 18 rows x 20 (Tileset, index); sprites: list of (Tileset, index, x, y, flipx, flipy)."""
     tilesets, legend, grid, sprites, section = [], {}, [], [], None
     for n, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         line = raw.split(";", 1)[0].rstrip() if section != "grid" else raw.rstrip("\n")
@@ -114,28 +116,41 @@ def render_screen(path, sets, out, scale=3):
     font = next((t for t in tilesets if "DIGIT0" in t.labels and "LETTER_A" in t.labels), None)
     blank = next(((t, t.labels["BLANK"]) for t in tilesets if "BLANK" in t.labels),
                  next(((t, 0) for t in tilesets if t is not font), (tilesets[0], 0)))
-    screen = Image.new("RGBA", (160, 144), SHADES[0] + (255,))
+    cells = []
     for ty, row in enumerate(grid):
+        out_row = []
         for tx, ch in enumerate(row):
             if ch in legend:
-                ts, i = resolve(legend[ch])
+                out_row.append(resolve(legend[ch]))
             elif font and ch.isdigit():
-                ts, i = font, font.labels["DIGIT0"] + int(ch)
+                out_row.append((font, font.labels["DIGIT0"] + int(ch)))
             elif font and ch.isalpha() and ch.isupper():
-                ts, i = font, font.labels["LETTER_A"] + ord(ch) - ord("A")
+                out_row.append((font, font.labels["LETTER_A"] + ord(ch) - ord("A")))
             elif ch in " .":
-                ts, i = blank
+                out_row.append(blank)
             else:
                 raise KeyError(f"{path}: char {ch!r} at ({tx},{ty}) has no legend entry")
-            screen.paste(ts.images[i], (tx * 8, ty * 8))
+        cells.append(out_row)
+    sprs = []
     for n, parts in sprites:
         ts, i = resolve(parts[0])
+        sprs.append((ts, i, int(parts[1]), int(parts[2]), "flipx" in parts[3:], "flipy" in parts[3:]))
+    return cells, sprs
+
+
+def render_screen(path, sets, out, scale=3):
+    cells, sprs = parse_screen(path, sets)
+    screen = Image.new("RGBA", (160, 144), SHADES[0] + (255,))
+    for ty, row in enumerate(cells):
+        for tx, (ts, i) in enumerate(row):
+            screen.paste(ts.images[i], (tx * 8, ty * 8))
+    for ts, i, x, y, fx, fy in sprs:
         spr = ts.sprites[i]
-        if "flipx" in parts[3:]:
+        if fx:
             spr = spr.transpose(Image.FLIP_LEFT_RIGHT)
-        if "flipy" in parts[3:]:
+        if fy:
             spr = spr.transpose(Image.FLIP_TOP_BOTTOM)
-        screen.alpha_composite(spr, (int(parts[1]), int(parts[2])))
+        screen.alpha_composite(spr, (x, y))
     screen.convert("RGB").resize((160 * scale, 144 * scale), Image.NEAREST).save(out)
 
 

@@ -60,3 +60,12 @@ def teleport(gb, x, y=20):
     gb.write_u8("player_y", y)
     gb.write_u16("player_vx", 0)
     gb.write_u16("player_vy", 0)
+
+
+def wait_state(gb, state, max_frames=600):
+    """Advance until the game reaches `state` (e.g. back to PLAY after a death and the intro)."""
+    for _ in range(max_frames):
+        if gb.u8("state") == state:
+            return True
+        gb.frames(1)
+    return gb.u8("state") == state

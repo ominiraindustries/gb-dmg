@@ -9,7 +9,7 @@ uint8_t cheat_flags;
 uint8_t hud_cut;                // 1: the LYC ISR cuts the window at line 15 (HUD on top)
 uint8_t time_tick;
 uint8_t checkpoint, checkpoint_col;
-uint8_t dying_timer;
+uint8_t dying_timer, pause_timer;
 uint8_t death_y, death_ys;
 int16_t death_vy;
 
@@ -26,24 +26,27 @@ void lcd_isr(void) {
     LCDC_REG = (LCDC_REG & ~LCDCF_WINON) | LCDCF_OBJON;
 }
 
-// Start of VBlank: same moment GBDK DMAs the shadow OAM, so BG and sprites move together
+// Start of VBlank: same moment GBDK DMAs the shadow OAM, so BG and sprites move together.
+// Palettes from the fade shadows; the window comes back on for the HUD.
 void vbl_isr(void) {
     SCX_REG = scx_shadow;
+    BGP_REG = bgp_shadow;
+    OBP0_REG = obp0_shadow;
+    OBP1_REG = obp1_shadow;
     if (hud_cut) LCDC_REG = (LCDC_REG | LCDCF_WINON) & ~LCDCF_OBJON;
 }
 
 void draw_vram(void) {
     level_draw_vram();
     hud_draw_vram();
+    ui_draw_vram();
     if (LY_REG < 144) vram_late++;
 }
 
-// LCD off: load the level and place Teo at the start or at the checkpoint (map restored)
-void start_level(void) {
+// LCD off (called by the INTRO screen): level, enemies and Teo at the start or the checkpoint
+void load_level(void) {
     uint8_t i, start_col = 0, start_row = 6;
     uint16_t cam = 0;
-    DISPLAY_OFF;
-    hide_sprites_range(0, 40);
     checkpoint_col = 0;
     for (i = 0; i < LEVEL1_1_OBJ_COUNT; i++) {
         if (level1_1_obj_type[i] == OBJ_START) {
@@ -61,18 +64,12 @@ void start_level(void) {
     level_load(cam);
     actors_clear();
     enemies_reset(camera_x);
+    goal_reset();
     player_spawn((uint16_t)start_col << 4, Y_BIAS + (start_row << 4));
     time_units = TIME_START;
     time_tick = 0;
+    hud_pause(0);
     hud_init();
-    SCY_REG = 0xF0;             // level row 0 at screen line 16, below the HUD
-    SCX_REG = scx_shadow;
-    WX_REG = 7;
-    WY_REG = 0;
-    hud_cut = 1;
-    state = STATE_PLAY;
-    skip_measure = 1;
-    DISPLAY_ON;
 }
 
 void new_game(void) {
@@ -81,7 +78,7 @@ void new_game(void) {
     lives = 3;
     coins = 0;
     checkpoint = 0;
-    start_level();
+    transition(SCR_INTRO);
 }
 
 void update_timer(void) {
@@ -121,29 +118,66 @@ void update_dying(void) {
     }
     if (player_dead == 2) {
         ox = (uint8_t)(player_x - camera_x) + 8;
-        if (death_y > 200 && death_vy > 0) {
-            hide_sprites_range(0, 4);
-        } else {
-            set_sprite_tile(0, SPR_TEO_SMALL_DEATH); set_sprite_prop(0, 0);
-            set_sprite_tile(1, SPR_TEO_SMALL_DEATH + 2); set_sprite_prop(1, 0);
-            move_sprite(0, ox, death_y);
-            move_sprite(1, ox + 8, death_y);
-            hide_sprite(2); hide_sprite(3);
+        if (death_y > 200 && death_vy > 0) hide_sprites_range(0, 4);
+        else {
+            oam16(0, ox, death_y, SPR_TEO_SMALL_DEATH, 0);
+            hide_sprites_range(2, 4);
         }
     }
     if (--dying_timer == 0) {
         lives--;
-        if (lives == 0) {
-            state = STATE_GAMEOVER;               // screen comes in step 3b
-            hide_sprites_range(0, 40);
-        } else {
-            start_level();
-        }
+        hud_set_lives();
+        transition(lives ? SCR_INTRO : SCR_GAMEOVER);
     }
 }
 
-// Equivalence test asm vs C (gb-asm skill): tests set eq_request = 1, read eq_mismatch / eq_done.
-// Exhaustive over every x of the level (+64 past the end) and every y.
+void update_play(void) {
+    if (pressed & J_START) {                      // pause (ui.md §5)
+        state = STATE_PAUSE;
+        pause_timer = 0;
+        hud_pause(1);
+        sfx(SFX_PAUSE);
+        return;
+    }
+    if (player_freeze) {
+        player_update();                          // power-up / damage animation: rest waits
+    } else {
+        player_update();
+        if (goal_check()) return;
+        enemies_update();
+        actors_update();
+        level_update_camera();
+        update_timer();
+        if (!checkpoint && checkpoint_col && player_x >= ((uint16_t)checkpoint_col << 4))
+            checkpoint = 1;
+    }
+    if (player_dead) start_dying();
+}
+
+void update_pause(void) {
+    if (pressed & J_START) {
+        hud_pause(0);
+        state = STATE_PLAY;
+        return;
+    }
+    if (++pause_timer == 30) hud_pause(2);        // blink 30 visible / 30 hidden
+    else if (pause_timer == 60) { hud_pause(1); pause_timer = 0; }
+}
+
+// Scanlines used since vsync() returned (VBlank starts at LY 144). 255 = missed a frame.
+void measure_frame(void) {
+    uint8_t ly = LY_REG;
+    if (skip_measure) {
+        skip_measure = 0;
+        return;
+    }
+    if ((uint8_t)sys_time != frame_start) frame_lines = 255;
+    else frame_lines = ly >= 144 ? ly - 144 : ly + 10;
+    if (frame_lines > max_frame_lines) max_frame_lines = frame_lines;
+}
+
+// ---------------------------------------------------------------- asm equivalence test hook
+// Tests set eq_request = 1, then read eq_mismatch / eq_done (gb-asm skill procedure)
 uint8_t eq_request, eq_done;
 uint16_t eq_mismatch, eq_count;
 uint8_t mt_at_c(uint16_t x, uint8_t y);
@@ -152,7 +186,6 @@ void act_move_c(uint8_t i);
 extern uint16_t level_px_w;
 extern uint8_t act_xs[], act_ys[];
 
-// act_move asm vs C on a scratch slot: signed velocities, sub-pixel carries, 16-bit x wrap
 static void eq_act_move(void) {
     uint8_t s = ACT_MAX - 1, k, xs0, ys0, y0, xs1, ys1, y1;
     uint16_t x0, x1;
@@ -191,30 +224,14 @@ void eq_run(void) {
     eq_done = 1;
 }
 
-// Scanlines used since vsync() returned (VBlank starts at LY 144). 255 = missed a frame.
-void measure_frame(void) {
-    uint8_t ly = LY_REG;
-    if (skip_measure) {
-        skip_measure = 0;
-        return;
-    }
-    if ((uint8_t)sys_time != frame_start) frame_lines = 255;
-    else frame_lines = ly >= 144 ? ly - 144 : ly + 10;
-    if (frame_lines > max_frame_lines) max_frame_lines = frame_lines;
-}
-
 void init(void) {
     DISPLAY_OFF;
-    BGP_REG = 0xE4;
-    OBP0_REG = 0xE4;
-    OBP1_REG = 0xD8;            // SHOT form: shades 1 and 2 swapped (spr.tiles notes)
     set_bkg_data(0, BG_COUNT, bg_tiles);
     set_bkg_data(TILE_FONT, FONT_COUNT, font_tiles);
     set_bkg_data(TILE_UI, UI_COUNT, ui_tiles);    // tiles >= 128 live in the shared $8800 area
     set_sprite_data(0, SPR_COUNT, spr_tiles);
     SPRITES_8x16;
     SHOW_BKG;
-    SHOW_WIN;
     CRITICAL {
         STAT_REG = STATF_LYC;
         LYC_REG = 15;
@@ -226,11 +243,12 @@ void init(void) {
     sound_init();
     world = 1;
     stage = 1;
+    lives = 3;
 }
 
 void main(void) {
     init();
-    new_game();
+    show_screen_now(SCR_TITLE);
     while (1) {
         vsync();
         frame_start = (uint8_t)sys_time;
@@ -243,26 +261,20 @@ void main(void) {
             eq_run();
             skip_measure = 1;
         }
-        if (state == STATE_PLAY) {
-            if (player_freeze) {
-                player_update();            // power-up / damage animation: everything else waits
-            } else {
-                player_update();
-                enemies_update();
-                actors_update();
-                level_update_camera();
-                update_timer();
-                if (!checkpoint && checkpoint_col && player_x >= ((uint16_t)checkpoint_col << 4))
-                    checkpoint = 1;
+        if (!update_transition()) {
+            switch (state) {
+            case STATE_PLAY: update_play(); break;
+            case STATE_PAUSE: update_pause(); break;
+            case STATE_DYING: update_dying(); break;
+            case STATE_GOAL: update_goal(); player_animate(); break;
+            default: update_screens(); break;
             }
-            if (player_dead) start_dying();
-            else player_draw();
+        }
+        if (state == STATE_PLAY || state == STATE_GOAL || state == STATE_PAUSE) {
+            if (state != STATE_GOAL || player_x < (196 << 4)) player_draw();
             enemies_draw();
             actors_draw();
-        } else if (state == STATE_DYING) {
-            update_dying();
-        } else if (state == STATE_GAMEOVER) {
-            if (pressed & J_START) new_game();
+            draw_banner();
         }
         sound_update();
         measure_frame();

@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from helpers import DYING, GAMEOVER, PLAY, Y_BIAS, s16, start_play, teleport
+from helpers import DYING, GAMEOVER, PLAY, Y_BIAS, s16, start_play, teleport, wait_state
 
 T_NONE, T_WALKER, T_SHELL = 0, 1, 2
 E_WALK, E_SQUASH, E_FLIP, E_BALL, E_BALL_MOVE = range(5)
@@ -200,8 +200,8 @@ def test_checkpoint_respawn(gb):
     gb.write_u8("cheat_flags", 2)
     clear_enemies(gb)
     teleport(gb, 104 * 16, Y_BIAS + 9 * 16)       # below the level: fell
-    gb.frames(150)
-    assert gb.u8("state") == PLAY
+    gb.frames(20)
+    assert wait_state(gb, PLAY)
     assert gb.u16("player_x") == 100 * 16
 
 
@@ -211,8 +211,9 @@ def test_game_over_when_no_lives(gb):
     gb.write_u8("lives", 1)
     teleport(gb, 69 * 16 + 4, SMALL_ON_GROUND)
     gb.write_u16("camera_x", 60 * 16)
-    gb.frames(120)
-    assert gb.u8("state") == GAMEOVER
+    assert wait_state(gb, GAMEOVER)
+    gb.frames(20)
+    gb.screenshot("game_over")
 
 
 def test_frame_budget_bot(gb):

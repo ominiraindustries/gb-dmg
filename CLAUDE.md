@@ -12,6 +12,10 @@ el profiling lo justifica y con una prueba de equivalencia contra la versión C.
   - `res/*.tiles`: tiles en arte ASCII 8x8 (`.` `-` `+` `#` = colores 0-3, `@ NOMBRE` etiqueta el
     siguiente tile). Se convierten al compilar a `build/gen/<nombre>.c/.h` (`#include "bg.h"`).
   - Assets compartidos en `harness/common/*.tiles` (p. ej. la fuente): `"common_res": ["font"]` en game.json.
+  - Pantallas fijas (título, resultados...): las maquetas `design/screens/<nombre>.screen` del
+    ui-designer se convierten al compilar en mapas de tiles (`screen_<nombre>_map[360]` + sprites) con
+    `"screens": [...]` y `"vram_order": ["bg", "font", "ui"]` (bases de VRAM) en game.json
+    (`harness/screens.py`). Lo que diseña el agente es exactamente lo que sale en el juego.
   - Código compartido en `harness/common/src/` (p. ej. `bcd.s` + `bcd.h`, suma BCD con `daa`):
     `"common_src": ["bcd.s"]` en game.json; sus headers están en el include path.
   - `res/*.lvl`: niveles en ASCII (rejilla + `@ clave valor`), convertidos a `build/gen/<nivel>.c/.h`

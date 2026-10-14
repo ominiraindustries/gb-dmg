@@ -55,5 +55,15 @@
   },
   "common_src": [
     "bcd.s"
+  ],
+  "screens": [
+    "title",
+    "clear",
+    "gameover"
+  ],
+  "vram_order": [
+    "bg",
+    "font",
+    "ui"
   ]
 }

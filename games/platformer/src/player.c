@@ -294,7 +294,7 @@ void unstick(void) {
     }
 }
 
-void animate(void) {
+void player_animate(void) {
     static const uint8_t walk_small[4] = {
         SPR_TEO_SMALL_WALK1, SPR_TEO_SMALL_IDLE, SPR_TEO_SMALL_WALK2, SPR_TEO_SMALL_IDLE };
     static const uint8_t walk_big[4] = {
@@ -346,7 +346,7 @@ void player_update(void) {
     if (player_on_ground) player_coyote = COYOTE_FRAMES;
     else if (player_coyote) player_coyote--;
     if ((uint8_t)(player_y + hb_y) >= PIT_Y && player_y < 0xF0) player_dead = 1;
-    animate();
+    player_animate();
 }
 
 // ---------------------------------------------------------------- drawing (sprites 0-3)

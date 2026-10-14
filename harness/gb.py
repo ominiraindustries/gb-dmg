@@ -140,6 +140,16 @@ def build(name):
             sources.append(asciitiles.convert(tiles, gen))
         except ValueError as e:
             die(str(e))
+    if cfg.get("screens"):
+        import preview
+        import screens
+        sets = preview.find_tilesets(gdir)
+        for name in cfg["screens"]:
+            try:
+                sources.append(screens.convert(gdir / "design" / "screens" / f"{name}.screen", gen,
+                                               sets, cfg.get("vram_order", [])))
+            except (KeyError, ValueError) as e:
+                die(str(e))
     for lvl in sorted((gdir / "res").glob("*.lvl")):
         try:
             sources.append(levels.convert(lvl, gen, cfg.get("levels", {})))

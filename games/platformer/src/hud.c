@@ -16,6 +16,8 @@
 #define COL_TIME  16
 
 enum { HUD_SCORE = 1, HUD_COINS = 2, HUD_LIVES = 4, HUD_TIME = 8, HUD_TIMEICON = 16, HUD_ROW0 = 32 };
+uint8_t pause_row[20];
+uint8_t hud_paused;                     // 0 normal, 1 "PAUSA" shown, 2 "PAUSA" hidden (blink)
 
 uint8_t hud_buf[2][20];
 uint8_t hud_dirty;
@@ -23,7 +25,7 @@ uint8_t score[3];                       // packed BCD, little-endian (score[0] =
 uint8_t coins, lives, world, stage;
 uint16_t time_units;
 
-static void put_text(uint8_t *dst, const char *s) {
+void put_text(uint8_t *dst, const char *s) {        // also used by flow.c (LCD off)
     while (*s) {
         char c = *s++;
         if (c >= 'A' && c <= 'Z') *dst = T_A + (c - 'A');
@@ -114,10 +116,20 @@ void hud_init(void) {
     hud_dirty = 0;
 }
 
-// VBlank only. At most 13 tiles in play (score 6 + coins 2 + lives 2 + time 3).
+// PAUSE: row 0 becomes "PAUSA" at cols 7-11, blinking; restored from hud_buf (ui.md §5)
+void hud_pause(uint8_t mode) {
+    uint8_t i;
+    hud_paused = mode;
+    for (i = 0; i < 20; i++) pause_row[i] = T_BLANK;
+    if (mode == 1) put_text(&pause_row[7], "PAUSA");
+    hud_dirty |= HUD_ROW0;
+}
+
+// VBlank only. At most 13 tiles in play (score 6 + coins 2 + lives 2 + time 3); 20 in pause.
 void hud_draw_vram(void) {
     uint8_t d = hud_dirty;
     if (!d) return;
+    if (d & HUD_ROW0) copy(WIN_MAP, hud_paused ? pause_row : hud_buf[0], 20);
     if (d & HUD_SCORE) copy(WIN_MAP + 32 + COL_SCORE, &hud_buf[1][COL_SCORE], 6);
     if (d & HUD_COINS) copy(WIN_MAP + COL_COINS, &hud_buf[0][COL_COINS], 2);
     if (d & HUD_LIVES) copy(WIN_MAP + 32 + COL_LIVES, &hud_buf[1][COL_LIVES], 2);
