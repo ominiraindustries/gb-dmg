@@ -24,5 +24,17 @@ First art pass for the first-person crawler (not yet user-reviewed when written)
   renders d1 and d2.
 - Item icons: chunky with a manual '-' halo; a ring+round body reads as a padlock - keep
   amulets V-chained so they don't clash with the lock.
+Continuity pass (2026-10-14, user: "vista cercana y lejana desconexas"):
+- Root cause was scale: sides had 4 perspective courses, fronts 8 small bricks. 8 courses on the
+  sides costs ~114 tiles vs ~58 for 4 (measured), so ALL faces use 4 courses (ashlar) with lines
+  shared at the corners. Ceiling joints / floor ribs on the depth planes (y 16/24, 80/72/64) tie
+  BG to walls cheaply (horizontal lines are free in a 2-tile row). Keep BG 2-periodic: main.c
+  fill_margins copies columns 0/1 into the slide margins.
+- Tile savers: joints at pixel 7 of a tile so the F*L1 edge column dedupes; vertical corners in
+  the mortar colour (no black seam between coplanar S0/S1/S2); S2L2/S2R2 = F3L2/F3R2 tiles (-10).
+- Bayer gradients across a narrow side piece read as a dotted column, not a ramp: use flat tones
+  per depth (1, 50% checker, 2, 3).
+- `gb.py preview` view part needs bases for '@ base auto' (fpview.preview bug, reported);
+  workaround: monkeypatch fpview.parse with screens.vram_bases.
 **Why:** saves iterations next time a view-piece game or large sprites come up.
 **How to apply:** any games/*/res/view.pcs work and any sprite larger than 16x16.
