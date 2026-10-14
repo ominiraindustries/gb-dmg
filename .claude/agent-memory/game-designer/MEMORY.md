@@ -1,2 +1,3 @@
 - [User taste](user_taste.md) — classic-game clones, original themes (chose medieval knight), gentle difficulty, Spanish UI, classic top HUD
 - [Shmup project](project_shmup.md) — games/shmup doubles as harness stress test; designs must list reused gbe modules + new engine items
+- [Dungeon project](project_dungeon.md) — games/dungeon first-person crawler (CRIPTA), double-buffered view, E1-E16 engine list incl. banking
