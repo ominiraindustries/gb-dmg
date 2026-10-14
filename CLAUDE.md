@@ -12,6 +12,10 @@ el profiling lo justifica y con una prueba de equivalencia contra la versión C.
   - `res/*.tiles`: tiles en arte ASCII 8x8 (`.` `-` `+` `#` = colores 0-3, `@ NOMBRE` etiqueta el
     siguiente tile). Se convierten al compilar a `build/gen/<nombre>.c/.h` (`#include "bg.h"`).
   - Assets compartidos en `harness/common/*.tiles` (p. ej. la fuente): `"common_res": ["font"]` en game.json.
+  - `res/*.lvl`: niveles en ASCII (rejilla + `@ clave valor`), convertidos a `build/gen/<nivel>.c/.h`
+    (mapa por columnas + lista de objetos). Qué significa cada carácter va en game.json `"levels"`
+    con nombres simbólicos que define el C del juego (formato al principio de `harness/levels.py`;
+    `levels.parse()` sirve para tests de lint en Python puro).
 - `tools/gbdk/` — SDK, no versionado (`python harness/gb.py setup`)
 
 ## Commits

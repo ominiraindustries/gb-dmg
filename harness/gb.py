@@ -18,6 +18,7 @@ import zipfile
 from pathlib import Path
 
 import asciitiles
+import levels
 
 ROOT = Path(__file__).resolve().parent.parent
 GBDK_VERSION = "4.5.0"
@@ -108,6 +109,11 @@ def build(name):
     for tiles in shared + sorted((gdir / "res").glob("*.tiles")):
         try:
             sources.append(asciitiles.convert(tiles, gen))
+        except ValueError as e:
+            die(str(e))
+    for lvl in sorted((gdir / "res").glob("*.lvl")):
+        try:
+            sources.append(levels.convert(lvl, gen, cfg.get("levels", {})))
         except ValueError as e:
             die(str(e))
     cmd = [
