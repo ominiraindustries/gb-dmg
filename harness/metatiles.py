@@ -14,6 +14,11 @@ One source for the ROM (mt_tiles / mt_attr), the level preview and Python tests.
 
 Output: enum MT_<NAME> = id (line order, first = 0), MT_COUNT, MT_BASE, ATTR_<NAME> bits,
 const uint8_t mt_tiles[MT_COUNT][4], mt_attr[MT_COUNT].
+More tables: res/metatiles_<set>.mt -> metatiles_<set>.c/.h with mt_<set>_tiles / mt_<set>_attr,
+MT_<SET>_<NAME>, MT_<SET>_COUNT (interiors, caves: one table per tileset; gbe_world copies the
+current one to WRAM with world_metatiles()).
+Attributes named K_* are exclusive KIND values (games/faro: attr = flags | kind in the low bits):
+a metatile with two K_ names is an error (their values would add up to a third kind).
 """
 from pathlib import Path
 
@@ -72,6 +77,8 @@ def parse(path, labels=None, bases=None):
         for x in a:
             if x not in bits:
                 raise ValueError(f"{where}: attribute {x} not declared with '@ attr {x} <bit>'")
+        if sum(x.startswith("K_") for x in a) > 1:
+            raise ValueError(f"{where}: {name} has two kinds {[x for x in a if x.startswith('K_')]} (K_* are values)")
         names.append(name)
         tiles.append(t)
         attrs.append(a)
@@ -82,23 +89,27 @@ def convert(src, out_dir, labels=None, bases=None):
     mt = parse(src, labels, bases)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    enum = "\n".join(f"    MT_{n} = {i}," for i, n in enumerate(mt.names))
-    attrs = "\n".join(f"#define ATTR_{k} 0x{v:02X}" for k, v in mt.attr_bits.items())
-    (out_dir / "metatiles.h").write_text(
+    stem = Path(src).stem                               # metatiles or metatiles_<set>
+    tag = stem[len("metatiles"):].lstrip("_")
+    P = f"MT_{tag.upper()}_" if tag else "MT_"          # enum prefix
+    c = f"mt_{tag}_" if tag else "mt_"                  # C prefix
+    enum = "\n".join(f"    {P}{n} = {i}," for i, n in enumerate(mt.names))
+    attrs = "\n".join(f"#ifndef ATTR_{k}\n#define ATTR_{k} 0x{v:02X}\n#endif" for k, v in mt.attr_bits.items())
+    (out_dir / f"{stem}.h").write_text(
         f"// Generated from {Path(src).name} by harness/metatiles.py - do not edit\n"
         f"#pragma once\n#include <stdint.h>\n\n"
-        f"#define MT_BASE {mt.base}\n#define MT_COUNT {len(mt.names)}\n{attrs}\n\n"
+        f"#define {P}BASE {mt.base}\n#define {P}COUNT {len(mt.names)}\n{attrs}\n\n"
         f"enum {{\n{enum}\n}};\n\n"
-        f"extern const uint8_t mt_tiles[][4];\nextern const uint8_t mt_attr[];\n",
+        f"extern const uint8_t {c}tiles[][4];\nextern const uint8_t {c}attr[];\n",
         encoding="utf-8")
     rows = ",\n".join(f"    {{ {', '.join(str(mt.base + t) for t in tl)} }}   /* {i:2d} {n} */"
                       for i, (n, tl) in enumerate(zip(mt.names, mt.tiles)))
     attr_vals = ", ".join(
         f"0x{sum(mt.attr_bits[x] for x in a):02X}" for a in mt.attrs)
-    (out_dir / "metatiles.c").write_text(
+    (out_dir / f"{stem}.c").write_text(
         f"// Generated from {Path(src).name} by harness/metatiles.py - do not edit\n"
-        f'#include "metatiles.h"\n\n'
-        f"const uint8_t mt_tiles[MT_COUNT][4] = {{\n{rows}\n}};\n\n"
-        f"const uint8_t mt_attr[MT_COUNT] = {{ {attr_vals} }};\n",
+        f'#include "{stem}.h"\n\n'
+        f"const uint8_t {c}tiles[{P}COUNT][4] = {{\n{rows}\n}};\n\n"
+        f"const uint8_t {c}attr[{P}COUNT] = {{ {attr_vals} }};\n",
         encoding="utf-8")
-    return out_dir / "metatiles.c"
+    return out_dir / f"{stem}.c"

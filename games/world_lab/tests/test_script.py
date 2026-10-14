@@ -122,3 +122,17 @@ def test_table_ids_and_rom_rows(gb):
         assert bytes(row[:15]).rstrip(b"\0").decode("latin-1") == r["name"]
         assert row[15] == r["cat"] and row[16] | (row[17] << 8) == r["price"]
         assert row[18:21] == [r["ability"], r["perece"], 0xFF if r["better"] is None else r["better"]]
+
+
+def test_tile_queue_copies_rom_data_over_two_frames(gb):
+    import asciitiles
+    tiles, _ = asciitiles.parse(GAME / "res" / "spr.tiles")
+    want = b"".join(asciitiles.tile_bytes(t) for t in tiles[:6]) if hasattr(asciitiles, "tile_bytes") else None
+    gb.frames(2)
+    gb.write_u8("tq_test", 1)
+    gb.frames(1)
+    assert gb.u8("tiles_lost") == 0
+    gb.frames(3)
+    got = bytes(gb.pyboy.memory[0x8000 + 60 * 16 + k] for k in range(6 * 16))
+    src = bytes(gb.pyboy.memory[0x8000 + k] for k in range(6 * 16))   # spr tiles were loaded at 0
+    assert got == src

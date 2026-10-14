@@ -105,7 +105,9 @@ Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `
   `gb.worst_frames(funcs, frames, step)` desglosa los peores frames: en games/shmup el pico eran 4
   costes medianos a la vez, no una función caliente. Regla propia < 120 líneas; el límite real es
   154 (por encima se pierde un frame).
-- Librería de GBDK: `memcpy`/`memset` son asm (~10 T/byte); `memmove` (~190 T/byte) y `strncpy`
+- Librería de GBDK: `memcpy`/`memset` son asm (~10 T/byte en copias largas, pero ~30 T/byte en copias cortas
+  o con banco: 16 B por tile ~480 T, 128 B con `bank_memcpy` 4.2k; en VBlank usar copias asm desenrolladas como
+  `tile_copy16` de gbe_tiles.s, ~20 T/byte); `memmove` (~190 T/byte) y `strncpy`
   (~290 T/byte) son C: evitarlos en el juego (games/dungeon: 11k T por un scroll de 60 bytes).
 - Trampas medidas de SDCC: indexar con `int8_t` (`board[row_off[r] + i]`) ~466 T por acceso → usar
   punteros/`memcpy`; recalcular datos de una forma en cada llamada → cachear; `memcpy`/`memset` de

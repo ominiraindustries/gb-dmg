@@ -24,7 +24,9 @@
     "gbe_sfx_asm.s",
     "gbe_flags.c",
     "gbe_tbox.c",
-    "gbe_script.c"
+    "gbe_script.c",
+    "gbe_tiles.c",
+    "gbe_tiles.s"
   ],
   "lcc_flags": [
     "-autobank",

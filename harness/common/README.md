@@ -41,6 +41,7 @@ List the files in `"common_src"`; their headers are on the include path.
 | `gbe_flags.c` | story flags (bitset, 1024 by default) and 16 byte variables, ids from `res/scripts/flags.txt` / `vars.txt` | `GBE_FLAG_BYTES` | world_lab |
 | `gbe_tbox.c` | dialogue box in the window: typewriter (1-2 chars/f, A finishes the page), pages with a blinking arrow, speaker tab, yes/no, 2x2 choice; all through gbe_vq | `tbox_frame[9]`, `tbox_arrow`, `tbox_cursor`; the game shows the window while `tbox_visible` | world_lab: conversation test |
 | `gbe_script.c` | event script VM for `harness/script.py` bytecode (`res/scripts/*.evs`): flags, vars, say/ask/choice, wait, call/ret, game ops by table; runs from any bank, copies text and operands to WRAM first so game ops may be BANKED | `script_game_op()` + `res/scripts/ops.txt` | world_lab: branches, game op that takes time |
+| `gbe_tiles.c` `gbe_tiles.s` | tile DATA queue: runs of tiles from any bank, staged to WRAM in the logic, copied in VBlank with an unrolled asm copy (`tile_copy16`, ~330 T/tile), `tiles_budget` per VBlank (2) | - | world_lab: 4 tiles with GBDK memcpy overran VBlank (vram_late caught it) |
 | `gbe_selftest.c` | asm-vs-C equivalence of all the above, run in the ROM | call `gbe_selftest()` when `gbe_eq_request` | test: `gb.selftest()` |
 
 Header: `gbe.h` (documents every function and the rules). The game provides `src/gbe_config.h`:

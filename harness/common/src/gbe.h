@@ -362,6 +362,15 @@ void script_run(uint8_t bank, const uint8_t *code);
 void script_resume(void);
 void script_update(void);
 
+// ---------------------------------------------------------------- gbe_tiles.c
+// Tile DATA queue: tiles_push(VRAM address, bank, src, n tiles); tiles_prepare() in the logic
+// (copies <= tiles_budget tiles to WRAM with the bank switched), tiles_draw_vram() in VBlank.
+extern uint8_t tiles_budget, tiles_lost;
+uint8_t tiles_push(uint8_t *dst, uint8_t bank, const uint8_t *src, uint8_t n);
+uint8_t tiles_pending(void);
+void tiles_prepare(void);
+void tiles_draw_vram(void);
+
 // ---------------------------------------------------------------- gbe_selftest.c
 // Equivalence of every asm routine with its C reference (gb-asm procedure). Tests call
 // gb.selftest() (sets gbe_eq_request; the game calls gbe_selftest()). Which modules are checked

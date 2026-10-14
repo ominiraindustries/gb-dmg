@@ -259,8 +259,7 @@ def build(name):
                                                sets, cfg.get("vram_order", [])))
             except (KeyError, ValueError) as e:
                 die(str(e))
-    mt_file = gdir / "res" / "metatiles.mt"
-    if mt_file.exists():
+    for mt_file in sorted((gdir / "res").glob("metatiles*.mt")):          # metatiles.mt, metatiles_<set>.mt
         try:
             sources.append(metatiles.convert(mt_file, gen, tileset_labels(gdir, mt_file), bases))
         except ValueError as e:

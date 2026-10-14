@@ -21,7 +21,7 @@ static const int8_t dir_dy[4] = { 1, -1, 0, 0 };
 uint8_t px, py, pdir, pstep_px, moving, pspeed;
 uint16_t steps;
 uint8_t actors_on = 1;
-uint8_t given_item, given_count, spin_left, npc;
+uint8_t given_item, given_count, spin_left, npc, tq_test;
 static void ui_init(void);
 
 const sfx_t sfx_table[1] = { { 0, 0, 0, { 0, 0, 0, 0, 0 } } };                 // tests may clear it before the first frame
@@ -167,11 +167,14 @@ void main(void) {
         vsync();
         world_draw_vram();
         vq_draw_vram();
+        tiles_draw_vram();
         WY_REG = tbox_visible ? 96 : 144;
         frame_vram_check();
         frame_begin();
         if (gbe_eq_request) { gbe_eq_request = 0; gbe_selftest(); skip_measure = 1; }
         update();
+        if (tq_test) { tq_test = 0; tiles_push((uint8_t *)0x8000 + 60 * 16, 0, spr_tiles, 6); }
+        tiles_prepare();
         tbox_update();
         script_update();
         spin_update();
