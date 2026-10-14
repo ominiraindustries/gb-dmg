@@ -45,9 +45,10 @@ tester can verify.
    the real routes lived 117/235 f and the wave script needed 7 of 6 enemy slots.
    Review your levels as images: `python harness/gb.py preview <game>` renders vertical levels
    (with `res/metatiles.mt`) to `build/preview/level_<name>.png` with the objects marked.
-6. Taste questions (theme, tone, difficulty target, names, which of two valid mechanics) are the
-   user's: list them under "Decisiones pendientes" with 2-3 concrete options and your
-   recommendation, instead of silently choosing.
+6. Choose theme, tone, names, story and difficulty target yourself (the user prefers a working
+   game first; these change cheaply later) and write them in the GDD. Only choices that are
+   expensive once built (core mechanic, camera/view, scope) go under "Decisiones pendientes"
+   with 2-3 concrete options and your recommendation first.
 7. Never write code in `src/`, tests, or `.tiles` art.
 
 ## Lessons from earlier games

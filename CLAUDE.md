@@ -39,8 +39,9 @@ Hacer commit automáticamente (sin preguntar) al terminar cada cosa: un juego o 
 skills/agentes/CLAUDE.md, mejoras del arnés. Mensajes en español, agrupados por tema.
 
 ## Estudio (diseño + programación)
-Para juegos nuevos o partes grandes: skill `/game-studio <idea>` (fases autónomas; solo se para en
-decisiones de gusto, con imagen si son visuales, y en la prueba del usuario al final).
+Para juegos nuevos o partes grandes: skill `/game-studio <idea>` (fases autónomas: tema, tono, nombres y
+detalles los decido yo; solo pregunto lo caro de cambiar, como la mecánica central o la vista, y paro en la prueba
+del usuario al final).
 Roles (subagentes en `.claude/agents/`, cada uno con memoria propia):
 - `game-designer` → `design/gdd.md` (mecánicas con números, controles, pantallas, presupuestos, hitos, plan de pruebas)
 - `pixel-artist` → `res/*.tiles` + maquetas; revisa sus PNG de preview

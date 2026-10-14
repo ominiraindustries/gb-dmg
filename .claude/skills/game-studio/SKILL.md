@@ -1,6 +1,6 @@
 ---
 name: game-studio
-description: Run the studio pipeline to make a Game Boy DMG game from an idea - design (game-designer), art and UI (pixel-artist, ui-designer), implementation, QA (qa-tester), bot playtest (playtester) and the user's playtest - stopping only for the user's taste decisions. Use when the user wants to start a new game or a major new part of a game, e.g. "/game-studio un plataformas de un ninja".
+description: Run the studio pipeline to make a Game Boy DMG game from an idea - design (game-designer), art and UI (pixel-artist, ui-designer), implementation, QA (qa-tester), bot playtest (playtester) and the user's playtest - deciding cheap-to-change things itself and stopping only for expensive choices and the user's playtest. Use when the user wants to start a new game or a major new part of a game, e.g. "/game-studio un plataformas de un ninja".
 ---
 
 # Studio pipeline
@@ -13,19 +13,18 @@ not see this conversation): game folder, what to deliver, decisions already take
 Talk to the user in Spanish. Commit after each phase (CLAUDE.md rule).
 
 ## Autonomy: when to stop for the user
-The pipeline runs on its own from the idea to a playable, QA'd, bot-playtested milestone. Stop and
-ask (AskUserQuestion, 2-3 options + your recommendation first) **only for taste**:
-- theme, tone, names, story; which of two valid core mechanics; the difficulty target;
-- visual style choices, always with a comparison image (see Phase 2);
-- scope cuts that change what the game is.
-Batch them: one round of questions per phase, not one question at a time. Everything technical
-(numbers inside the GDD's ranges, engine choices, budgets, art iterations against the skill
-checklists, bug fixes, tuning the playtester backs with measurements) you decide, and say what
-you decided in the phase note. Each phase ends with a short note to the user (what was done, the
-key image paths, decisions you took) and you continue without waiting. The user's playtest
-(Phase 6) is the one real stop: ask them to play and wait for their feedback.
-If the user said "aprueba tú" / "no preguntes", skip the taste questions too and take your
-recommendations, listing them in the note.
+The user prefers seeing a working game early over being asked: "las cositas se pueden cambiar
+luego". The pipeline runs on its own from the idea to a playable, QA'd, bot-playtested milestone.
+- **Decide yourself** everything that is cheap to change later: theme, tone, names, story, texts,
+  difficulty numbers, art details, UI layout, every technical choice. Take the designer's/artist's
+  recommendation and list what you chose in the phase note.
+- **Ask** (AskUserQuestion, 2-3 options + your recommendation first, all in one round) only for
+  what is expensive to change once built: the core mechanic or camera/view (e.g. turn-based vs
+  real time, first-person vs top-down), and a scope cut that changes what the game is. A visual
+  question that really decides the look goes with a comparison image (Phase 2). If unsure, decide.
+- Each phase ends with a short note to the user (what was done, key image paths, decisions you
+  took) and you continue without waiting. The user's playtest (Phase 6) is the one real stop.
+- Feedback can arrive at any time: route it (Phase 6 rules) and keep going.
 
 ## Phase 0 - Setup
 - Pick a folder name (lowercase, no spaces). New game: `python harness/gb.py new <game>`.
@@ -36,8 +35,8 @@ recommendations, listing them in the note.
 - Show the user: pitch, core loop, controls, screens, M1 scope, budget verdict.
 - Resolve "Decisiones pendientes" with the user (AskUserQuestion, 2-3 options + recommendation).
   Send answers back to the designer (SendMessage) to update the GDD, or edit it yourself if tiny.
-- Ask only the taste items of "Decisiones pendientes" (batched); decide the technical ones yourself
-  with the designer's recommendation. Mark the GDD "aprobado" with the date. Commit.
+- "Decisiones pendientes": decide them with the designer's recommendation; ask only the expensive
+  ones (core mechanic, view, scope), batched. Mark the GDD "aprobado" with the date. Commit.
 
 ## Phase 2 - Art and UI (in parallel, one message with two Agent calls)
 - **pixel-artist**: asset list from the GDD -> `res/*.tiles` (+ mockups showing art in context).
@@ -46,9 +45,10 @@ recommendations, listing them in the note.
 - Run `python harness/gb.py preview <game>` yourself and look at the PNGs against the skill
   checklists; send problems back to the right agent yourself. Give the user the paths of the key
   previews in the phase note (feedback can arrive any time later). Commit.
-- Visual taste questions ("windows on the walls or not?") go to the user WITH a comparison image:
-  ask the artist for the variants side by side in the same scenes (games/dungeon:
-  `variant_windows.png`); the user could not choose from text alone.
+- Art details ("windows on the walls or not?") you decide from the previews. A visual question that
+  really sets the game's look goes to the user WITH a comparison image: the artist renders the
+  variants side by side in the same scenes (games/dungeon: `variant_windows.png`); the user could
+  not choose from text alone.
 
 ## Phase 3 - Build (you, with the gbdk / gb-asm skills)
 - Implement milestone by milestone (M1 first). Follow CLAUDE.md: loop structure, VRAM rules,
@@ -71,7 +71,7 @@ recommendations, listing them in the note.
   `design/playtest.md`.
 - Apply the proposals that are measured and inside the GDD's intent (update the GDD numbers too);
   re-run the playtester if the changes were large. Proposals that change the game's character
-  (a new mechanic, a different difficulty target) are taste: batch them for the user. Commit.
+  (a new mechanic, a different camera) are expensive: batch them for the user. Commit.
 
 ## Phase 6 - Playtest (the user)
 - Ask the user to play: `python harness/gb.py run <game>` (controls: arrows, A = a, B = s,
