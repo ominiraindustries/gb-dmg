@@ -1,0 +1,40 @@
+; RECETAS (M1b, from COCINA with Select): known recipes. Box rows 0-12, tab 'Recetas' + known
+; count. List rows 1-11 (11 visible): cursor col 1, MARK_CAUGHT col 3 = you have the
+; ingredients now / MARK_SEEN = missing some, name cols 5-18 (<= 14). Footer rows 13-17: the 1-3
+; ingredients rows 14-16 (marker col 1 = have it, name cols 3-16, have/need right-aligned
+; cols 17-18). A: fill the slots with this recipe and go back to COCINA (= 'Repetir receta';
+; the cursor starts on the last cooked recipe). B: back to COCINA unchanged.
+tilesets: ui uimenu font font_lower font_es
+legend:
+( ui:FRAME_BL
+) ui:FRAME_BR
+* ui:CURSOR
+/ font:SLASH
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+○ uimenu:MARK_SEEN
+● uimenu:MARK_CAUGHT
+grid:
+<_.Recetas..8/32.__>
+{..●.Asado.simple..}
+{..○.Pescado.brasa.}
+{*.●.Cangrejo.y.sal}
+{..○.Tortilla......}
+{..●.Mermelada.....}
+{..○.Caldo.de.algas}
+{..................}
+{..................}
+{..................}
+{..................}
+{..................}
+(==================)
+<__________________>
+{●.Carne.cangrejo.1}
+{●.Sal............2}
+{..................}
+(==================)
+sprites:

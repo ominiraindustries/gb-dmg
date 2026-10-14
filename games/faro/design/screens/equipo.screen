@@ -1,0 +1,51 @@
+; EQUIPO page 1 'Estado' (M1b). Header row 1: page arrows cols 1/18, name cols 3-7, status
+; (3 letters, blank if none) cols 9-11, level cols 14-17. Stats rows 4-7: labels cols 1-2 /
+; 13-15, values right-aligned ending col 10 / col 18; row 6 bowl icon + band word; row 7 PX
+; bar to the next level. Gear box rows 8-13: 3 weapon slots rows 9-11 (name cols 2-15, type
+; icon col 18, '-' if empty), clothes row 12 (name, '+n' DEF right-aligned cols 16-18).
+; Footer rows 14-17: row 15 detail of the selected gear, row 16 active dish (POT icon,
+; buff name, steps left right-aligned). A on a slot: list of owned weapons/clothes to swap
+; (same box as MOCHILA's popup, wider). Left/right: page 2 (Tecnicas). B: back.
+tilesets: ui uimenu font font_lower font_es
+legend:
+( ui:FRAME_BL
+) ui:FRAME_BR
+* ui:CURSOR
++ uimenu:PLUS
+/ font:SLASH
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+[ uimenu:BAR_L
+] uimenu:BAR_R
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+Ψ uimenu:BOWL_MID
+μ uimenu:DMG_CORTE
+ν uimenu:DMG_GOLPE
+ρ uimenu:POT
+■ uimenu:BAR_8
+□ uimenu:BAR_0
+▶ uimenu:ARROW_RIGHT
+◀ uimenu:ARROW_LEFT
+grid:
+<__________________>
+{◀.Leo...VEN...Nv3▶}
+(==================)
+<__________________>
+{PV...26/30..ATQ..8}
+{EN...11/11..DEF..7}
+{Ψ.Normal....AGI..8}
+{PX[■■■■■□□□]......}
+{__________________}
+{*Cuchillo........μ}
+{.Remo.viejo......ν}
+{.Machete.........μ}
+{.Chubasquero....+3}
+(==================)
+<__________________>
+{Corte..Poder..8...}
+{ρ.Coraza.......384}
+(==================)
+sprites:

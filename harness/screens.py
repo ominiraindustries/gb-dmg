@@ -28,7 +28,7 @@ from pathlib import Path
 import preview
 
 
-TEXT_CHARS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!?:-/")
+TEXT_CHARS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!?:-/,'¡¿")
 
 
 def text_runs(path):
@@ -45,7 +45,8 @@ def text_runs(path):
             section = key[:-1]
         elif section == "legend" and line.strip():
             ref = line[2:].strip().upper().split(":")[-1]
-            if ref not in ("DASH", "EXCLAM", "DOT", "COLON", "QUESTION", "SLASH"):   # font punctuation is text
+            if ref not in ("DASH", "EXCLAM", "DOT", "COLON", "QUESTION", "SLASH",   # font punctuation is text
+                           "COMMA", "APOSTROPHE", "EXCL_OPEN", "QUEST_OPEN"):        # (font_es)
                 legend.add(line[0])
         elif section == "grid" and line.strip():
             grid.append(line.ljust(20)[:20])

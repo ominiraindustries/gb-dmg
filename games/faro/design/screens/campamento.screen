@@ -1,0 +1,41 @@
+; CAMP (M1b), full screen. Rows 0-9: the camp scene picture 20x10 (pixel-artist .pic: Leo,
+; fire animated 3 frames by tile patches, pot, night; blank here). Status box cols 0-7 rows
+; 10-17: PV row 11, EN row 12, bowl + sac number row 13, lantern + full lanterns row 15, phase
+; (M2) row 16. Menu box cols 8-19 rows 10-17: 6 entries rows 11-16 (1-row pitch), cursor
+; col 9, text cols 10-18. Cocinar -> COCINA, Descansar -> ask (dialogue box style in BG),
+; Salar -> list of perishables (MOCHILA list layout, tab 'Salar'), Capturas -> CAPTURAS,
+; Guardar -> save box, Recoger -> back to the map (fire disappears). B = Recoger.
+tilesets: ui uimenu font font_lower font_es
+legend:
+( ui:FRAME_BL
+) ui:FRAME_BR
+* ui:CURSOR
+/ font:SLASH
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+Ψ uimenu:BOWL_MID
+δ uimenu:POCKET_LANTERNS
+grid:
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+<______><__________>
+{PV..32}{*Cocinar..}
+{EN...9}{.Descansar}
+{Ψ...41}{.Salar....}
+{......}{.Capturas.}
+{δ.3/12}{.Guardar..}
+{Noche.}{.Recoger..}
+(======)(==========)
+sprites:

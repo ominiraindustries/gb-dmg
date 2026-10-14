@@ -14,7 +14,7 @@ F_LE_GUSTA, F_DADO = 0, 1
 
 
 def win_line(gb, row):
-    return GB.tile_text(gb.bg_map(window=True)[row][1:19], BASES["font"], BASES["font_lower"]).strip()
+    return GB.tile_text(gb.bg_map(window=True)[row][1:19], BASES["font"], BASES["font_lower"], BASES["font_es"]).strip()
 
 
 def start_talk(gb):
@@ -47,7 +47,7 @@ def test_conversation_no_branch_and_game_ops(gb):
     start_talk(gb)
     assert wait_state(gb, TB_PAGE)
     gb.screenshot("talk_page1")
-    assert win_line(gb, 2).endswith("Hola Leo! Esta") and win_line(gb, 4) == "es una prueba"
+    assert win_line(gb, 2) == "¡Hola Leo! Esta" and win_line(gb, 4) == "es una prueba"
     assert "Tomasa" in GB.tile_text(gb.bg_map(window=True)[0][:20], BASES["font"], BASES["font_lower"])
     gb.tap("a")
     assert wait_state(gb, TB_PAGE)

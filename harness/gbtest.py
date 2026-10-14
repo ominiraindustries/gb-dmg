@@ -157,15 +157,18 @@ class GB:
     FONT_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-!.:?/"     # harness/common/font.tiles order
 
     @staticmethod
-    def tile_text(tiles, font, lower=None):
+    def tile_text(tiles, font, lower=None, es=None):
         """Map tile numbers back to text: `font` = VRAM base of font.tiles, `lower` = base of
-        font_lower.tiles (a..z) or None; any other tile reads as a space."""
+        font_lower.tiles (a..z) or None, `es` = base of font_es.tiles (, ' ¡ ¿) or None; any other
+        tile reads as a space."""
         out = ""
         for t in tiles:
             if 0 <= t - font < len(GB.FONT_CHARS):
                 out += GB.FONT_CHARS[t - font]
             elif lower is not None and 0 <= t - lower < 26:
                 out += chr(97 + t - lower)
+            elif es is not None and 0 <= t - es < 4:
+                out += ",'¡¿"[t - es]
             else:
                 out += " "
         return out

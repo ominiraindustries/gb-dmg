@@ -1,0 +1,38 @@
+; OPCIONES (M1b; from TITLE and the panel). Box rows 2-12, tab 'Opciones'. Rows 4/6/8:
+; cursor col 2, label cols 3-9, value between ARROW_LEFT col 10 and ARROW_RIGHT col 18 (value
+; cols 11-17). Texto: Lento / Normal / Rapido (GDD 4.5). Sonido: Estereo / Mono. Left/right
+; change the value at once (the text-speed sample on rows 14-16 retypes). B / Salir: back.
+tilesets: ui uimenu font font_lower font_es
+legend:
+( ui:FRAME_BL
+) ui:FRAME_BR
+* ui:CURSOR
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+· font:DOT
+▶ uimenu:ARROW_RIGHT
+◀ uimenu:ARROW_LEFT
+grid:
+....................
+....................
+<_.Opciones._______>
+{..................}
+{.*Texto..◀Normal.▶}
+{..................}
+{..Sonido.◀Estereo▶}
+{..................}
+{..Salir...........}
+{..................}
+{..................}
+{..................}
+(==================)
+<__________________>
+{Asi.de.rapido.se..}
+{..................}
+{salen.los.textos·.}
+(==================)
+sprites:

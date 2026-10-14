@@ -1,0 +1,121 @@
+; ART MOCKUP (pixel-artist): battle with Pinzarro, on top of the ui-designer's combate.screen layout:
+; creature picture (res/battle_pinzarro.tiles, 7x7 sequential) at cols 13-19 rows 0-6, Leo's back
+; (res/battle_leo.tiles, 5x6 sequential) at cols 1-5 rows 7-12.
+tilesets: ui uimenu font font_lower battle_pinzarro battle_leo
+legend:
+─ battle_pinzarro:0
+━ battle_pinzarro:1
+│ battle_pinzarro:2
+┃ battle_pinzarro:3
+┄ battle_pinzarro:4
+┅ battle_pinzarro:5
+┆ battle_pinzarro:6
+┇ ui:4
+┈ battle_pinzarro:7
+┉ battle_pinzarro:8
+┊ battle_pinzarro:9
+┋ battle_pinzarro:10
+┌ battle_pinzarro:11
+┍ battle_pinzarro:12
+┎ battle_pinzarro:13
+┏ uimenu:16
+┐ battle_pinzarro:14
+┑ battle_pinzarro:15
+┒ battle_pinzarro:16
+┓ battle_pinzarro:17
+└ battle_pinzarro:18
+┕ battle_pinzarro:19
+┖ battle_pinzarro:20
+┗ uimenu:0
+┘ uimenu:9
+┙ uimenu:5
+┚ uimenu:1
+┛ uimenu:10
+├ battle_pinzarro:21
+┝ battle_pinzarro:22
+┞ battle_pinzarro:23
+┟ battle_pinzarro:24
+┠ battle_pinzarro:25
+┡ battle_pinzarro:26
+┢ battle_pinzarro:27
+┣ ui:6
+┤ ui:7
+┥ battle_pinzarro:28
+┦ battle_pinzarro:29
+┧ battle_pinzarro:30
+┨ battle_pinzarro:31
+┩ battle_pinzarro:32
+┪ battle_pinzarro:33
+┫ battle_pinzarro:34
+┬ battle_pinzarro:35
+┭ battle_pinzarro:36
+┮ battle_pinzarro:37
+┯ battle_pinzarro:38
+┰ battle_pinzarro:39
+┱ battle_pinzarro:40
+┲ battle_pinzarro:41
+┳ battle_pinzarro:42
+┴ battle_pinzarro:43
+┵ battle_pinzarro:44
+┶ battle_pinzarro:45
+┷ battle_pinzarro:46
+┸ battle_pinzarro:47
+┹ battle_pinzarro:48
+┺ battle_leo:0
+┻ battle_leo:1
+┼ battle_leo:2
+┽ battle_leo:3
+┾ battle_leo:4
+┿ ui:5
+╀ battle_leo:5
+╁ battle_leo:6
+╂ battle_leo:7
+╃ battle_leo:8
+╄ battle_leo:9
+╅ uimenu:7
+╆ battle_leo:10
+╇ battle_leo:11
+╈ battle_leo:12
+╉ battle_leo:13
+╊ battle_leo:14
+╋ font:41
+╌ battle_leo:15
+╍ battle_leo:16
+╎ battle_leo:17
+╏ battle_leo:18
+═ battle_leo:19
+║ uimenu:12
+╒ battle_leo:20
+╓ battle_leo:21
+╔ battle_leo:22
+╕ battle_leo:23
+╖ battle_leo:24
+╗ ui:8
+╘ battle_leo:25
+╙ battle_leo:26
+╚ battle_leo:27
+╛ battle_leo:28
+╜ battle_leo:29
+╝ ui:1
+╞ ui:2
+╟ ui:3
+╠ ui:9
+grid:
+.............─━│┃┄┅┆
+┇Pinzarro....┈┉┊┋┌┍┎
+┇Nv3..DOR.┏..┐┑┒┓└┕┖
+┇PV┗┘┙┚┚┚┚┚┚┛├┝┞┟┠┡┢
+┣┤┤┤┤┤┤┤┤┤┤┤┤┥┦┧┨┩┪┫
+.............┬┭┮┯┰┱┲
+.............┳┴┵┶┷┸┹
+.┺┻┼┽┾.Leo......Nv5┿
+.╀╁╂╃╄.PV┗┘┘┘┘┘┘╅┚┛┿
+.╆╇╈╉╊.VEN....32╋38┿
+.╌╍╎╏═.EN..9╋13...║┿
+.╒╓╔╕╖┤┤┤┤┤┤┤┤┤┤┤┤┤╗
+.╘╙╚╛╜..............
+╝╞╞╞╞╞╞╞╞╞╞╞╞╞╞╞╞╞╞╟
+┇╠Atacar..Tecnica..┿
+┇.Objeto..Artilugio┿
+┇.Huir....Capturar.┿
+┣┤┤┤┤┤┤┤┤┤┤┤┤┤┤┤┤┤┤╗

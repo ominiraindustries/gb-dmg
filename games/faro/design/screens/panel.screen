@@ -1,0 +1,47 @@
+; START PANEL (M1b): window WX = 87 (screen cols 10-19), WY = 0, slides in WX 167 -> 87 in
+; 8 f (10 px/f) and out the same way. Window map col = screen col - 10. A drawer: left
+; border only, top/bottom lines run to the screen edge. Entries rows 1-8 (1-row pitch,
+; checked: no descender touches a letter below), cursor col 11, text cols 12-19.
+; 'Mapa' is M2: in M1 the list has 7 entries and rows shift up (row = 1 + index).
+; Stats rows 10-15: HUD sprites move in as labels (heart = PV, bowl = saciedad).
+tilesets: ui font font_lower font_es
+legend:
+$ ui:COIN
+( ui:FRAME_BL
+* ui:CURSOR
+/ font:SLASH
+< ui:FRAME_TL
+= ui:FRAME_B
+_ ui:FRAME_T
+{ ui:FRAME_L
+grid:
+..........<_________
+..........{*Cuaderno
+..........{.Mochila.
+..........{.Equipo..
+..........{.Acampar.
+..........{.Mapa....
+..........{.Guardar.
+..........{.Opciones
+..........{.Salir...
+..........{.........
+..........{Leo......
+..........{Nv.....12
+..........{....32/38
+..........{EN...9/13
+..........{..Normal.
+..........{$....1250
+..........{Dia......
+..........(=========
+sprites:
+; Leo (pixel-artist leo.tiles DOWN_A), 16x16 at the camera spot (64, 64)
+leo:0 64 64
+leo:1 64 72
+leo:2 72 64
+leo:3 72 72
+; OAM 0 (HUD heart) moved to the panel PV row while it is open
+uispr:2 88 96
+uispr:3 88 104
+; OAM 1 (HUD bowl) moved to the panel saciedad row
+uispr:8 88 112
+uispr:9 88 120

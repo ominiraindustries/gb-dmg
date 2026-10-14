@@ -1,0 +1,45 @@
+; CUADERNO entry page (M1b). Picture 7x7 (code, from the .pic, tiles at $8800) inside the
+; frame cols 0-8 rows 0-8. Right: name row 1 (cols 10-19), number row 2, family icon + name
+; row 3, 'Debil' row 4 and 'Resiste' row 5 (or 'Inmune' for BRUMA) with damage-type icons
+; right-aligned ending col 19 ('?' icons until known: Ojo de farero or captured), 'Cazas' row
+; 6. Box rows 9-17: 'Zona' and 'Cebo' rows 10-11 (values cols 7-18), description rows 13-15
+; (3 lines x 18, 1-row pitch), kitchen note row 16 (POT icon col 1, text cols 3-18). Only
+; captured species show the description and note (seen: rows 13-16 '???'). Up/down: previous /
+; next seen species. B: back to the list.
+tilesets: ui uimenu font font_lower font_es
+legend:
+( ui:FRAME_BL
+) ui:FRAME_BR
+, font_es:COMMA
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+· font:DOT
+ε uimenu:FAM_BICHO
+μ uimenu:DMG_CORTE
+ν uimenu:DMG_GOLPE
+ρ uimenu:POT
+● uimenu:MARK_CAUGHT
+grid:
+<_______>...........
+{.......}.Pinzarro..
+{.......}.01.●......
+{.......}.ε.Bicho...
+{.......}.Debil....ν
+{.......}.Resiste..μ
+{.......}.Cazas...3.
+{.......}...........
+(=======)...........
+<__________________>
+{Zona..Playa.......}
+{Cebo..Pescado.....}
+{..................}
+{Anda.de.lado.y....}
+{pellizca.a.quien..}
+{pisa.su.arena·....}
+{ρ.Con.sal,.un.lujo·
+(==================)
+sprites:

@@ -21,3 +21,11 @@ name or shifted row becomes a bug.
   `font_lower` to the `tilesets:` line or lowercase renders as uppercase in the preview.
 - Descenders (g j p q y) touch whatever is in the row below: check titles sitting right on a dark
   area (dungeon "Mapa" over the automap).
+- The preview draws every sprite as ONE 8x8 tile: list an 8x16 sprite as its two halves
+  (`set:N x y` and `set:N+1 x y+8`) or only the top half shows (games/faro title beam).
+- `vram_order` slots alternate whole tilesets: UI sets that are loaded together into one slot
+  must be one .tiles file (faro: uibattle + uiscreen merged into uimenu, 42 tiles in the 44 slot).
+- Numbers right-aligned next to a label: the sample must leave 2 blanks or the label's define
+  name swallows the number (`ATQ_19`); pick short sample values (faro EQUIPO uses Nv3 stats).
+- Big mockup sets: generate them with a script (design/gen_screens.py in faro) with box/tab/bar
+  helpers; re-run it when shared glyphs arrive instead of hand-editing .screen files.

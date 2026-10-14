@@ -1,0 +1,38 @@
+; TIENDA Comprar (M1b). Header row 1: mode cols 1-7, COIN col 13, money right-aligned cols
+; 15-18. List rows 4-11, 2-row pitch (4 visible): name row (cursor col 1, cols 2-15), price row
+; (COIN + price right-aligned ending col 18). Footer rows 14-16: 2-line description rows 14-15,
+; 'Tienes' + owned count row 16. A: quantity box. B: back to the counter dialogue.
+tilesets: ui uimenu font font_lower font_es
+legend:
+$ ui:COIN
+( ui:FRAME_BL
+) ui:FRAME_BR
+* ui:CURSOR
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+· font:DOT
+▼ ui:ARROW_DOWN
+grid:
+<__________________>
+{Comprar.....$.1250}
+(==================)
+<__________________>
+{*Pocion...........}
+{.............$..20}
+{.Farolillo........}
+{.............$..15}
+{.Farolillo.fino...}
+{.............$..40}
+{.Red..............}
+{.............$..12}
+(================▼=)
+<__________________>
+{Cura.30.PV.de.una.}
+{herida·...........}
+{Tienes..3.........}
+(==================)
+sprites:

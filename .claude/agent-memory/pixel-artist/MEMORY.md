@@ -10,3 +10,4 @@
 - [GRIFO shmup lessons](shmup_lessons.md) — bullet/BG readability rules learned on games/shmup (2026-10-14)
 - [First-person view lessons](fpview_lessons.md) — view.pcs generator, tile budget tricks, layered-shape monsters (games/dungeon)
 - [Shared font lessons](font_lessons.md) — user hated thin 5x7 font; bold 7x7 rules (2 px stems, 6 px digits) used since 2026-10-14; lowercase in font_lower.tiles
+- [FARO style](faro_style.md) — user wants clean Link's Awakening look with own identity (no noise/hatching); hero is Leo (boy)

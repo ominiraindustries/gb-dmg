@@ -1,0 +1,43 @@
+; COCINA (M1b): camp, inn kitchen and Tomasa's house. Top box rows 0-5, tab 'Cocina': 3 slots
+; rows 1-3 (MARK_CAUGHT = filled / MARK_SEEN = empty col 1, ingredient name cols 3-16, '-'
+; when empty); row 4: ARROW_RIGHT + the recipe these slots make if it is KNOWN, '???' if not
+; known, blank when empty. List box rows 6-13, tab 'Ingredientes': cursor col 1, name cols 2-15,
+; count cols 17-18 (count already minus what is in the slots). A: put in the next slot. B:
+; take the last slot out (empty slots: leave). Start: cook (quantity box if > 1 possible).
+; Select: Recetas. Hints box rows 14-17 (rows 15 and 16).
+tilesets: ui uimenu font font_lower font_es
+legend:
+( ui:FRAME_BL
+) ui:FRAME_BR
+* ui:CURSOR
+- font:DASH
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+▶ uimenu:ARROW_RIGHT
+▼ ui:ARROW_DOWN
+○ uimenu:MARK_SEEN
+● uimenu:MARK_CAUGHT
+grid:
+<_.Cocina._________>
+{●.Carne.cangrejo..}
+{●.Sal.............}
+{○.-...............}
+{▶.Cangrejo.y.sal..}
+(==================)
+<_.Ingredientes.___>
+{*Carne.cangrejo..1}
+{.Bayas...........5}
+{.Sal.............2}
+{.Huevas.erizo....1}
+{.Pan.............1}
+{.Algas...........3}
+(================▼=)
+<__________________>
+{Select..Recetas...}
+{Start...Cocinar...}
+(==================)
+sprites:

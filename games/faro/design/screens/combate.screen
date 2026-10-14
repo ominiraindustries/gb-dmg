@@ -1,0 +1,46 @@
+; BATTLE, command menu (M1b). All BG, LCD-off build inside the fade (GDD 3.1), window off.
+; Creature picture 7x7 at cols 13-19 rows 0-6 and player back 5x6 at cols 1-5 rows 7-12
+; are written by the code from the .pic data (blank here). Enemy block: name row 1, level
+; + status (3 letters) + flag icons row 2, PV bar row 3, half frame. Player block: name +
+; level row 7, PV bar row 8, status + PV numbers row 9, EN + bowl row 10. Menu box rows
+; 13-17: 3 x 2 commands, cursor cols 1 / 9, text cols 2 / 10. See ui.md 6.
+tilesets: ui uimenu font font_lower font_es
+legend:
+( ui:FRAME_BL
+) ui:FRAME_BR
+* ui:CURSOR
+/ font:SLASH
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+[ uimenu:BAR_L
+] uimenu:BAR_R
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+~ uimenu:ST_CALM
+Ψ uimenu:BOWL_MID
+▊ uimenu:BAR_6
+▌ uimenu:BAR_4
+■ uimenu:BAR_8
+□ uimenu:BAR_0
+grid:
+....................
+{Pinzarro...........
+{Nv3..DOR.~.........
+{PV[■▌□□□□□□].......
+(============.......
+....................
+....................
+.......Leo......Nv5}
+.......PV[■■■■■■▊□]}
+.......VEN....32/38}
+.......EN..9/13...Ψ}
+......=============)
+....................
+<__________________>
+{*Atacar..Tecnica..}
+{.Objeto..Artilugio}
+{.Huir....Capturar.}
+(==================)
+sprites:

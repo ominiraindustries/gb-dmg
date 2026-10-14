@@ -18,3 +18,8 @@ never add a HUD separator row (use a blank row). See [[screen-gotchas]].
 in-game text is Spanish sentence case ("Nueva partida", "Pulsa Start"), lowercase from
 `harness/common/font_lower.tiles`. Capitals only at the start of labels/lines, acronyms (PV, EQ),
 button names, compass letters, and title logos. Apply to every new game's mockups and ui.md.
+
+**FARO (2026-10-14, not yet reviewed by the user):** same frame with rounded corners + light rivet;
+box titles as tabs cut into the top border (also the dialogue speaker name); Start panel as a
+right-hand drawer without right border; HUD = 2 sprite icons only. Logo with outlined letters,
+light top / dark bottom fill and a 3 px dark shadow; hero sprite on the title again.

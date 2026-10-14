@@ -1,0 +1,39 @@
+; CHOICE of 3-4 (M1b): the question was the previous page; the box shows the options in
+; 2 columns x 2 rows: cursor cols 1 / 10, text cols 2-9 / 11-18 (<= 8 chars), rows 14/16.
+; Order: left-top, right-top, left-bottom, right-bottom. B = last option (Salir).
+tilesets: ui font font_lower font_es
+legend:
+( ui:FRAME_BL
+) ui:FRAME_BR
+* ui:CURSOR
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+grid:
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+<_.Rosa.___________>
+{..................}
+{*Comprar..Vender..}
+{..................}
+{.Hablar...Salir...}
+(==================)
+sprites:
+; Leo (pixel-artist leo.tiles DOWN_A), 16x16 at the camera spot (64, 64)
+leo:0 64 64
+leo:1 64 72
+leo:2 72 64
+leo:3 72 72

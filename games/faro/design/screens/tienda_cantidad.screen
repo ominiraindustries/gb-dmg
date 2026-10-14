@@ -1,0 +1,40 @@
+; TIENDA quantity box (M1b; also MOCHILA Tirar and COCINA x N): BG box cols 8-19 rows 9-11
+; over the list. 'x' col 10, amount right-aligned cols 11-12, COIN col 14, total
+; right-aligned cols 15-18 (no coin/total for Tirar/Cocinar). ARROW_UP / ARROW_DOWN on the
+; borders above/below the amount (col 12). Up/down +-1, left/right +-10, wraps 1 <-> max
+; (max = what you can afford and carry). A: buy (SFX, 'Gracias!' in the footer). B: cancel.
+tilesets: ui uimenu font font_lower font_es
+legend:
+$ ui:COIN
+( ui:FRAME_BL
+) ui:FRAME_BR
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+· font:DOT
+» uimenu:CURSOR_IDLE
+▲ uimenu:ARROW_UP
+▼ ui:ARROW_DOWN
+grid:
+<__________________>
+{Comprar.....$.1250}
+(==================)
+<__________________>
+{»Pocion...........}
+{.............$..20}
+{.Farolillo........}
+{.............$..15}
+{.Farolillo.fino...}
+{.......<___▲______>
+{.Red...{.x.3.$..60}
+{.......(===▼======)
+(================▼=)
+<__________________>
+{Cura.30.PV.de.una.}
+{herida·...........}
+{Tienes..3.........}
+(==================)
+sprites:

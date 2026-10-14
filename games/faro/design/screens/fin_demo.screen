@@ -1,0 +1,82 @@
+; END OF DEMO (M1b): after the anillo 1 scene. LCD-off load; rows 0-5 are the title logo
+; (same title tiles), box rows 7-16 with the run summary: registered species, hunts, level,
+; play time (values right-aligned ending col 17). Row 15 'Gracias por jugar'. A: back to
+; TITLE (the game is saved first, so Continuar resumes at the lighthouse).
+tilesets: ui title font font_lower font_es
+legend:
+! font:EXCLAM
+( ui:FRAME_BL
+) ui:FRAME_BR
+/ font:SLASH
+: font:COLON
+< ui:FRAME_TL
+= ui:FRAME_B
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+丁 title:T024
+丂 title:T025
+七 title:T026
+丄 title:T027
+丅 title:T028
+丆 title:T029
+万 title:T030
+丈 title:T031
+三 title:T032
+上 title:T033
+下 title:T034
+丌 title:T035
+不 title:T036
+与 title:T037
+丏 title:T038
+丐 title:T039
+丑 title:T040
+丒 title:T041
+专 title:T042
+且 title:T043
+丕 title:T044
+世 title:T045
+丙 title:T000
+业 title:T001
+丛 title:T002
+东 title:T003
+丝 title:T004
+丞 title:T005
+丟 title:T006
+丠 title:T007
+両 title:T008
+丢 title:T009
+丣 title:T010
+两 title:T011
+严 title:T012
+並 title:T013
+丧 title:T014
+丨 title:T015
+丩 title:T016
+个 title:T017
+丫 title:T018
+丬 title:T019
+中 title:T020
+丮 title:T021
+丯 title:T022
+丰 title:T023
+grid:
+....................
+...丙业丛东丝丞丟丙业丠両丢丣两...
+...严並丧丨丩个丫严丬中丮丯丰丁...
+...丂七丄丅丆万丈丂三上下丌不与...
+...丏丐..丑.丑丏丐丒专且丕世...
+la.isla.en.la.bruma.
+....................
+.<_.Fin.de.la.demo..
+.{................}.
+.{.Luces......5/48}.
+.{.Cazas........12}.
+.{.Nivel.........8}.
+.{.Tiempo.....0:42}.
+.{................}.
+.{.Gracias.por....}.
+.{.jugar!.........}.
+.(================).
+....................
+sprites:

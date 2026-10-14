@@ -1,0 +1,95 @@
+; ART MOCKUP (pixel-artist): Sendero del Cabo - forest of 2x2 trees, 2-wide path, tall grass patch,
+; 1-high cliff with stairs, pond with shore, bramble (machete), boulder, flowers. Creatures: Dunejo in the
+; tall grass (in game PRIO hides its lower half), Sapoyo asleep (Zz), Gavirata flying, Erizal alert (!).
+tilesets: overworld leo critters fx
+legend:
+─ overworld:43
+━ overworld:44
+│ overworld:46
+┃ overworld:47
+┄ overworld:11
+┅ overworld:8
+┆ overworld:12
+┇ overworld:1
+┈ overworld:0
+┉ overworld:45
+┊ overworld:48
+┋ overworld:49
+┌ overworld:2
+┍ overworld:35
+┎ overworld:36
+┏ overworld:39
+┐ overworld:40
+┑ overworld:69
+┒ overworld:66
+┓ overworld:81
+└ overworld:82
+┕ overworld:65
+┖ overworld:37
+┗ overworld:38
+┘ overworld:41
+┙ overworld:42
+┚ overworld:70
+┛ overworld:68
+├ overworld:67
+┝ overworld:57
+┞ overworld:58
+┟ overworld:59
+┠ overworld:60
+┡ overworld:6
+┢ overworld:7
+┣ overworld:4
+┤ overworld:5
+┥ overworld:23
+┦ overworld:28
+┧ overworld:26
+┨ overworld:21
+┩ overworld:22
+┪ overworld:61
+┫ overworld:62
+┬ overworld:63
+┭ overworld:64
+grid:
+─━│┃─━│┃┄┅┅┆┇┈┇┈─━│┃
+┈┉┊┋┈┉┊┋┄┅┅┆┈┌┈┌┈┉┊┋
+┍┎┏┐┇┈┇┈┄┅┅┆┑┒┓└┕┒┕┒
+┖┗┘┙┈┌┈┌┄┅┅┆┚┛┓└├┛├┛
+─━│┃┇┈┝┞┄┅┅┆┇┈┇┈┇┈┇┈
+┈┉┊┋┈┌┟┠┄┅┅┆┈┌┈┌┈┌┈┌
+┍┎┏┐┇┈┇┈┄┅┅┆┈┈┈┈┈┈┈┈
+┖┗┘┙┈┌┈┌┄┅┅┆┡┢┡┢┡┢┡┢
+─━│┃┣┤┇┈┄┅┅┆┈┈┈┈┈┈┈┈
+┈┉┊┋┤┣┈┌┄┅┅┆┡┢┡┢┡┢┡┢
+┇┈┇┈┇┈┇┈┄┅┅┆┈┈┈┈┈┈┈┈
+┈┌┈┌┈┌┈┌┄┅┅┆┡┢┡┢┡┢┡┢
+┥┥┥┥┥┦┇┈┄┅┅┆┇┈┈┈┈┈┇┈
+┅┅┅┅┅┧┈┌┄┅┅┆┈┌┡┢┡┢┈┌
+┨┩┨┩┅┧┇┈┄┅┅┆┇┈┇┈┪┫┇┈
+┩┨┩┨┅┧┈┌┄┅┅┆┈┌┈┌┬┭┈┌
+┨┩┨┩┅┧┇┈┄┅┅┆┇┈┇┈┇┈┇┈
+┩┨┩┨┅┧┈┌┄┅┅┆┈┌┈┌┈┌┈┌
+sprites:
+leo:8 64 64
+leo:9 64 72
+leo:10 72 64
+leo:11 72 72
+critters:10 112 64 flipx
+critters:11 112 72 flipx
+critters:8 120 64 flipx
+critters:9 120 72 flipx
+critters:24 16 80
+critters:25 16 88
+critters:26 24 80
+critters:27 24 88
+fx:4 28 64
+fx:5 28 72
+critters:16 96 24
+critters:17 96 32
+critters:18 104 24
+critters:19 104 32
+critters:34 128 112 flipx
+critters:35 128 120 flipx
+critters:32 136 112 flipx
+critters:33 136 120 flipx
+fx:0 132 96
+fx:1 132 104

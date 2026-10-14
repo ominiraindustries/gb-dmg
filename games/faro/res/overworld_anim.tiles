@@ -1,0 +1,46 @@
+; FARO - second frames of the animated exterior tiles (not resident in VRAM; copied over the
+; frame-0 tile through the tile queue E6, one 4-tile group per VBlank, every 24 f).
+;   WATER_A1 -> overworld WATER_TL   WATER_B1 -> overworld WATER_TR
+;   FLOWER_A1 -> overworld FLOWERS_TL FLOWER_B1 -> overworld FLOWERS_TR
+; 4 tiles. Generated from a script, then this file is the source of truth.
+
+@ WATER_A1
+; 0
+--------
+--------
+---..---
+--.--.--
+--------
+--------
+--------
+--------
+@ WATER_B1
+; 1
+--------
+--------
+--------
+--------
+-----..-
+----.--.
+--------
+--------
+@ FLOWER_A1
+; 2
+........
+.#.#....
+#.#.#...
+.#+#....
+#.#.#...
+.#.#....
+........
+........
+@ FLOWER_B1
+; 3
+........
+........
+........
+....#.#.
+...#.#.#
+....#+#.
+...#.#.#
+....#.#.

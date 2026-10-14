@@ -1,0 +1,37 @@
+; EQUIPO page 2 'Tecnicas' (M1b). Same header. List rows 4-12 (9 visible): name cols 2-15,
+; EN cost right-aligned cols 17-18. Footer rows 14-17: 2-line description rows 15 and 16 (18
+; chars). A on a technique usable out of battle (Primeros auxilios, Concentrar): use it.
+tilesets: ui uimenu font font_lower font_es
+legend:
+( ui:FRAME_BL
+) ui:FRAME_BR
+* ui:CURSOR
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+· font:DOT
+▶ uimenu:ARROW_RIGHT
+◀ uimenu:ARROW_LEFT
+grid:
+<__________________>
+{◀.Leo...VEN...Nv3▶}
+(==================)
+<_.Tecnicas._______>
+{.Concentrar......0}
+{.Ojo.de.farero...1}
+{*Golpe.suave.....2}
+{.Aturdir.........3}
+{.Primeros.aux....5}
+{.Silbido.........3}
+{..................}
+{..................}
+{..................}
+(==================)
+<__________________>
+{Ataque.que.nunca..}
+{deja.a.0.PV·......}
+(==================)
+sprites:

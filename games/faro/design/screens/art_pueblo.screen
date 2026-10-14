@@ -1,0 +1,99 @@
+; ART MOCKUP (pixel-artist): Varadero town square - shop (sack sign) and enfermeria (heart sign) with
+; chimneys, plaza path, sign, flowers, bush, barrel, shore and jetty. Leo (up) at (64,64); Tomasa,
+; a fisherman, a neighbour; a Pinzarro on the shore; an item with its sparkle. Metatiles: res/metatiles.mt.
+tilesets: overworld leo npc critters fx
+legend:
+─ overworld:112
+━ overworld:113
+│ overworld:118
+┃ overworld:116
+┄ overworld:50
+┅ overworld:51
+┆ overworld:114
+┇ overworld:115
+┈ overworld:117
+┉ overworld:52
+┊ overworld:53
+┋ overworld:119
+┌ overworld:120
+┍ overworld:121
+┎ overworld:122
+┏ overworld:123
+┐ overworld:134
+┑ overworld:135
+┒ overworld:130
+┓ overworld:131
+└ overworld:126
+┕ overworld:1
+┖ overworld:0
+┗ overworld:128
+┘ overworld:129
+┙ overworld:136
+┚ overworld:137
+┛ overworld:124
+├ overworld:125
+┝ overworld:132
+┞ overworld:133
+┟ overworld:127
+┠ overworld:2
+┡ overworld:8
+┢ overworld:10
+┣ overworld:4
+┤ overworld:5
+┥ overworld:87
+┦ overworld:88
+┧ overworld:93
+┨ overworld:94
+┩ overworld:89
+┪ overworld:90
+┫ overworld:95
+┬ overworld:96
+┭ overworld:23
+┮ overworld:97
+┯ overworld:98
+┰ overworld:21
+┱ overworld:22
+grid:
+─━━│━━━┃┄┅─━━━━│━━━┃
+┆┇┇┇┇┇┇┈┉┊┆┇┇┇┇┇┇┇┇┈
+┆┇┇┇┇┇┇┈┄┅┆┇┇┇┇┇┇┇┇┈
+┋┌┌┌┌┌┌┍┉┊┋┌┌┌┌┌┌┌┌┍
+┎┏┐┑┒┓┏└┕┖┎┏┗┘┒┓┙┚┏└
+┛├├├┝┞├┟┖┠┛├├├┝┞├├├┟
+┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡
+┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡
+┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡
+┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡
+┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡┡
+┢┢┢┢┢┢┢┢┢┢┢┢┢┢┢┢┢┢┢┢
+┣┤┕┖┥┦┕┖┕┖┄┅┕┖┣┤┕┖┧┨
+┤┣┖┠┩┪┖┠┖┠┉┊┖┠┤┣┖┠┫┬
+┭┭┭┭┭┭┭┭┭┭┭┭┮┯┭┭┭┭┭┭
+┡┡┡┡┡┡┡┡┡┡┡┡┮┯┡┡┡┡┡┡
+┰┱┰┱┰┱┰┱┰┱┰┱┮┯┰┱┰┱┰┱
+┱┰┱┰┱┰┱┰┱┰┱┰┮┯┱┰┱┰┱┰
+sprites:
+leo:8 64 64
+leo:9 64 72
+leo:10 72 64
+leo:11 72 72
+npc:0 96 48
+npc:1 96 56
+npc:2 104 48
+npc:3 104 56
+npc:26 128 80 flipx
+npc:27 128 88 flipx
+npc:24 136 80 flipx
+npc:25 136 88 flipx
+npc:32 16 64
+npc:33 16 72
+npc:34 24 64
+npc:35 24 72
+critters:0 32 112
+critters:1 32 120
+critters:2 40 112
+critters:3 40 120
+fx:6 148 64
+fx:7 148 72
+fx:8 148 62
+fx:9 148 70

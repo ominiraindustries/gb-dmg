@@ -1,0 +1,41 @@
+; SAVE from the panel (M1b): the stats area (rows 10-16) becomes the save box. Rows 10-13:
+; name, 'Luces' (registered species), play time (h:mm, up to 99:59). Row 15 question,
+; row 16 Si/No (cursor col 12 or 16, starts on Si). After A on Si: row 15 'Guardando',
+; SFX SAVE, then 'Guardado' 60 f and back to the stats. B = No.
+tilesets: ui uimenu font font_lower font_es
+legend:
+( ui:FRAME_BL
+* ui:CURSOR
+: font:COLON
+< ui:FRAME_TL
+= ui:FRAME_B
+? font:QUESTION
+_ ui:FRAME_T
+{ ui:FRAME_L
+» uimenu:CURSOR_IDLE
+¿ font_es:QUEST_OPEN
+grid:
+..........<_________
+..........{.Cuaderno
+..........{.Mochila.
+..........{.Equipo..
+..........{.Acampar.
+..........{.Mapa....
+..........{»Guardar.
+..........{.Opciones
+..........{.Salir...
+..........{.........
+..........{Leo......
+..........{Luces...5
+..........{Tiempo...
+..........{.....1:23
+..........{.........
+..........{¿Guardar?
+..........{.*Si..No.
+..........(=========
+sprites:
+; Leo (pixel-artist leo.tiles DOWN_A), 16x16 at the camera spot (64, 64)
+leo:0 64 64
+leo:1 64 72
+leo:2 72 64
+leo:3 72 72

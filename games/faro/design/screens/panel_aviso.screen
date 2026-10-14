@@ -1,0 +1,38 @@
+; PANEL MESSAGE (M1b): refusals from the panel are written in the stats area (rows 10-16,
+; cols 11-19, 9 chars per line, 1-row pitch) for 90 f or until A/B: 'No es seguro' (creature
+; alert near), 'Aqui no' (town / no CAMP cell), 'Sin madera' (no firewood).
+tilesets: ui font font_lower font_es
+legend:
+( ui:FRAME_BL
+* ui:CURSOR
+: font:COLON
+< ui:FRAME_TL
+= ui:FRAME_B
+_ ui:FRAME_T
+{ ui:FRAME_L
+· font:DOT
+grid:
+..........<_________
+..........{.Cuaderno
+..........{.Mochila.
+..........{.Equipo..
+..........{*Acampar.
+..........{.Mapa....
+..........{.Guardar.
+..........{.Opciones
+..........{.Salir...
+..........{.........
+..........{.........
+..........{No.es....
+..........{seguro:..
+..........{hay.algo.
+..........{cerca·...
+..........{.........
+..........{.........
+..........(=========
+sprites:
+; Leo (pixel-artist leo.tiles DOWN_A), 16x16 at the camera spot (64, 64)
+leo:0 64 64
+leo:1 64 72
+leo:2 72 64
+leo:3 72 72

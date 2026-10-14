@@ -19,7 +19,7 @@ Estado: aprobado (2026-10-14)    Versión: 1.0    Autor: game-designer    Fecha:
 ## 1. Pitch
 
 - **Género:** RPG de captura y supervivencia, combate por turnos 1 contra 1, mundo continuo por casillas.
-- **Fantasía:** "eres Mar, la nieta de la farera. Hace siete años el faro de Albor se apagó, la abuela
+- **Fantasía:** "eres Leo, el nieto de la farera. Hace siete años el faro de Albor se apagó, la abuela
   desapareció y la Bruma cerró el mar: no llegan barcos y la isla vive de lo que caza y pesca. El
   faro no quemaba aceite: concentraba la luz que llevan dentro todas las criaturas de la isla. Con el
   cuaderno de tu abuela, un cuchillo de pesca y cinco farolillos sales a cazar para comer y a capturar
@@ -230,7 +230,7 @@ gasta); un plato medio (40-60) cubre 9-14 min.
 | Dónde | mapa con bandera `OUTDOOR` + casilla con `CAMP` bajo el jugador + casilla de delante libre (ahí va la hoguera) |
 | Cuándo no | ninguna criatura alerta a ≤ 5 casillas ("No es seguro"); nunca en pueblos |
 | Coste | **1 Leña** (máx. 9; 4 C en tiendas, o "Ramas secas" en arbustos FORAGE) |
-| Pantalla | escena de campamento (§4): Mar, hoguera animada, olla, mochila |
+| Pantalla | escena de campamento (§4): Leo, hoguera animada, olla, mochila |
 | Cocinar | gratis mientras dure el campamento |
 | Descansar | PV +50 % del máximo, EN al máximo, cura todos los estados; `sac −8`; pasa a la siguiente fase (día ↔ noche, M2); reinicia todos los spawns y recolecciones |
 | Salar | 1 Sal + 1 perecedero → conserva |
@@ -245,7 +245,7 @@ gasta); un plato medio (40-60) cubre 9-14 min.
 - Afecta a: entradas de spawn con horario, quién duerme (DORMILON diurno/nocturno), especies BRUMA.
 
 ### 2.9 Muerte y enfermería
-- PV 0 en combate → "Mar se desmaya..." → fundido a negro → despiertas en la **última enfermería
+- PV 0 en combate → "Leo se desmaya..." → fundido a negro → despiertas en la **última enfermería
   visitada** con PV llenos, **mitad del dinero** (redondeo abajo), sin perder objetos ni registro.
 - Enfermería: cura PV, EN y estados **gratis** (jingle de 90 f). Fija el punto de despertar.
 - Posada (cada pueblo): 15-40 C, curación completa + elegir fase + cocina de la posada.
@@ -266,7 +266,7 @@ r1:  Nv 3 [========  ]     ######   nombre (≤ 10), nivel, barra de PV (8 tiles
 r2:  DOR                   ######   estado (3 letras) / iconos ENR CAL ILU
 r3-5:                      ######
 r6:   ####                          jugador de espaldas 40x48 (5x6 tiles) cols 1-5, filas 6-11
-r7:   ####       Mar   Nv 5
+r7:   ####       Leo   Nv 5
 r8:   ####       PV  32/38
 r9:   ####       [========]          barra 8 tiles
 r10:  ####       EN   9/13  (o)      (o) = icono de saciedad
@@ -453,19 +453,19 @@ Un estado principal (`st`, `st_turns`) + banderas con su contador.
 bot de equilibrio: L33-36 al llegar al final).
 
 ### 3.10 Ejemplos resueltos (los tests los reproducen con `rng_state` fijado)
-**A. Principio: Mar L3 contra Pinzarro L3** (tiers 6/5/7/3; BICHO: débil GOLPE, resiste CORTE).
-Pinzarro: PV `10 + (54 >> 3)` = 16, ATQ `4 + (45 >> 4)` = 6, DEF `3 + (63 >> 4)` = 6, AGI 3. Mar: PV 30,
+**A. Principio: Leo L3 contra Pinzarro L3** (tiers 6/5/7/3; BICHO: débil GOLPE, resiste CORTE).
+Pinzarro: PV `10 + (54 >> 3)` = 16, ATQ `4 + (45 >> 4)` = 6, DEF `3 + (63 >> 4)` = 6, AGI 3. Leo: PV 30,
 ATQ 8, DEF 6 + 1 = 7, AGI 8.
 - Cuchillo (CORTE 8): `R16 = (8 × 170) >> 6 = 21`, `d = (8 × 21) >> 4 = 10`, resiste → **5** (4 golpes).
 - Remo (GOLPE 7): `d = (7 × 21) >> 4 = 9`, débil → **18 ≥ 16: lo mata de un golpe** (caza, no captura).
 - Golpe suave con remo: `18 − 4 = 13` → quedan **3 PV** (3 × 4 = 12 ≤ 16 → banda ≤ 25 %, `Q_hp` 6).
   Captura con Farolillo: `v = 150 × 6 >> 2 = 225` → **88 %**.
-- Pinza (CORTE 6) contra Mar: `R16 = (6 × 146) >> 6 = 13`, `d = (6 × 13) >> 4 = 4` → 3-4 por golpe.
-**B. Mitad: Mar L20 (ATQ 34, DEF 28 + 9, AGI 25) contra Musgali L20** (tiers 9/9/7/6; BESTIA, débil CORTE).
+- Pinza (CORTE 6) contra Leo: `R16 = (6 × 146) >> 6 = 13`, `d = (6 × 13) >> 4 = 4` → 3-4 por golpe.
+**B. Mitad: Leo L20 (ATQ 34, DEF 28 + 9, AGI 25) contra Musgali L20** (tiers 9/9/7/6; BESTIA, débil CORTE).
 Musgali: PV 77, ATQ 37, DEF 29, AGI 24.
 - Machete (CORTE 13): `R16 = (34 × 35) >> 6 = 18`, `d = (13 × 18) >> 4 = 14`, ×2 = **28** → 2 golpes: 21 PV
   (21 × 2 = 42 ≤ 77 → banda ≤ 50 %).
-- Embestida de Musgali (GOLPE 14): `R16 = (37 × 27) >> 6 = 15`, `d = (14 × 15) >> 4 = 13` → Mar aguanta 7-8.
+- Embestida de Musgali (GOLPE 14): `R16 = (37 × 27) >> 6 = 15`, `d = (14 × 15) >> 4 = 13` → Leo aguanta 7-8.
 - Captura `catch` 80, ≤ 50 %, DORMIDO (dardo), Farolillo fino: `80 → 80 → 160 → 240` = **94 %**; sin dardo **47 %**.
 - Huir: `128 + 8 × (25 − 24) = 136` → 53 %. Acierto del jugador: 242 (95 %).
 
@@ -502,15 +502,15 @@ FIELD.SCRIPT (anillo del faro) -> LAMP (escena) -> FIELD ... -> ENDING -> CREDIT
 | TITLE | BG, LCD apagado | logo "FARO" (imagen) con el haz girando (sprites), "Pulsa Start" 30/30 f, Continuar / Nueva partida / Opciones |
 | FIELD | BG con scroll + sprites | mapa, actores, HUD discreto (§4.4) |
 | Texto | **ventana** WY = 96 (filas 12-17), WX = 7 | marco + 2 líneas de 18 car. (filas 14 y 16), flecha ▼ parpadeando 16/16 f; Sí/No dentro del cuadro a la derecha |
-| Panel (Start) | **ventana** WX = 87 (cols 10-19), WY = 0; entra deslizando WX 167→87 en 8 f | Cuaderno, Mochila, Equipo, Acampar, Mapa (M2), Guardar, Opciones, Salir; abajo: "Mar Nv12", PV, EN, estómago, fase (sol/luna), dinero |
+| Panel (Start) | **ventana** WX = 87 (cols 10-19), WY = 0; entra deslizando WX 167→87 en 8 f | Cuaderno, Mochila, Equipo, Acampar, Mapa (M2), Guardar, Opciones, Salir; abajo: "Leo Nv12", PV, EN, estómago, fase (sol/luna), dinero |
 | CUADERNO | pantalla completa (LCD off) | lista 48 (Nº, nombre o "-----", ● capturada / ○ vista), contador "Luces 23/48"; ficha: imagen 56x56, familia, hábitat, cebo favorito, debilidades (si se usó Ojo de farero o capturada), texto (3 líneas), "Notas de cocina" |
 | MOCHILA | pantalla completa | 4 bolsillos (←/→): Objetos, Comida, Artilugios, Farolillos; lista con cuenta; icono 16x16 del seleccionado; A: Usar/Comer/Registrar/Tirar |
 | EQUIPO | pantalla completa | stats, ropa, bolsa de 3 armas, técnicas, plato activo y pasos que le quedan, estado |
-| CAMP | pantalla completa | escena (Mar, hoguera animada 3 frames, olla); menú: Cocinar, Descansar, Salar, Farolillos, Guardar, Recoger |
+| CAMP | pantalla completa | escena (Leo, hoguera animada 3 frames, olla); menú: Cocinar, Descansar, Salar, Farolillos, Guardar, Recoger |
 | COCINA | pantalla completa | 3 huecos de ingrediente + lista de Comida; "Cocinar", "Repetir receta", "Recetas" (conocidas con sus ingredientes); resultado con icono |
 | SHOP | pantalla completa | Comprar / Vender; lista con precio; cantidad con ↑↓ (×1, ←/→ ×10); dinero |
 | BATTLE | BG | §3.1 |
-| FAINT | BG negro + texto | "Mar se desmaya..." |
+| FAINT | BG negro + texto | "Leo se desmaya..." |
 | LAMP | escena en la Sala de la Lente | el anillo se enciende (parches de mapa + destellos de paleta), texto, la Bruma de la región se disuelve |
 | ENDING / CREDITS | imágenes + texto | §6.5 |
 
@@ -713,7 +713,7 @@ Tiers PV/AT/DF/AG (1-15). `catch` 0-255. Comportamiento → al alertarse. Hor.: 
 Especies 46-48 solo existen con `lamp_ring = 6`. Las 4 especies GUARDIAN-jefe y 45/48 se rinden (§3.6).
 
 ### 6.4 Historia (actos), personajes y lore
-**Personajes:** **Mar** (14, protagonista, nombre cambiable en M2); **Ines** (la farera desaparecida;
+**Personajes:** **Leo** (14, protagonista, nombre cambiable en M2); **Ines** (la farera desaparecida;
 se la conoce por su diario); **Tomasa** (cocinera de Varadero, mentora, enseña a cocinar y a respetar
 lo que se come); **Bruno** (cazador de Salinas, rival: no cree en el faro, vende carne y pieles; compite
 contigo en encargos y al final ayuda); **Celso** (bibliotecario de Altamar, historia de los fareros);
@@ -736,7 +736,7 @@ vaciar la isla de luces es lo que alimenta la Bruma).
 un recuerdo de Ines).
 
 ### 6.5 Final
-Escena de 6 imágenes (fundidos): el haz sobre el mar, barcos en Varadero, Ines y Mar en la cocina de
+Escena de 6 imágenes (fundidos): el haz sobre el mar, barcos en Varadero, Ines y Leo en la cocina de
 Tomasa, el Vivero, créditos con las especies capturadas desfilando (sus sprites de campo), "Fin". Tras
 los créditos, vuelta al mapa en Varadero (posjuego) con la partida marcada `game_clear`.
 

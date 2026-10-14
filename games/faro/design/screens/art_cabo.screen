@@ -1,0 +1,83 @@
+; ART MOCKUP (pixel-artist): the cape - the dark lighthouse (2x5 metatiles, door at the bottom), cliff
+; with stairs down to the sea, campsite fire ring, flowers, and the Bruma (FOG metatile) closing the sea.
+tilesets: overworld leo critters fx
+legend:
+─ overworld:108
+━ overworld:109
+│ overworld:1
+┃ overworld:0
+┄ overworld:140
+┅ overworld:142
+┆ overworld:110
+┇ overworld:111
+┈ overworld:2
+┉ overworld:141
+┊ overworld:143
+┋ overworld:144
+┌ overworld:145
+┍ overworld:148
+┎ overworld:149
+┏ overworld:146
+┐ overworld:147
+┑ overworld:150
+┒ overworld:151
+┓ overworld:4
+└ overworld:5
+┕ overworld:152
+┖ overworld:153
+┗ overworld:155
+┘ overworld:156
+┙ overworld:154
+┚ overworld:157
+┛ overworld:158
+├ overworld:83
+┝ overworld:84
+┞ overworld:11
+┟ overworld:8
+┠ overworld:12
+┡ overworld:85
+┢ overworld:86
+┣ overworld:69
+┤ overworld:66
+┥ overworld:65
+┦ overworld:81
+┧ overworld:82
+┨ overworld:71
+┩ overworld:70
+┪ overworld:68
+┫ overworld:67
+┬ overworld:72
+┭ overworld:21
+┮ overworld:22
+grid:
+─━─━─━│┃┃┄┅┃│┃│┃│┃│┃
+┆┇┆┇┆┇┃┈┃┉┊┃┃┈┃┈┃┈┃┈
+─━│┃│┃│┃┋┌┍┎│┃─━─━─━
+┆┇┃┈┃┈┃┈┏┐┑┒┃┈┆┇┆┇┆┇
+│┃│┃┓└│┃┕┖┗┘│┃┓└│┃│┃
+┃┈┃┈└┓┃┈┕┙┚┘┃┈└┓┃┈┃┈
+│┃│┃│┃│┃┕┖┗┘│┃│┃│┃│┃
+┃┈┃┈┃┈┃┈┕┃┛┘┃┈┃┈┃┈┃┈
+│┃├┝│┃│┃┞┟┟┠│┃│┃│┃│┃
+┃┈┡┢┃┈┃┈┞┟┟┠┃┈┃┈┃┈┃┈
+┣┤┥┤┥┤┥┤┦┧┦┧┥┤┥┤┥┤┥┨
+┩┪┫┪┫┪┫┪┦┧┦┧┫┪┫┪┫┪┫┬
+┭┮┭┮┭┮┭┮┭┮┭┮┭┮┭┮┭┮┭┮
+┮┭┮┭┮┭┮┭┮┭┮┭┮┭┮┭┮┭┮┭
+┭┮┭┮┭┮┭┮┭┮┭┮┭┮┭┮┭┮┭┮
+┮┭┮┭┮┭┮┭┮┭┮┭┮┭┮┭┮┭┮┭
+─━─━─━─━─━─━─━─━─━─━
+┆┇┆┇┆┇┆┇┆┇┆┇┆┇┆┇┆┇┆┇
+sprites:
+leo:18 112 48 flipx
+leo:19 112 56 flipx
+leo:16 120 48 flipx
+leo:17 120 56 flipx
+critters:40 16 40
+critters:41 16 48
+critters:42 24 40
+critters:43 24 48
+critters:20 136 88
+critters:21 136 96
+critters:22 144 88
+critters:23 144 96

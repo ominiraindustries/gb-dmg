@@ -1,0 +1,42 @@
+; MOCHILA action popup (M1b): BG box cols 8-19 rows 6-12 over the list (the code saves
+; nothing: it redraws the list rows when the popup closes). Options rows 7-11 (1-row pitch),
+; cursor col 9, text cols 10-18 (<= 9). Per pocket: Objetos 'Usar Tirar Salir', Comida
+; 'Comer Tirar Salir', Artilugios 'Usar Registrar Tirar Salir' (Tirar only for consumables),
+; Farolillos 'Tirar Salir'. B = Salir. Tirar asks the amount with the quantity box (tienda).
+; The list cursor stays as CURSOR_IDLE.
+tilesets: ui uimenu font font_lower font_es
+legend:
+( ui:FRAME_BL
+) ui:FRAME_BR
+* ui:CURSOR
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+· font:DOT
+» uimenu:CURSOR_IDLE
+γ uimenu:POCKET_GADGETS
+▶ uimenu:ARROW_RIGHT
+◀ uimenu:ARROW_LEFT
+grid:
+<__________________>
+{◀.γ.Artilugios...▶}
+(==================)
+<__________________>
+{.Honda.........Sel}
+{»Red.............4}
+{.Cebo.d<__________>
+{.Bengal{.Usar.....}
+{.......{*Registrar}
+{.......{.Tirar....}
+{.......{.Salir....}
+{.......{..........}
+(=======(==========)
+<__________________>
+{...Enreda.a.la....}
+{..................}
+{...presa.3.turnos·}
+(==================)
+sprites:

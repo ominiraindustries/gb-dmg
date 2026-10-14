@@ -10,6 +10,7 @@
 #include "ui.h"
 #include "font.h"
 #include "font_lower.h"
+#include "font_es.h"
 #include "script_test.h"
 #include "script_ids.h"
 
@@ -45,6 +46,7 @@ void init(void) {
     set_bkg_data(VRAM_UI, UI_COUNT, ui_tiles);
     set_bkg_data(VRAM_FONT, FONT_COUNT, font_tiles);
     set_bkg_data(VRAM_FONT_LOWER, FONT_LOWER_COUNT, font_lower_tiles);
+    set_bkg_data(VRAM_FONT_ES, FONT_ES_COUNT, font_es_tiles);
     ui_init();
     LCDC_REG |= LCDCF_WIN9C00;
     WX_REG = 7;
@@ -102,6 +104,7 @@ static void ui_init(void) {
     tbox_cursor = VRAM_UI + UI_CURSOR;
     txt_font = VRAM_FONT;
     txt_lower = VRAM_FONT_LOWER;
+    txt_es = VRAM_FONT_ES;
     txt_blank = VRAM_UI + UI_BLANK;
     tbox_name[0] = 'L'; tbox_name[1] = 'e'; tbox_name[2] = 'o'; tbox_name[3] = 0;
 }

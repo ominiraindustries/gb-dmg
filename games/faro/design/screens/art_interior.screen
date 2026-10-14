@@ -1,0 +1,114 @@
+; ART MOCKUP (pixel-artist): the posada / Tomasa's kitchen - back wall with windows, clock, shelf and stove
+; (2-high pieces), counter with Tomasa behind it, bed, rug, table with chair, plants, doormat exit.
+tilesets: interior leo npc
+legend:
+─ interior:0
+━ interior:10
+│ interior:11
+┃ interior:13
+┄ interior:14
+┅ interior:25
+┆ interior:26
+┇ interior:39
+┈ interior:40
+┉ interior:17
+┊ interior:18
+┋ interior:12
+┌ interior:27
+┍ interior:28
+┎ interior:41
+┏ interior:42
+┐ interior:19
+┑ interior:20
+┒ interior:1
+┓ interior:2
+└ interior:29
+┕ interior:30
+┖ interior:43
+┗ interior:44
+┘ interior:74
+┙ interior:75
+┚ interior:3
+┛ interior:4
+├ interior:31
+┝ interior:32
+┞ interior:45
+┟ interior:46
+┠ interior:76
+┡ interior:77
+┢ interior:47
+┣ interior:48
+┤ interior:51
+┥ interior:52
+┦ interior:54
+┧ interior:55
+┨ interior:49
+┩ interior:50
+┪ interior:53
+┫ interior:56
+┬ interior:57
+┭ interior:58
+┮ interior:59
+┯ interior:60
+┰ interior:61
+┱ interior:90
+┲ interior:91
+┳ interior:94
+┴ interior:92
+┵ interior:93
+┶ interior:95
+┷ interior:78
+┸ interior:79
+┹ interior:62
+┺ interior:63
+┻ interior:66
+┼ interior:67
+┽ interior:80
+┾ interior:81
+┿ interior:96
+╀ interior:97
+╁ interior:98
+╂ interior:64
+╃ interior:65
+╄ interior:68
+╅ interior:69
+╆ interior:70
+╇ interior:71
+╈ interior:72
+╉ interior:73
+╊ interior:6
+╋ interior:7
+╌ interior:8
+╍ interior:9
+grid:
+──━│┃┄━│┅┆┇┈┉┊┃┄━│──
+──┋┋┋┋┋┋┌┍┎┏┐┑┋┋┋┋──
+──┒┓┒┓┒┓└┕┖┗┘┙┒┓┒┓──
+──┚┛┚┛┚┛├┝┞┟┠┡┚┛┚┛──
+──┢┣┤┣┤┥┒┓┒┓┒┓┦┧┒┓──
+──┨┩┩┩┩┪┚┛┚┛┚┛┫┬┚┛──
+──┒┓┒┓┒┓┒┓┒┓┒┓┭┮┒┓──
+──┚┛┚┛┚┛┚┛┚┛┚┛┯┰┚┛──
+──┒┓┱┲┲┲┲┳┒┓┒┓┒┓┒┓──
+──┚┛┴┵┵┵┵┶┚┛┚┛┚┛┚┛──
+──┷┸┴┵┵┵┵┶┹┺┻┼┒┓┒┓──
+──┽┾┿╀╀╀╀╁╂╃╄╅┚┛┚┛──
+──┒┓┒┓┒┓┒┓┒┓┒┓╆╇┒┓──
+──┚┛┚┛┚┛┚┛┚┛┚┛╈╉┚┛──
+──┒┓┒┓┒┓╊╋┒┓┒┓┒┓┷┸──
+──┚┛┚┛┚┛╌╍┚┛┚┛┚┛┽┾──
+────────────────────
+────────────────────
+sprites:
+leo:8 64 64
+leo:9 64 72
+leo:10 72 64
+leo:11 72 72
+npc:0 32 16
+npc:1 32 24
+npc:2 40 16
+npc:3 40 24
+npc:26 112 80 flipx
+npc:27 112 88 flipx
+npc:24 120 80 flipx
+npc:25 120 88 flipx

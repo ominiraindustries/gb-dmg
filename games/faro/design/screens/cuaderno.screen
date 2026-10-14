@@ -1,0 +1,44 @@
+; CUADERNO list (M1b: 6 species, full game 48). Header row 1: title cols 1-8, lantern icon
+; col 13, caught count right-aligned cols 15-18 ('5/48'). List rows 4-13 (10 visible, 1-row
+; pitch): cursor col 1, number cols 2-3, marker col 5 (MARK_CAUGHT capturada / MARK_SEEN
+; vista / blank unknown), name cols 7-16 or '-----' if unknown. Scroll arrows row 3 / row 14
+; col 17. Footer row 16: family icon col 1 + family name cols 3-8, 'Cazas' + kills
+; right-aligned cols 17-18 (blank for unknown species). A: ficha (seen species only). B: panel.
+tilesets: ui uimenu font font_lower font_es
+legend:
+( ui:FRAME_BL
+) ui:FRAME_BR
+* ui:CURSOR
+- font:DASH
+/ font:SLASH
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+δ uimenu:POCKET_LANTERNS
+ε uimenu:FAM_BICHO
+▼ ui:ARROW_DOWN
+○ uimenu:MARK_SEEN
+● uimenu:MARK_CAUGHT
+grid:
+<__________________>
+{Cuaderno....δ.5/48}
+(==================)
+<__________________>
+{*01.●.Pinzarro....}
+{.02.●.Dunejo......}
+{.03.○.Gavirata....}
+{.04.●.Sapoyo......}
+{.05.●.Erizal......}
+{.06.●.Polifaro....}
+{.07.○.Zancuda.....}
+{.08...-----.......}
+{.09...-----.......}
+{.10...-----.......}
+(================▼=)
+<__________________>
+{ε.Bicho...Cazas..3}
+(==================)
+sprites:

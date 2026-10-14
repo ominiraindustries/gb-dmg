@@ -1,0 +1,42 @@
+; ASK (M1b): yes/no inside the dialogue box. The question is ONE line (row 14, <= 18
+; chars; longer context goes in a SAY page before). Row 16: 'Si' and 'No' on the right,
+; cursor at col 12 (Si) or col 16 (No); starts on Si (No for dangerous questions: the
+; script says which). Up/down/left/right toggle, A confirms, B = No.
+tilesets: ui font font_lower font_es
+legend:
+( ui:FRAME_BL
+) ui:FRAME_BR
+* ui:CURSOR
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+? font:QUESTION
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+¿ font_es:QUEST_OPEN
+grid:
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+<_.Tomasa._________>
+{..................}
+{¿Cocinamos.algo?..}
+{..................}
+{...........*Si..No}
+(==================)
+sprites:
+; Leo (pixel-artist leo.tiles DOWN_A), 16x16 at the camera spot (64, 64)
+leo:0 64 64
+leo:1 64 72
+leo:2 72 64
+leo:3 72 72

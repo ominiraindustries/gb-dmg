@@ -1,0 +1,39 @@
+; COCINA result (M1b): BG popup cols 2-17 rows 3-12 over the kitchen. Row 4 '¡Nueva receta!'
+; only for a new recipe (jingle; blank otherwise), dish icon 16x16 at cols 9-10 rows 6-7
+; (item icon, $8800), dish name centred row 9 (<= 14), effect row 11 (<= 14). Mejunje:
+; same box. A: close and redraw the kitchen.
+tilesets: ui uimenu font font_lower font_es
+legend:
+! font:EXCLAM
+( ui:FRAME_BL
+) ui:FRAME_BR
++ uimenu:PLUS
+- font:DASH
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+¡ font_es:EXCL_OPEN
+○ uimenu:MARK_SEEN
+grid:
+<_.Cocina._________>
+{○.-...............}
+{○.-...............}
+{○<______________>.}
+{.{¡Nueva.receta!}.}
+(={..............}=)
+<_{..............}_>
+{.{..............}.}
+{.{..............}.}
+{.{Cangrejo.y.sal}.}
+{.{..............}.}
+{.{+25.PV..Coraza}.}
+{.(==============).}
+(==================)
+<__________________>
+{Select..Recetas...}
+{Start...Cocinar...}
+(==================)
+sprites:

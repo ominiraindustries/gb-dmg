@@ -1,0 +1,44 @@
+; MOCHILA (M1b), full screen, LCD-off build. Header row 1: pocket arrows (cols 1 and 18),
+; pocket icon col 3, pocket name cols 5-14. Left/right change pocket (Objetos, Comida,
+; Artilugios, Farolillos) and redraw the list. List rows 4-11 (8 visible, 1-row pitch): cursor
+; col 1, name cols 2-15, count right-aligned cols 17-18 ('Sel' = gadget registered on Select).
+; ARROW_UP row 3 col 17 / ARROW_DOWN row 12 col 17 when the list scrolls. Info box rows 13-17:
+; item icon 16x16 at cols 1-2 rows 14-15 (pixel-artist icons, 4 tiles at $8800) and a 2-line
+; description cols 4-18 rows 14 and 16 (15 chars). A: action popup. B: back to the panel.
+; Start: sort the pocket (by kind, then name).
+tilesets: ui uimenu font font_lower font_es
+legend:
+( ui:FRAME_BL
+) ui:FRAME_BR
+* ui:CURSOR
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+· font:DOT
+β uimenu:POCKET_FOOD
+▶ uimenu:ARROW_RIGHT
+▼ ui:ARROW_DOWN
+◀ uimenu:ARROW_LEFT
+grid:
+<__________________>
+{◀.β.Comida.......▶}
+(==================)
+<__________________>
+{*Carne.cangrejo..2}
+{.Muslo.conejo....1}
+{.Bayas...........5}
+{.Sal.............3}
+{.Pan.............1}
+{.Asado.simple....2}
+{.Huevo.gaviota...4}
+{.Caldo.de.algas..1}
+(================▼=)
+<__________________>
+{...Carne.fresca·..}
+{..................}
+{...Se.estropea·...}
+(==================)
+sprites:

@@ -1,0 +1,43 @@
+; BATTLE > Atacar (M1b): the 3 weapons of the bag (Equipo), tab 'Atacar' on the box border.
+; Names cols 2-15 (<= 14). The detail box (cols 6-19 rows 6-12) covers the player block
+; while a list is open and shows the selected weapon: type icon + name row 7, 'Poder' row 8,
+; efficacy row 9 ('Eficaz', 'Poco eficaz', 'No le afecta', blank = unknown or normal;
+; known after Ojo de farero or once captured). B: back to the commands (cursor on Atacar).
+tilesets: ui uimenu font font_lower font_es
+legend:
+( ui:FRAME_BL
+) ui:FRAME_BR
+* ui:CURSOR
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+[ uimenu:BAR_L
+] uimenu:BAR_R
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+~ uimenu:ST_CALM
+μ uimenu:DMG_CORTE
+▌ uimenu:BAR_4
+■ uimenu:BAR_8
+□ uimenu:BAR_0
+grid:
+....................
+{Pinzarro...........
+{Nv3..DOR.~.........
+{PV[■▌□□□□□□].......
+(============.......
+....................
+......<____________>
+......{μ.Corte.....}
+......{Poder...8...}
+......{Poco.eficaz.}
+......{............}
+......{............}
+......(============)
+<_.Atacar._________>
+{*Cuchillo.........}
+{.Remo.viejo.......}
+{.Machete..........}
+(==================)
+sprites:

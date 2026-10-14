@@ -5,7 +5,7 @@
 #include "gbe.h"
 #include "font.h"
 
-uint8_t txt_font, txt_blank, txt_lower;   // txt_lower: VRAM base of font_lower (0 = none)
+uint8_t txt_font, txt_blank, txt_lower, txt_es;   // VRAM bases of font_lower / font_es (0 = none)
 
 uint8_t txt_char(char c) {
     if (c >= 'A' && c <= 'Z') return txt_font + FONT_LETTER_A + (c - 'A');
@@ -19,6 +19,12 @@ uint8_t txt_char(char c) {
     case ':': return txt_font + FONT_COLON;
     case '?': return txt_font + FONT_QUESTION;
     case '/': return txt_font + FONT_SLASH;
+    }
+    if (txt_es) {                                // font_es.tiles: COMMA APOSTROPHE EXCL_OPEN QUEST_OPEN
+        if (c == ',') return txt_es;
+        if (c == 0x27) return txt_es + 1;        // apostrophe
+        if ((uint8_t)c == 0xA1) return txt_es + 2;   // '¡' (script.py / tables.py encode Latin-1)
+        if ((uint8_t)c == 0xBF) return txt_es + 3;   // '¿'
     }
     return txt_blank;
 }

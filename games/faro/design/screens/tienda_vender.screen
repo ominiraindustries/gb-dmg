@@ -1,0 +1,37 @@
+; TIENDA Vender (M1b). Same layout: owned items of all pockets except key items, count
+; 'x' + count right-aligned ending col 18 on the name row (the x tells counts from prices), sell
+; price (half, materials full) on the price row.
+tilesets: ui uimenu font font_lower font_es
+legend:
+$ ui:COIN
+( ui:FRAME_BL
+) ui:FRAME_BR
+* ui:CURSOR
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+· font:DOT
+▼ ui:ARROW_DOWN
+grid:
+<__________________>
+{Vender......$.1250}
+(==================)
+<__________________>
+{*Concha.........x4}
+{.............$..12}
+{.Bayas..........x5}
+{.............$...2}
+{.Carne.cangrejo.x1}
+{.............$...5}
+{.Pocion.........x3}
+{.............$..10}
+(================▼=)
+<__________________>
+{Concha.de.playa·..}
+{Solo.vale.dinero·.}
+{..................}
+(==================)
+sprites:

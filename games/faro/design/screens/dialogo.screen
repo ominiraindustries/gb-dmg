@@ -1,0 +1,44 @@
+; DIALOGUE (M1b): window, WY = 96 (screen rows 12-17), WX = 7. Window map row = screen
+; row - 12. Speaker name in a tab on the top border (cols 3.., blank before/after; no
+; speaker = plain border). 2 lines of 18 chars: rows 14 and 16, cols 1-18. 'More' arrow:
+; ARROW_DOWN replaces the FRAME_B at row 17 col 17, blinking 16/16 f with FRAME_B while the
+; box waits for A/B. Typewriter 1 char/f (Opciones), 4 tiles/f max. See ui.md 4.
+tilesets: ui font font_lower font_es
+legend:
+! font:EXCLAM
+( ui:FRAME_BL
+) ui:FRAME_BR
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+¡ font_es:EXCL_OPEN
+· font:DOT
+▼ ui:ARROW_DOWN
+grid:
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+....................
+<_.Tomasa._________>
+{..................}
+{¡Leo!.Tu.abuela.me}
+{..................}
+{dejo.esto.para.ti·}
+(================▼=)
+sprites:
+; Leo (pixel-artist leo.tiles DOWN_A), 16x16 at the camera spot (64, 64)
+leo:0 64 64
+leo:1 64 72
+leo:2 72 64
+leo:3 72 72

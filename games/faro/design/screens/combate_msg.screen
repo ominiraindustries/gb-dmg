@@ -1,0 +1,46 @@
+; BATTLE message (M1b): the menu box shows 2 lines (rows 14 and 16, 18 chars), typed at
+; 2 chars/f. ARROW_DOWN at row 17 col 17 blinks when the line waits for A (only on
+; messages that need reading; the turn sequence auto-advances after 40 f otherwise).
+tilesets: ui uimenu font font_lower font_es
+legend:
+! font:EXCLAM
+( ui:FRAME_BL
+) ui:FRAME_BR
+/ font:SLASH
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+[ uimenu:BAR_L
+] uimenu:BAR_R
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+~ uimenu:ST_CALM
+¡ font_es:EXCL_OPEN
+· font:DOT
+Ψ uimenu:BOWL_MID
+▊ uimenu:BAR_6
+▌ uimenu:BAR_4
+■ uimenu:BAR_8
+□ uimenu:BAR_0
+▼ ui:ARROW_DOWN
+grid:
+....................
+{Pinzarro...........
+{Nv3..DOR.~.........
+{PV[■▌□□□□□□].......
+(============.......
+....................
+....................
+.......Leo......Nv5}
+.......PV[■■■■■■▊□]}
+.......VEN....32/38}
+.......EN..9/13...Ψ}
+......=============)
+....................
+<__________________>
+{¡Golpe.suave!.Le..}
+{..................}
+{quedan.3.PV·......}
+(================▼=)
+sprites:

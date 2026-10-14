@@ -8,6 +8,7 @@ from its `game.json`; nothing is linked unless listed.
 |---|---|---|
 | `font.tiles` | bold 7x7 font: DIGIT0..9, LETTER_A..Z, DASH EXCLAM DOT COLON QUESTION SLASH (42 tiles) | `"common_res": ["font"]` |
 | `font_lower.tiles` | lowercase a..z (`LOWER_A`, 26 tiles), same baseline; g j p q y drop 1 px into row 7 | `"common_res": ["font", "font_lower"]` + a `vram_order` slot + `txt_lower = VRAM_FONT_LOWER` |
+| `font_es.tiles` | Spanish punctuation: COMMA APOSTROPHE EXCL_OPEN (¡) QUEST_OPEN (¿), 4 tiles (separate so games/dungeon keeps its 256 BG tiles) | `"font_es"` in common_res + vram_order, `txt_es = VRAM_FONT_ES`; script.py/tables.py encode ¡ ¿ as 0xA1/0xBF |
 
 ## Code (`src/`)
 List the files in `"common_src"`; their headers are on the include path.

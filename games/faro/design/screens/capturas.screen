@@ -1,0 +1,38 @@
+; CAPTURAS (M1b, camp): full lanterns (repeated captures). Box rows 0-13, tab 'Capturas' +
+; count/cap. List rows 1-12: cursor col 1, lantern icon col 2, species name cols 4-13, level
+; right-aligned cols 16-18 ('Nv' + 1-2 digits). Footer rows 14-17: what 'Cocinar' gives
+; (rows 15-16). A: popup 'Cocinar / Soltar / Salir' (MOCHILA popup style). B: camp menu.
+tilesets: ui uimenu font font_lower font_es
+legend:
+( ui:FRAME_BL
+) ui:FRAME_BR
+* ui:CURSOR
+/ font:SLASH
+: font:COLON
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+δ uimenu:POCKET_LANTERNS
+grid:
+<_.Capturas..3/12._>
+{*δ.Pinzarro....Nv3}
+{.δ.Dunejo......Nv4}
+{.δ.Pinzarro....Nv5}
+{..................}
+{..................}
+{..................}
+{..................}
+{..................}
+{..................}
+{..................}
+{..................}
+{..................}
+(==================)
+<__________________>
+{Cocinar.da:.......}
+{Carne.cangrejo.x2.}
+(==================)
+sprites:

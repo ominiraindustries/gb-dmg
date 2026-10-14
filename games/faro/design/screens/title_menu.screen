@@ -1,0 +1,119 @@
+; TITLE, menu state (after Start). Same art; rows 8-13 cols 2-13 come from this map (code copies
+; the 6x12 block from screen_title_menu_map). 'Continuar' only with a valid save: without one the
+; code blanks SCREEN_TITLE_MENU_LEN_CONTINUAR tiles and the cursor starts on 'Nueva partida'.
+; BG cursor at col 3, 2-row pitch. Opciones opens OPCIONES (opciones.screen).
+tilesets: ui title font font_lower font_es
+legend:
+α title:T000
+β title:T001
+γ title:T002
+δ title:T003
+ε title:T004
+ζ title:T005
+η title:T006
+θ title:T007
+ι title:T008
+κ title:T009
+λ title:T010
+μ title:T011
+ν title:T012
+ξ title:T013
+ο title:T014
+π title:T015
+ρ title:T016
+σ title:T017
+τ title:T018
+υ title:T019
+φ title:T020
+χ title:T021
+ψ title:T022
+ω title:T023
+Α title:T024
+Β title:T025
+Γ title:T026
+Δ title:T027
+Ε title:T028
+Ζ title:T029
+Η title:T030
+Θ title:T031
+Ι title:T032
+Κ title:T033
+Λ title:T034
+Μ title:T035
+Ν title:T036
+Ξ title:T037
+Ο title:T038
+Π title:T039
+Ρ title:T040
+Σ title:T041
+Τ title:T042
+Υ title:T043
+Φ title:T044
+Χ title:T045
+Ψ title:T046
+Ω title:T047
+а title:T048
+б title:T049
+в title:T050
+г title:T051
+д title:T052
+е title:T053
+ж title:T054
+з title:T055
+и title:T056
+й title:T057
+к title:T058
+л title:T059
+м title:T060
+н title:T061
+о title:T062
+п title:T063
+р title:T064
+с title:T065
+т title:T066
+у title:T067
+ф title:T068
+х title:T069
+ц title:T070
+ч title:T071
+ш title:T072
+щ title:T073
+ъ title:T074
+ы title:T075
+ь title:T076
+э title:T077
+ю title:T078
+я title:T079
+А title:T080
+Б title:T081
+В title:T082
+Г title:T083
+Д title:T084
+Е title:T085
+Ж title:T086
+З title:T087
+И title:T088
+Й title:T089
+К title:T090
+Л title:T091
+* CURSOR
+grid:
+....................
+...αβγδεζηαβθικλμ...
+...νξοπρστνυφχψωΑ...
+...ΒΓΔΕΖΗΘΒΙΚΛΜΝΞ...
+...ΟΠ..Ρ.ΡΟΠΣΤΥΦΧ...
+la.isla.en.la.bruma.
+................ΨΩа.
+................бвг.
+...*Continuar...деж.
+................зий.
+....Nueva.partidaлм.
+................н.о.
+....Opciones....прст
+ууууууууууууууфхцчшщ
+ъыъыъыъыъыъыъыьэюэээ
+яАяАяАяАяАяАяБВГДЕЖЗ
+ИЙИЙИЙИЙИЙИЙИЙИЙИЙИЙ
+КЛКЛКЛКЛКЛКЛКЛКЛКЛКЛ
+sprites:

@@ -1,0 +1,143 @@
+; TITLE, first state (M1b). LCD-off load (gbe_screen) of screen_title_map, SCX = SCY = 0, window off.
+; Logo rows 1-4 (the O is the lighthouse lens), subtitle row 5, lighthouse cols 15-18 rows 5-13,
+; sea rows 14-17. 'Pulsa Start' blinks 30/30 f (code blanks SCREEN_TITLE_LEN_PULSA_START tiles).
+; Beam sprites from the lantern (x 136, y 54) with OAM priority bit set: the beam passes BEHIND
+; the logo, the text and the tower (only shows on white). See ui.md 2.
+tilesets: ui title font font_lower font_es
+legend:
+α title:T000
+β title:T001
+γ title:T002
+δ title:T003
+ε title:T004
+ζ title:T005
+η title:T006
+θ title:T007
+ι title:T008
+κ title:T009
+λ title:T010
+μ title:T011
+ν title:T012
+ξ title:T013
+ο title:T014
+π title:T015
+ρ title:T016
+σ title:T017
+τ title:T018
+υ title:T019
+φ title:T020
+χ title:T021
+ψ title:T022
+ω title:T023
+Α title:T024
+Β title:T025
+Γ title:T026
+Δ title:T027
+Ε title:T028
+Ζ title:T029
+Η title:T030
+Θ title:T031
+Ι title:T032
+Κ title:T033
+Λ title:T034
+Μ title:T035
+Ν title:T036
+Ξ title:T037
+Ο title:T038
+Π title:T039
+Ρ title:T040
+Σ title:T041
+Τ title:T042
+Υ title:T043
+Φ title:T044
+Χ title:T045
+Ψ title:T046
+Ω title:T047
+а title:T048
+б title:T049
+в title:T050
+г title:T051
+д title:T052
+е title:T053
+ж title:T054
+з title:T055
+и title:T056
+й title:T057
+к title:T058
+л title:T059
+м title:T060
+н title:T061
+о title:T062
+п title:T063
+р title:T064
+с title:T065
+т title:T066
+у title:T067
+ф title:T068
+х title:T069
+ц title:T070
+ч title:T071
+ш title:T072
+щ title:T073
+ъ title:T074
+ы title:T075
+ь title:T076
+э title:T077
+ю title:T078
+я title:T079
+А title:T080
+Б title:T081
+В title:T082
+Г title:T083
+Д title:T084
+Е title:T085
+Ж title:T086
+З title:T087
+И title:T088
+Й title:T089
+К title:T090
+Л title:T091
+* CURSOR
+grid:
+....................
+...αβγδεζηαβθικλμ...
+...νξοπρστνυφχψωΑ...
+...ΒΓΔΕΖΗΘΒΙΚΛΜΝΞ...
+...ΟΠ..Ρ.ΡΟΠΣΤΥΦΧ...
+la.isla.en.la.bruma.
+................ΨΩа.
+................бвг.
+................деж.
+................зий.
+....Pulsa.Start.клм.
+................н.о.
+................прст
+ууууууууууууууфхцчшщ
+ъыъыъыъыъыъыъыьэюэээ
+яАяАяАяАяАяАяБВГДЕЖЗ
+ИЙИЙИЙИЙИЙИЙИЙИЙИЙИЙ
+КЛКЛКЛКЛКЛКЛКЛКЛКЛКЛ
+sprites:
+; 8x16 sprites are listed as their two 8x8 halves because the preview draws 8x8 sprites.
+; Leo (leo.tiles SIDE_A) on the rocks looking at the lighthouse: OAM 0-1 at (112, 95).
+leo:16 112 95
+leo:17 112 103
+leo:18 120 95
+leo:19 120 103
+; one beam frame (long, pointing left), OAM 2-9; the code animates it, see ui.md 2.
+uispr:14 128 52
+uispr:15 128 60
+uispr:16 120 52
+uispr:17 120 60
+uispr:18 112 52
+uispr:19 112 60
+uispr:20 104 52
+uispr:21 104 60
+uispr:22 96 52
+uispr:23 96 60
+uispr:24 88 52
+uispr:25 88 60
+uispr:26 80 52
+uispr:27 80 60
+uispr:28 72 52
+uispr:29 72 60

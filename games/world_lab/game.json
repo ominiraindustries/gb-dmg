@@ -2,7 +2,8 @@
   "title": "WORLD LAB",
   "common_res": [
     "font",
-    "font_lower"
+    "font_lower",
+    "font_es"
   ],
   "common_src": [
     "gbe_frame.c",
@@ -35,6 +36,7 @@
     "bg",
     "ui",
     "font",
-    "font_lower"
+    "font_lower",
+    "font_es"
   ]
 }

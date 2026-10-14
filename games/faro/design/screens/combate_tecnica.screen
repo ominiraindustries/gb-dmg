@@ -1,0 +1,43 @@
+; BATTLE > Tecnica (M1b): learned techniques, cost in EN right-aligned cols 17-18; 3
+; visible, scrolls one at a time; ARROW_UP (row 13 col 17) / ARROW_DOWN (row 17 col 17)
+; while there is more above / below. Not enough EN: the cost blinks 8/8 f and A gives
+; SFX BACK. Detail box: 'Coste' + 'EN' now/max, then a 2-line blurb (12 chars).
+tilesets: ui uimenu font font_lower font_es
+legend:
+( ui:FRAME_BL
+) ui:FRAME_BR
+* ui:CURSOR
+/ font:SLASH
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+[ uimenu:BAR_L
+] uimenu:BAR_R
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+~ uimenu:ST_CALM
+▌ uimenu:BAR_4
+■ uimenu:BAR_8
+□ uimenu:BAR_0
+▼ ui:ARROW_DOWN
+grid:
+....................
+{Pinzarro...........
+{Nv3..DOR.~.........
+{PV[■▌□□□□□□].......
+(============.......
+....................
+......<____________>
+......{Coste..2.EN.}
+......{Tienes..9/13}
+......{Nunca.deja.a}
+......{0.PV........}
+......{............}
+......(============)
+<_.Tecnica.________>
+{*Golpe.suave.....2}
+{.Concentrar......0}
+{.Ojo.de.farero...1}
+(================▼=)
+sprites:

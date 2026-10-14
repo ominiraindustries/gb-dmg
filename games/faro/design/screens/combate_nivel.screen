@@ -1,0 +1,44 @@
+; BATTLE level up (M1b): after the victory messages, a box over the (gone) creature area,
+; cols 8-19 rows 0-6, tab with the new level; gains with PLUS, right-aligned cols 17-18.
+; The message box says 'Leo sube al Nv6!'. A closes; then 'Aprende ...' messages.
+tilesets: ui uimenu font font_lower font_es
+legend:
+! font:EXCLAM
+( ui:FRAME_BL
+) ui:FRAME_BR
++ uimenu:PLUS
+/ font:SLASH
+< ui:FRAME_TL
+= ui:FRAME_B
+> ui:FRAME_TR
+[ uimenu:BAR_L
+] uimenu:BAR_R
+_ ui:FRAME_T
+{ ui:FRAME_L
+} ui:FRAME_R
+¡ font_es:EXCL_OPEN
+Ψ uimenu:BOWL_MID
+▊ uimenu:BAR_6
+■ uimenu:BAR_8
+□ uimenu:BAR_0
+▼ ui:ARROW_DOWN
+grid:
+........<_.Nv6.____>
+........{PV......+4}
+........{EN......+1}
+........{ATQ.....+2}
+........{DEF.....+1}
+........{AGI.....+1}
+........(==========)
+.......Leo......Nv5}
+.......PV[■■■■■■▊□]}
+.......VEN....32/38}
+.......EN..9/13...Ψ}
+......=============)
+....................
+<__________________>
+{¡Leo.sube.al.Nv6!.}
+{..................}
+{..................}
+(================▼=)
+sprites:
