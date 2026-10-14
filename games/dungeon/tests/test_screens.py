@@ -4,10 +4,10 @@ from gbtest import GB
 from conftest import boot, start_play, wait_state
 from test_game import CHEAT_FROZEN, CHEAT_INVINCIBLE, CHEAT_SEEN_ALL
 from test_play import clear_monsters, place, put_monster
-from view_model import expected, shown
+from view_model import BASES, expected, shown
 
 ST_TITLE, ST_PLAY, ST_MENU, ST_MAP, ST_GAMEOVER, ST_CLEAR = range(6)
-T_A, T_0, T_UI, T_LOWER = 24 + 10, 24, 0, 66
+T_0, T_UI, T_LOWER = BASES["font"], BASES["ui"], BASES["font_lower"]
 CURSOR = 9                                                   # ui.tiles: BLANK, 8 frame pieces, CURSOR
 
 

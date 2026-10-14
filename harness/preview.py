@@ -21,7 +21,10 @@ Chars without a legend entry: letters and digits map to the font tileset (if lis
 letters to font_lower (LOWER_A..; harness/common/font_lower.tiles) if listed, else to uppercase; space
 and '.' map to the tile labelled BLANK (any listed tileset), else tile 0 of the first non-font one.
 The font's punctuation has labels: DASH EXCLAM DOT COLON QUESTION SLASH (use them in the legend).
+Legend keys should not be letters: a word that mixes legend letters with text letters is an error
+(games/dungeon: key 'u' turned the u of "puerta" into a tile). Use symbols or Greek letters.
 """
+import re
 import sys
 from pathlib import Path
 
@@ -104,6 +107,17 @@ def parse_screen(path, sets):
         raise ValueError(f"{path}: missing 'tilesets:' line")
     if len(grid) != 18:
         raise ValueError(f"{path}: grid has {len(grid)} rows, expected 18")
+
+    # A letter used as a legend key wins over text: in a word it silently becomes that tile
+    # (games/dungeon: key 'u' = arrow tile inside "puerta"). Words mixing legend letters and text
+    # letters are an error; legend keys should not be letters at all once text has lowercase.
+    keys = {c for c in legend if c.isascii() and c.isalpha()}
+    for ty, row in enumerate(grid):
+        for m in re.finditer(r"[A-Za-z]{2,}", row):
+            word = m.group()
+            if any(c in keys for c in word) and any(c not in keys for c in word):
+                raise ValueError(f"{path}: row {ty} word {word!r} mixes legend keys "
+                                 f"{sorted(set(word) & keys)} with text: use a non-letter key")
 
     def resolve(ref):
         if ":" in ref:

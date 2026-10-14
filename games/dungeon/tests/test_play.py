@@ -1,12 +1,12 @@
 """TORRE HUNDIDA M1b: items, doors, keys, combat, death, seen cells, HUD (GDD 2.4-2.11)."""
 from gbtest import GB
 from test_game import CHEAT_FROZEN, CHEAT_INVINCIBLE, CHEAT_ONE_HIT
-from view_model import expected, shown
+from view_model import BASES, expected, shown
 
 CELL_FLOOR, CELL_WALL, CELL_DOOR, CELL_LOCKED, CELL_DOOR_OPEN = 0, 1, 2, 3, 4
 IT_KEY, IT_POTION, IT_STAFF, IT_AMULET = 1, 2, 3, 4
-T_A, T_0 = 24 + 10, 24                                       # vram.h: VRAM_FONT 24
-T_LOWER = 66                                                 # VRAM_FONT_LOWER
+T_0, T_LOWER = BASES["font"], BASES["font_lower"]            # from game.json vram_order, never by hand
+T_A = T_0 + 10
 
 
 def win_text(gb, row):
