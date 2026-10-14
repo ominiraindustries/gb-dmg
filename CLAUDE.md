@@ -143,7 +143,8 @@ Detalle completo: skill `gb-hardware`. Lo imprescindible:
 - Mapa de fondo 32x32 tiles, pantalla 20x18. Una paleta de fondo, dos de sprites (color 0 transparente).
   OBP0/OBP1 no se inicializan al arrancar: fijarlas siempre. WRAM y SRAM arrancan con basura.
 - WRAM 8 KB, HRAM 127 bytes. ROM 32 KB sin MBC; más con MBC5 (preferible a MBC1).
-- Saves: habilitar SRAM solo durante el acceso y validar con firma + checksum.
+- Saves: habilitar SRAM solo durante el acceso y validar con firma + checksum: `gbe_save.c` ya lo hace;
+  los tests apagan y encienden con la SRAM (`ram = gb.power_off(); GB(rom, ram=ram)`).
 - Los tests en PyBoy no detectan bugs exclusivos del hardware real ni de timing a mitad de frame.
 
 ## Reglas de C con SDCC (para que sea rápido)

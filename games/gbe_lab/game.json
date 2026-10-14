@@ -11,7 +11,8 @@
     "gbe_pool.s",
     "gbe_spr.c",
     "gbe_selftest.c",
-    "gbe_bank.c"
+    "gbe_bank.c",
+    "gbe_save.c"
   ],
   "lcc_flags": [
     "-autobank",

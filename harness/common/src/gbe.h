@@ -185,6 +185,13 @@ void bank_set_sprite_data(uint8_t bank, uint8_t first, uint8_t n, const uint8_t 
 void bank_memcpy(uint8_t bank, void *dst, const void *src, uint16_t n) NONBANKED;
 uint8_t bank_read8(uint8_t bank, const uint8_t *p) NONBANKED;
 
+// ---------------------------------------------------------------- gbe_save.c
+// One save block in cartridge SRAM (needs an MBC with RAM + battery: -Wm-yt0x1B -Wm-ya1), with
+// signature, version, length and checksum; a torn write reads as "no save". len <= 8000.
+uint8_t save_load(void *dst, uint16_t len, uint8_t version);   // 1 = valid save copied to dst
+void save_store(const void *src, uint16_t len, uint8_t version);
+void save_erase(void);
+
 // ---------------------------------------------------------------- gbe_selftest.c
 // Equivalence of every asm routine with its C reference (gb-asm procedure). Tests call
 // gb.selftest() (sets gbe_eq_request; the game calls gbe_selftest()). Which modules are checked

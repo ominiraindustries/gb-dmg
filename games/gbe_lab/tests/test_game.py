@@ -40,3 +40,34 @@ def test_banked_assets_load_from_their_banks(gb):
         addr = 0x8800 + (first - 128) * 16                 # BG 128+ = 0x8800 in either LCDC mode
         got = [gb.pyboy.memory[addr + i] for i in range(32 * 16)]
         assert got == want, f"bank{k} (ROM bank {ids[k]}) not loaded correctly"
+
+
+def _req(g, r):
+    g.write_u8("save_req", r)
+    g.frames(3)
+
+
+def test_save_survives_power_off_and_detects_corruption(gb):
+    """gbe_save.c: a stored block reads back after a power cycle (SRAM kept by the battery);
+    a corrupted byte or a different version reads as no save; a blank cart has no save."""
+    from pathlib import Path
+    from gbtest import GB
+    _req(gb, 2)
+    assert gb.u8("save_ok") == 0                        # blank SRAM: no save
+    data = list(range(100, 116))
+    gb.write_bytes("save_buf", data)
+    _req(gb, 1)
+    ram = gb.power_off()
+    rom = Path(__file__).resolve().parents[1] / "build" / "gbe_lab.gb"
+    g2 = GB(rom, ram=ram)
+    try:
+        _req(g2, 2)
+        assert g2.u8("save_ok") == 1 and g2.bytes("load_buf", 16) == data
+        bad = bytearray(g2.power_off())
+    finally:
+        pass
+    bad[5 + 7] ^= 0x10                                   # flip one data bit
+    g3 = GB(rom, ram=bytes(bad))
+    _req(g3, 2)
+    assert g3.u8("save_ok") == 0
+    g3.close()

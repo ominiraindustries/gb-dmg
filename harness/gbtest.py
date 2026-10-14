@@ -8,6 +8,7 @@ Consistent reads: a PyBoy tick ends at LY 0, which can fall in the middle of the
 the point where a frame's logic is complete - and during the last frame of each frames() call
 snapshots WRAM there. u8/u16/bytes read WRAM from that snapshot; writes go to both.
 """
+import io
 from pathlib import Path
 
 from pyboy import PyBoy
@@ -28,9 +29,11 @@ def load_noi(path):
 
 
 class GB:
-    def __init__(self, rom, shots_dir=None):
+    def __init__(self, rom, shots_dir=None, ram=None):
+        """ram: cartridge SRAM bytes to boot with (from power_off()), for save/continue tests."""
         rom = Path(rom)
-        self.pyboy = PyBoy(str(rom), window="null", sound_emulated=False)
+        extra = {"ram_file": io.BytesIO(ram)} if ram is not None else {}
+        self.pyboy = PyBoy(str(rom), window="null", sound_emulated=False, **extra)
         self.pyboy.set_emulation_speed(0)
         self.syms = load_noi(rom.with_suffix(".noi"))
         self.shots_dir = Path(shots_dir or rom.parent / "shots")
@@ -41,6 +44,12 @@ class GB:
 
     def close(self):
         self.pyboy.stop(save=False)
+
+    def power_off(self):
+        """Stop and return the battery-backed cartridge RAM (boot again with GB(rom, ram=...))."""
+        buf = io.BytesIO()
+        self.pyboy.stop(save=True, ram_file=buf)
+        return buf.getvalue()
 
     # --- time ---
     def _on_vsync(self, _):

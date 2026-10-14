@@ -87,6 +87,15 @@ void draw_sprites(void) {
 }
 
 uint8_t bank_ids[3];
+// save test hooks (tests/test_game.py): 1 store save_buf, 2 load into load_buf, 3 erase
+uint8_t save_req, save_ok, save_buf[16], load_buf[16];
+
+static void save_hooks(void) {
+    if (save_req == 1) save_store(save_buf, 16, 1);
+    else if (save_req == 2) save_ok = save_load(load_buf, 16, 1);
+    else if (save_req == 3) save_erase();
+    save_req = 0;
+}
 
 void main(void) {
     DISPLAY_OFF;
@@ -105,6 +114,7 @@ void main(void) {
         vsync();
         frame_begin();
         frame_vram_check();
+        if (save_req) save_hooks();
         if (gbe_eq_request) { gbe_eq_request = 0; gbe_selftest(); skip_measure = 1; }
         update();
         draw_sprites();
