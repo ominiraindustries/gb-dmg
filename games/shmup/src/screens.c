@@ -12,8 +12,9 @@
 #define BG(r, c)  ((uint8_t *)0x9800 + (r) * 32 + (c))
 #define WIN(r, c) ((uint8_t *)0x9C00 + (r) * 32 + (c))
 
-uint8_t screen_timer, screen_sub, count_n, died_in_stage;
-static const uint8_t bcd_100[3] = { 0x00, 0x01, 0 };
+uint16_t screen_timer;           // 16-bit: CONTINUAR lasts 632 f (an 8-bit timer wrapped, QA bug)
+uint8_t screen_sub, count_n, died_in_stage;
+static uint8_t saved_msg, saved_msg_timer, bomb_sub, bonus_left;
 
 // ---------------------------------------------------------------- helpers
 static void load_screen(const uint8_t *map) {
@@ -34,11 +35,7 @@ static void put_bcd_now(uint8_t *dst, const uint8_t *bcd) {     // LCD off only
     bcd_tiles(dst, bcd);
 }
 
-static uint8_t blink_on(uint8_t t) {
-    return (uint8_t)(t % 60) < 30;
-}
-
-static void blink_text(uint8_t *dst, const char *s, uint8_t t) {
+static void blink_text(uint8_t *dst, const char *s, uint16_t t) {
     uint8_t m = (uint8_t)(t % 60);
     if (m == 0) text_put_str(dst, s);
     else if (m == 30) {
@@ -66,7 +63,7 @@ void title_build(void) {
 }
 
 void title_update(void) {
-    uint8_t t = ++screen_timer;
+    uint16_t t = ++screen_timer;
     oam16(0, 72 + 8, 56 + 16 + ((t >> 4) & 1), SPR_PLAYER, 0);    // bob 1 px every 16 f
     if (screen_sub == 0) {
         blink_text(BG(10, 4), "PULSA START", t);
@@ -82,12 +79,17 @@ void pause_toggle(void) {
     if (state == ST_PLAY) {
         state = ST_PAUSE;
         sfx(SFX_PAUSE);
+        saved_msg = hud_msg;                             // FASE 1 / PELIGRO come back after (ui.md 2.4)
+        saved_msg_timer = hud_msg_timer;
         hud_message(MSG_PAUSA, 0);
+        set_fade(0);                                     // normal palette even mid-bomb (ui.md 4)
+        shake_x = shake_y = 0;
         screen_timer = 0;
     } else {
         state = ST_PLAY;
         NR50_REG = 0x77;
-        hud_message_end();
+        if (saved_msg != MSG_NONE) hud_message(saved_msg, saved_msg_timer);
+        else hud_message_end();
     }
 }
 
@@ -115,7 +117,8 @@ void continue_start(void) {
 }
 
 void continue_update(void) {
-    uint8_t t = ++screen_timer, k;
+    uint16_t t = ++screen_timer;
+    uint8_t k;
     if (screen_sub == 0) {                               // fade out, then window full screen
         k = 1 + (t >> 2);
         set_fade(k > 3 ? 3 : k);
@@ -178,16 +181,15 @@ void gameover_build(void) {
 }
 
 void gameover_update(void) {
-    uint8_t t = ++screen_timer;
+    uint16_t t = ++screen_timer;
     if (new_record) blink_text(BG(11, 4), "NUEVO RECORD!", t);
     if (t == 180 || (t >= 30 && (pressed & (J_START | J_A)))) transition(ST_TITLE);
 }
 
 // ---------------------------------------------------------------- CLEAR (bonus count)
-// ui.md 7: bombs left x 2000 (+100/f, one bomb every 20 f), then the no-death bonus 10 000
-// drains 100/f into the score; Start/A finishes the count at once.
-static uint8_t bonus_left;                               // hundreds left (100 = 10 000)
-
+// ui.md 7: bombs left x 2000 (+100/f: 20 f per bomb), then the no-death bonus 10 000 drains
+// 100/f into the score. Start/A adds what is left in one BCD addition (an add per hundred
+// overpaid and cost a frame, QA bugs).
 void stage_clear(void) {
     transition(ST_CLEAR);
 }
@@ -213,6 +215,7 @@ static void clear_numbers(void) {
 void clear_build(void) {
     load_screen(screen_clear_map);
     count_n = bombs;
+    bomb_sub = 20;
     bonus_left = died_in_stage ? 0 : 100;
     *BG(4, 9) = T_DIGIT0 + count_n;
     bonus_tiles(BG(6, 12));
@@ -225,20 +228,22 @@ void clear_build(void) {
 }
 
 void clear_update(void) {
-    uint8_t t = ++screen_timer;
+    uint16_t t = ++screen_timer;
     if (screen_sub == 0) {                               // 30 f before counting
         if (t == 30) { screen_sub = 1; screen_timer = 0; }
         return;
     }
     if (screen_sub == 1) {
-        if (pressed & (J_START | J_A)) {                 // finish at once
-            while (count_n) { uint8_t k; for (k = 0; k < 20; k++) add_score(bcd_100); count_n--; }
-            while (bonus_left) { add_score(bcd_100); bonus_left--; }
+        if (pressed & (J_START | J_A)) {                 // finish at once, same total
+            uint8_t h = bonus_left;
+            if (count_n) h += bomb_sub + (uint8_t)((count_n - 1) * 20);
+            add_score_hundreds(h);
+            count_n = 0; bonus_left = 0;
         } else if (count_n) {
-            add_score(bcd_100);
-            if ((uint8_t)(t % 20) == 0) count_n--;
+            add_score_hundreds(1);
+            if (!--bomb_sub) { count_n--; bomb_sub = 20; }
         } else if (bonus_left) {
-            add_score(bcd_100);
+            add_score_hundreds(1);
             bonus_left--;
         }
         if ((t & 3) == 0) sfx(SFX_TICK);
@@ -253,5 +258,5 @@ void clear_update(void) {
         return;
     }
     if (new_record) blink_text(BG(12, 3), "NUEVO RECORD!", t);
-    if (t == 255 || (t >= 30 && (pressed & (J_START | J_A)))) transition(ST_TITLE);
+    if (t == 300 || (t >= 30 && (pressed & (J_START | J_A)))) transition(ST_TITLE);
 }

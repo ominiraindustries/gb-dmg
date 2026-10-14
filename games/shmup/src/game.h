@@ -81,11 +81,13 @@ extern uint8_t score[3], hiscore[3];
 #define HUD_BAR   0x10
 #define HUD_ROW   0x80          // whole row (after a message)
 enum { MSG_NONE, MSG_FASE, MSG_PELIGRO, MSG_PAUSA };
-extern uint8_t hud_buf[20], hud_dirty, hud_msg, hud_bar_px, boss_bar_on, new_record;
+extern uint8_t hud_buf[20], hud_dirty, hud_msg, hud_msg_timer, hud_bar_px, boss_bar_on, new_record;
 void hud_init(void);
 void hud_update(void);          // counters -> hud_buf (outside VBlank)
 void hud_draw_vram(void);       // VBlank: text queue, message or dirty counters
 void add_score(const uint8_t *bcd);
+void add_score_hundreds(uint8_t n);
+void add_score_tens(uint8_t n);
 void hiscore_update(void);
 void hud_message(uint8_t msg, uint8_t frames);
 void hud_message_end(void);
@@ -120,12 +122,13 @@ void clear_build(void);
 void clear_update(void);
 
 // enemies.c
-extern uint8_t obj_ptr, no_fire, fire_busy;
+extern uint8_t obj_ptr, no_fire, fire_busy, kill_quiet;
 extern const int8_t wave_ofs[128];
 extern const uint8_t score_1000[3];
 uint8_t aim_at(uint8_t x, uint8_t y);
 void bullets_setup(uint8_t tile);
 void enemies_reset(void);
+void formations_clear(void);
 void objects_update(void);
 void enemies_update(void);
 void turrets_update(void);

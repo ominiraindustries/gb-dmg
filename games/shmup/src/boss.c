@@ -9,7 +9,7 @@
 #define BOSS_HP    200
 #define BOSS_ROW0  (STAGE1_STOP_ROW - 2)   // bottom metatile row of the boss
 
-uint8_t boss_hp, boss_phase, boss_state, boss_t, boss_flash, boss_hit_cd, boss_spiral;
+uint8_t boss_hp, boss_phase, boss_state, boss_t, boss_flash, boss_flash_cd, boss_hit_cd, boss_spiral;
 int8_t boss_dx, boss_dy;
 static uint16_t boss_ph;
 static uint8_t scy_stop, fan_cd, claw_cd, erase_row;
@@ -49,6 +49,7 @@ void boss_update(void) {
     if (boss_state == BOSS_NONE) {
         if (scroll_y == vmap_stop) {                     // the scroll stopped with the boss at y 16
             boss_state = BOSS_INTRO;
+            formations_clear();
             boss_hp = BOSS_HP;
             boss_phase = 0;
             boss_t = 0; boss_ph = 0; fan_cd = 40; claw_cd = 76;
@@ -60,6 +61,7 @@ void boss_update(void) {
     }
     if (boss_flash) { if (!--boss_flash) bgp_below_on = 0; }
     if (boss_hit_cd) boss_hit_cd--;
+    if (boss_flash_cd) boss_flash_cd--;
     t = ++boss_t;
     switch (boss_state) {
     case BOSS_INTRO:                                     // bar fills 1 px/f (ui.md 2.3)
@@ -83,7 +85,7 @@ void boss_update(void) {
         } else {                                         // B: 240 f cycle
             boss_dx = sway(0x00CD);                      // 160 f period
             if (t < 96) {
-                if ((t & 7) == 0 && !no_fire) {
+                if ((t & 7) == 1 && !no_fire) {     // t = 1, 9 .. 89: 12 bullets
                     bullets_setup(SPR_EBULLET_BOSS);
                     fire(BOSS_X + 28, BOSS_Y + 36, boss_spiral, 0);
                     boss_spiral += 5;
@@ -113,6 +115,7 @@ void boss_update(void) {
         if (t == 150) {
             shake_x = 0;
             boss_state = BOSS_OUTRO; boss_t = 0; erase_row = 0;
+            boss_bar_on = 0;                             // cols 15-19 back to BLANK (ui.md 2.3)
         }
         break;
     case BOSS_OUTRO:                                     // boss rows -> fog, wait, fly away
@@ -140,7 +143,10 @@ void boss_update(void) {
 void boss_damage(uint8_t dmg) {
     if (boss_state != BOSS_FIGHT || boss_phase == 1) return;
     if (!boss_hit_cd) { sfx(SFX_BOSS_HIT); boss_hit_cd = 8; }
-    if (!boss_flash && !(boss_t & 7)) { bgp_below = 0x90; bgp_below_on = 1; boss_flash = 2; }
+    if (!boss_flash_cd) {                            // at most every 8 f (a boss_t & 7 test missed
+        bgp_below = 0x90; bgp_below_on = 1;          // every hit of one frame parity, QA bug)
+        boss_flash = 2; boss_flash_cd = 8;
+    }
     if (boss_hp > dmg) {
         boss_hp -= dmg;
         if (boss_phase == 0 && boss_hp < 101) {

@@ -239,9 +239,10 @@ _spr_group::
     add a, e
     ld  (sg_end), a
     ; first slot this frame: (spr_rot & 31) mod slots (0 when slots <= 1), x2 for size 2
-    ; s < 32 and slots >= 2 -> quotient < 16: subtract slots * 8, 4, 2, 1 (a loop of single
-    ; subtractions took up to 15 rounds for a 2-slot group)
+    ; s = (spr_rot >> 1) & 31 mod slots (quotient < 16: subtract slots * 8, 4, 2, 1), then
+    ; + slots / 2 on odd frames (see group_start in gbe_spr.c)
     ld  a, (_spr_rot)
+    srl a
     and a, #31
     ld  e, a
     ld  a, b
@@ -263,6 +264,17 @@ _spr_group::
     sub a, d
     srl d
     .endm
+    ld  e, a
+    ld  a, (_spr_rot)
+    rrca
+    jr  nc, 4$                  ; even frame
+    ld  a, b
+    srl a                       ; slots / 2
+    add a, e
+    cp  a, b
+    jr  c, 3$
+    sub a, b
+3$:
     ld  e, a
 4$:
     ld  a, (sg_size)

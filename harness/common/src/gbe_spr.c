@@ -9,11 +9,17 @@
 
 uint8_t spr_rot;                              // advance once per frame
 
-// First OAM slot (relative to the group) this frame: a multiple of size below oam_n, rotating
+// First OAM slot (relative to the group) this frame: ((spr_rot >> 1) mod slots), plus half the
+// group on odd frames. Consecutive frames start half a group apart, so what fell past the 10
+// sprites of a line one frame is in front the next (rotating by 1 slot per frame left an object
+// hidden 2 frames in a row when a line had 2+ extra sprites: games/shmup QA).
+// spr_rot must cycle through 2 x a common multiple of the groups' slot counts (< 64): a jump in
+// (spr_rot >> 1) mod slots breaks the half-group step (12-slot group with a 0..15 counter did).
 static uint8_t group_start(uint8_t oam_n, uint8_t size) {
-    uint8_t s = spr_rot & 31, slots = size == 2 ? oam_n >> 1 : oam_n;
+    uint8_t s = (spr_rot >> 1) & 31, slots = size == 2 ? oam_n >> 1 : oam_n;
     if (slots <= 1) return 0;
     while (s >= slots) s -= slots;
+    if (spr_rot & 1) { s += slots >> 1; if (s >= slots) s -= slots; }
     return size == 2 ? s << 1 : s;
 }
 

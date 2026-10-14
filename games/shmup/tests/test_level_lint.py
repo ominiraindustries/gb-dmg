@@ -32,13 +32,13 @@ GROUND = set(",.*b:TFnu()1234cM|%")
 
 # Flyers per object letter: (count, spawn interval f, lifetime f, vy px/f) - GDD 2.6.
 FLYERS = {
-    "d": (3, 13, 100, 1.5),     # DART column of 3
-    "w": (4, 16, 200, 0.75),    # WAVE row of 4
-    "f": (4, 16, 200, 0.75),
+    "d": (3, 13, 117, 1.5),     # DART column of 3 (ROM route: 176 px / 1.5)
+    "w": (4, 16, 235, 0.75),    # WAVE row of 4 (ROM: 176 / 0.75)
+    "f": (4, 16, 235, 0.75),
     "s": (1, 0, 130, 1.5),      # SWOOP
     "g": (1, 0, 130, 1.5),
-    "c": (1, 0, 200, 0.75),     # CARRIER
-    "e": (1, 0, 200, 0.75),
+    "c": (1, 0, 235, 0.75),     # CARRIER
+    "e": (1, 0, 235, 0.75),
 }
 TURRET_LIFE = int(9.5 * ROW_FRAMES)  # ~9.5 rows on screen (GDD 6.2)
 MAX_FLYERS, MAX_TURRETS, MAX_IN_BAND, BAND_PX = 6, 4, 3, 16

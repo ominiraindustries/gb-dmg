@@ -69,19 +69,15 @@ static void fire_burst(void) {
     sfx(SFX_SHOT);
 }
 
+// The roar: bullets erased (+10 each, one addition) on the press frame, flying enemies hit on
+// the next, turrets and the boss on the one after (all in one frame lost a frame at the peak,
+// QA bug; 3 frames read as instant). One sound for everything it kills.
 static void bomb(void) {
-    uint8_t i;
+    uint8_t i, n = 0;
     pool_obj_t *o = &pool[P_BULLET];
-    for (i = 0; i < N_BULLET; i++, o++)            // +10 for every bullet erased
-        if (o->t) { o->t = 0; add_score(score_10); }
-    for (i = 0; i < N_ENEMY; i++)
-        if (pool[P_ENEMY + i].t && pool[P_ENEMY + i].t < OBJ_EXPLO && pool[P_ENEMY + i].y >= 16)
-            enemy_damage(P_ENEMY + i, 8);
-    for (i = 0; i < N_TURRET; i++) {
-        o = &pool[P_TURRET + i];
-        if (o->t && o->y >= 16 && o->y < 160) turret_damage(P_TURRET + i, 8);
-    }
-    boss_damage(8);
+    for (i = 0; i < N_BULLET; i++, o++)
+        if (o->t) { o->t = 0; n++; }
+    if (n) add_score_tens(n);
     if (!(cheat_flags & CHEAT_BOMBS)) bombs--;
     bomb_timer = BOMB_FRAMES;
     player_inv = BOMB_FRAMES;
@@ -89,6 +85,23 @@ static void bomb(void) {
     shake_timer = 16;
     set_fade(1);
     sfx(SFX_BOMB);
+}
+
+static void bomb_damage(void) {
+    uint8_t i;
+    pool_obj_t *o;
+    kill_quiet = 1;
+    if (bomb_timer == BOMB_FRAMES - 1) {
+        o = &pool[P_ENEMY];
+        for (i = 0; i < N_ENEMY; i++, o++)
+            if (o->t && o->t < OBJ_EXPLO && o->y >= 16 && o->y < 160) enemy_damage(P_ENEMY + i, 8);
+    } else {
+        o = &pool[P_TURRET];
+        for (i = 0; i < N_TURRET; i++, o++)
+            if (o->t && o->y >= 16 && o->y < 160) turret_damage(P_TURRET + i, 8);
+        boss_damage(8);
+    }
+    kill_quiet = 0;
 }
 
 void player_update(void) {
@@ -100,6 +113,7 @@ void player_update(void) {
         shake_y = shake_timer ? ((shake_timer & 2) ? 2 : -2) : 0;
     }
     if (bomb_timer) {
+        if (bomb_timer == BOMB_FRAMES - 1 || bomb_timer == BOMB_FRAMES - 2) bomb_damage();
         if (bomb_timer == BOMB_FRAMES - 4) set_fade(0);
         bomb_timer--;
     }

@@ -150,7 +150,10 @@ uint8_t hit_first_c(uint8_t first, uint8_t n);
 
 // ---------------------------------------------------------------- gbe_spr.c
 // OAM manager: one call per priority group (lower OAM slots = higher priority on the DMG).
-extern uint8_t spr_rot;                            // increment once per frame
+// spr_rot: advance once per frame, cycling through 2 x a common multiple of the groups' slot
+// counts (< 64; e.g. 48 for groups of 12, 6, 8, 2 slots): consecutive frames start each group
+// half a group apart, so a sprite dropped on a crowded line is drawn the next frame.
+extern uint8_t spr_rot;
 // size 1: one sprite per object; size 2: 16x16 (tile, tile + 2). pool_n >= 1.
 void spr_group(uint8_t oam_first, uint8_t oam_n, uint8_t pool_first, uint8_t pool_n, uint8_t size);
 void spr_group_c(uint8_t oam_first, uint8_t oam_n, uint8_t pool_first, uint8_t pool_n, uint8_t size);

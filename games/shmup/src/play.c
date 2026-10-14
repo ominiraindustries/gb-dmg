@@ -99,7 +99,7 @@ void play_sprites(void) {
     spr_group(OAM_ITEM, 2, P_ITEM, N_ITEM, 2);
     spr_group(OAM_SHOT, 8, P_SHOT, N_SHOT, 1);
     spr_group(OAM_EXPLO, 4, P_EXPLO, N_EXPLO, 2);
-    spr_rot++;
+    if (++spr_rot == 48) spr_rot = 0;                // groups of 12, 6, 1, 8, 2 slots: 2 x 24
 }
 
 void play_draw_vram(void) {

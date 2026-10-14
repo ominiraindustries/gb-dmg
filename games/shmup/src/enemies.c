@@ -33,6 +33,7 @@ uint8_t obj_ptr, no_fire;
 // One shooter per frame (a fan of up to 7 bullets is one shot, GDD 2.5): others retry on their next
 // think frame. Two fans + a turret in one frame made the worst frames (~128 lines, towers zone).
 uint8_t fire_busy;
+uint8_t kill_quiet;                 // bomb: one sound for everything it kills
 uint8_t fm_type[FORMATIONS], fm_x[FORMATIONS], fm_left[FORMATIONS], fm_timer[FORMATIONS];
 static uint8_t swoop_row, swoop_delay;
 
@@ -53,10 +54,10 @@ void bullets_setup(uint8_t tile) {
 }
 
 // ---------------------------------------------------------------- spawning
-static void spawn_enemy(uint8_t type, uint8_t x) {
+static uint8_t spawn_enemy(uint8_t type, uint8_t x) {
     uint8_t i = pool_alloc(P_ENEMY, N_ENEMY);
     pool_obj_t *o;
-    if (i == 0xFF) return;
+    if (i == 0xFF) return 0;
     o = &pool[i];
     o->t = type; o->x = x; o->xs = 0; o->y = SPAWN_Y; o->ys = 0;
     o->vx = 0; o->vy = 0x0180;
@@ -65,7 +66,8 @@ static void spawn_enemy(uint8_t type, uint8_t x) {
     if (type == OBJ_WAVE || type == OBJ_WAVE_F || type == OBJ_CARRIER_P || type == OBJ_CARRIER_B)
         o->vy = 0x00C0;
     if ((type == OBJ_WAVE || type == OBJ_WAVE_F) && x >= 5 * 16 + 8) o->s = 1;   // mirrored sine
-    if (type == OBJ_SWOOP || type == OBJ_SWOOP_G) o->s = swoop_delay;          // fire delay (f)
+    if (type == OBJ_SWOOP || type == OBJ_SWOOP_G) o->s = swoop_delay;          // pair fire delay (f)
+    return 1;
 }
 
 static void spawn_turret(uint8_t col, uint8_t row) {
@@ -111,11 +113,17 @@ void objects_update(void) {
         if (!fm_left[f]) continue;
         if (fm_timer[f]) { fm_timer[f]--; continue; }
         if (spawned) continue;
-        spawn_enemy(fm_type[f], fm_x[f]);
         spawned = 1;
+        if (!spawn_enemy(fm_type[f], fm_x[f])) continue;   // pool full: retry next frame (QA bug)
         fm_left[f]--;
         fm_timer[f] = fm_type[f] == OBJ_DART ? 13 : 16;
     }
+}
+
+// The boss arrives: formations still waiting for a free slot are dropped
+void formations_clear(void) {
+    uint8_t f;
+    for (f = 0; f < FORMATIONS; f++) fm_left[f] = 0;
 }
 
 void enemies_reset(void) {
@@ -139,12 +147,12 @@ void enemy_damage(uint8_t i, uint8_t dmg) {
     pool_obj_t *o = &pool[i];
     if (o->t >= OBJ_EXPLO) return;
     o->pad = 1;                                     // flash with OBP1 ~2 f (GDD 2.6)
-    if (o->aux2 > dmg) { o->aux2 -= dmg; sfx(SFX_HIT); return; }
+    if (o->aux2 > dmg) { o->aux2 -= dmg; if (!kill_quiet) sfx(SFX_HIT); return; }
     add_score(en_score[o->t]);
     if (o->t == OBJ_CARRIER_P || o->t == OBJ_CARRIER_B)
         spawn_item(o->t == OBJ_CARRIER_P ? OBJ_ITEM_P : OBJ_ITEM_B, o->x, o->y);
     explode(o);
-    sfx(SFX_BOOM);
+    if (!kill_quiet) sfx(SFX_BOOM);
 }
 
 // SWOOP state in s: 0x80 stopped, 0x40 leaving, 0x20 / 0x10 fan 1 / 2 fired, low nibble = pair
@@ -166,7 +174,7 @@ static void swoop(pool_obj_t *o) {
         if (may_fire(o->y)) {
             fire_busy = 1;
             bullets_setup(SPR_EBULLET);
-            fire_fan(o->x + 4, o->y + 4, aim_at(o->x, o->y), 3, 2, 1);
+            fire_fan(o->x + 4, o->y + 4, aim_at(o->x, o->y), 3, 2, scroll_y >= 131 * 16 ? 2 : 1);   // 1.5 in the towers (GDD 6.1)
         }
     } else if (!fire_busy && o->t == OBJ_SWOOP_G && t < 0x80 && t >= 36 && !(s & 0x10)) {
         s |= 0x10;
@@ -229,7 +237,11 @@ void enemies_update(void) {
     pool_obj_t *o = &pool[P_ENEMY];
     anim = ((frame >> 3) & 1) << 2;
     for (i = 0; i < N_ENEMY; i++, o++) {
-        if (o->t && enemy_frame(o) && !((i ^ frame) & 1)) enemy_think(o);
+        uint8_t t = o->t;
+        if (!t) continue;
+        if (t == OBJ_DART || t == OBJ_SWOOP || t == OBJ_SWOOP_G) o->tm++;   // no table route
+        else if (!enemy_frame(o)) continue;
+        if (!((i ^ frame) & 1)) enemy_think(o);
     }
 }
 
@@ -262,11 +274,11 @@ void turrets_update(void) {
 void turret_damage(uint8_t i, uint8_t dmg) {
     pool_obj_t *o = &pool[i], *e;
     uint8_t k;
-    if (o->aux2 > dmg) { o->aux2 -= dmg; sfx(SFX_HIT); return; }
+    if (o->aux2 > dmg) { o->aux2 -= dmg; if (!kill_quiet) sfx(SFX_HIT); return; }
     o->t = 0;
     vmap_set(o->aux, o->pad, MT_CRATER);
     add_score(score_turret);
-    sfx(SFX_BIG_BOOM);
+    if (!kill_quiet) sfx(SFX_BIG_BOOM);
     if ((k = pool_alloc(P_EXPLO, N_EXPLO)) != 0xFF) {
         e = &pool[k];
         e->t = OBJ_EXPLO_SCROLL; e->x = o->x; e->y = o->y; e->xs = e->ys = 0; e->vx = e->vy = 0;
@@ -289,7 +301,7 @@ void effects_update(void) {
     if (o->t) {                                     // sway +-7 px, period 64 f; blink OBP0/OBP1
         int8_t w = wave_ofs[(o->tm << 1) & 127];
         o->tm++;
-        o->x = o->aux + (w >> 2) + (w >> 4);
+        o->x = o->aux + (w >> 2) + (w >> 4) + (w >> 5);       // 24 x 0.34 = +-8 (GDD 2.7)
         o->prop = (o->tm & 8) ? S_PALETTE : 0;
     }
 }

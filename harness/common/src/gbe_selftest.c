@@ -109,7 +109,7 @@ static void eq_pool(void) {
         // spr_group: same OAM bytes (last 10 OAM entries as scratch), sizes 1/2, odd/even ranges
         size = (r & 2) ? 2 : 1;
         n = 5 + (r & 5);                                       // 5..10 slots
-        spr_rot = rnd8();
+        spr_rot = rnd8() & 63;
         memcpy(oam_save, &shadow_OAM[30], 40);
         spr_group_c(30, n, EQ_P, EQ_N, size);
         memcpy(ref, &shadow_OAM[30], 40);

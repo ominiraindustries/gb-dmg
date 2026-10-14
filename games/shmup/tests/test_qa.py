@@ -109,9 +109,6 @@ def _drawn_bullets(gb, line):
     return {(oam[i][1]) for i in drawn if 2 <= i < 14}
 
 
-@pytest.mark.xfail(strict=True, reason="BUG: the bullet group rotates 1 slot per frame (spr_rot++); "
-                   "with 2 bullets dropped per frame the one in the last-but-one slot moves to the last "
-                   "slot and stays hidden 2 frames in a row")
 def test_flicker_12_bullets_one_line_every_bullet_within_2_frames(gb):
     """12 bullets on one line (+0 player): 10 drawn per frame; each bullet must be drawn at least
     once in any 2 consecutive frames (GDD 7.3: never hidden 2 frames in a row)."""
@@ -128,8 +125,6 @@ def test_flicker_12_bullets_one_line_every_bullet_within_2_frames(gb):
     assert worst == len(xs), f"union of 2 frames had only {worst} of 12 bullets"
 
 
-@pytest.mark.xfail(strict=True, reason="BUG: spr_rot advances the bullet group 1 slot per frame; with "
-                   "the player on the line 4 bullets are dropped and 3 of them stay hidden 2+ frames")
 def test_flicker_player_plus_12_bullets_union_of_2_frames(gb):
     """GDD 11: frozen objects, 14 sprites on one line (player 2 + 12 bullets): the player is always
     drawn and the union of 2 consecutive frames contains all 12 bullets."""
@@ -316,8 +311,6 @@ def test_boss_bar_vram_matches_hp(gb):
     gb.screenshot("qa_boss_bar")
 
 
-@pytest.mark.xfail(strict=True, reason="BUG: ui.md 2.3 says the boss bar (cols 15-19) goes BLANK when "
-                   "the OUTRO starts; boss_bar_on is never cleared, the empty bar stays to the end")
 def test_boss_bar_cleared_in_outro(gb):
     to_boss(gb)
     gb.write_u8("boss_hp", 1)
@@ -345,8 +338,6 @@ def _to_peligro(gb):
     assert gb.u8("hud_msg") == 2
 
 
-@pytest.mark.xfail(strict=True, reason="BUG: pausing during PELIGRO (or FASE 1) drops the message: "
-                   "ui.md 2.4 wants its timer frozen and the message back after the pause")
 def test_pause_during_peligro_resumes_message(gb):
     _to_peligro(gb)
     gb.frames(20)
@@ -432,8 +423,6 @@ def test_pause_ignored_while_dying_and_boss_dead(gb):
     assert gb.u8("state") == ST_PLAY
 
 
-@pytest.mark.xfail(strict=True, reason="BUG: pausing in the 4 frames of the bomb's set_fade(1) keeps "
-                   "the whole screen faded (and SCY shaken) for the whole pause; ui.md 4: normal palette")
 def test_pause_right_after_bomb_shows_normal_palette(gb):
     isolate(gb, CHEAT_NO_LEVEL | CHEAT_INVINCIBLE)
     gb.frames(130)
@@ -479,9 +468,6 @@ def _to_continue(gb):
         gb.frames(1)
 
 
-@pytest.mark.xfail(strict=True, reason="BUG: continue_update uses the u8 screen_timer for a 632 f count: "
-                   "after 256 f `t > 16 && (t - 16) % 60 == 0` misfires; digits last 60-120 f and the "
-                   "count takes ~14 s instead of 10")
 def test_continue_count_one_digit_per_60_frames(gb):
     _to_continue(gb)
     changes, last, f = [], gb.u8("count_n"), 0
@@ -498,8 +484,6 @@ def test_continue_count_one_digit_per_60_frames(gb):
     assert f <= 16 + 600 + 20, f
 
 
-@pytest.mark.xfail(strict=True, reason="BUG: same u8 wrap: `t >= 46 && Start` ignores Start for 46 f "
-                   "every 256 f of the CONTINUAR count")
 def test_continue_start_accepted_late_in_count(gb):
     _to_continue(gb)
     gb.frames(256 + 20)                                           # timer wrapped, t ~ 20
@@ -512,6 +496,7 @@ def test_continue_start_accepted_late_in_count(gb):
 
 def _boss_kill_to_clear(gb, bombs, died):
     to_boss(gb)
+    gb.write_bytes("pool", [0] * (33 * 16))       # a late enemy still on screen would score too
     gb.write_u8("bombs", bombs)
     gb.write_u8("died_in_stage", died)
     gb.write_u8("extends", 3)
@@ -553,8 +538,6 @@ def test_clear_no_death_bonus_only_if_no_death(gb):
     assert bcd(gb) == 20000
 
 
-@pytest.mark.xfail(strict=True, reason="BUG: Start during the bomb count re-adds the 2000 of the bomb "
-                   "being counted (count_n x 20 more, ignoring the hundreds already added): overpays")
 def test_clear_start_skips_count_with_same_total(gb):
     _boss_kill_to_clear(gb, bombs=2, died=0)
     for _ in range(40):                                           # 30 f wait + ~7 f of counting
@@ -567,8 +550,6 @@ def test_clear_start_skips_count_with_same_total(gb):
     assert bcd(gb) == 20000 + 2 * 2000 + 10000, bcd(gb)
 
 
-@pytest.mark.xfail(strict=True, reason="BUG (low): Start on CLEAR adds up to 180 x add_score in one "
-                   "frame (~2 frames of CPU): frame_lines 255, the bonus screen stutters once")
 def test_clear_start_skip_frame_budget(gb):
     """The skip runs up to 180 add_score in one frame: it must not lose a frame (255)."""
     _boss_kill_to_clear(gb, bombs=4, died=0)
@@ -703,9 +684,6 @@ def test_boss_death_erases_boss_rows_to_fog(gb):
 
 # ------------------------------------------------------------------ bomb at the peak (budget)
 
-@pytest.mark.xfail(strict=True, reason="BUG: bomb() does all its work in 1 frame: 12 bullets x add_score + "
-                   "6 kills (add_score, sfx, item) + turret kills (vmap_set, explosion) on top of a peak "
-                   "frame -> frame_lines 255 (seen in the fair bot at row ~153, scroll 2309)")
 def test_bomb_at_peak_keeps_frame_budget(gb):
     isolate(gb, CHEAT_NO_LEVEL | CHEAT_INVINCIBLE)
     gb.frames(130)
@@ -843,8 +821,6 @@ def test_dart_route_dives_and_drifts_to_player(gb):
     assert r[1] > 40 and r[1] - 40 <= 10, r[1]                     # drifting right, ~0.25 px/f
 
 
-@pytest.mark.xfail(strict=True, reason="SPEC: phase B SPIRAL fires 11 bullets per cycle, GDD 2.10 says 12 "
-                   "(boss_t starts at 1, t & 7 == 0 for t = 8..88)")
 def test_boss_spiral_12_bullets(gb):
     to_boss(gb)
     gb.write_u8("cheat_flags", CHEAT_INVINCIBLE)
@@ -853,9 +829,8 @@ def test_boss_spiral_12_bullets(gb):
     gb.write_u8("boss_phase", 2)
     gb.write_u8("boss_t", 0)
     gb.write_u8("boss_spiral", 0)
-    gb.frames(1)
     fired = 0
-    for _ in range(100):
+    for _ in range(101):                           # t = 1, 9 .. 89 (the first one right away)
         before = gb.u8("boss_spiral")
         gb.frames(1)
         fired += ((gb.u8("boss_spiral") - before) & 255) // 5
@@ -876,9 +851,6 @@ def test_lint_lifetimes_match_the_rom_routes():
                      "ones the script needs 7 slots at row 36 (see test_no_spawn_dropped_without_shooting)")
 
 
-@pytest.mark.xfail(strict=True, reason="BUG: with nobody shot down, the WAVEs of row 29 (235 f real life, "
-                   "lint assumes 200) still hold slots when row 36 starts 2 DART columns: 2 DARTs are "
-                   "silently not spawned (spawn_enemy returns on a full pool, fm_left still decrements)")
 def test_no_spawn_dropped_without_shooting(gb):
     gb.write_u8("cheat_flags", CHEAT_INVINCIBLE)
     prev_fm, prev_full, drops = sum(gb.bytes("fm_left", 4)), False, []
@@ -895,9 +867,6 @@ def test_no_spawn_dropped_without_shooting(gb):
     assert drops == [], f"spawns lost (frame, row): {drops}"
 
 
-@pytest.mark.xfail(strict=True, reason="BUG: boss hit flash needs boss_t % 8 == 0 on the hit frame, but "
-                   "shots in slots 0-3 are only checked on even frames: with an odd boss_t - frame the boss "
-                   "never flashes (0 flash frames over ~25 hits); GDD 2.10 wants a flash at most every 8 f")
 def test_boss_flashes_when_hit_for_both_parities(gb):
     to_boss(gb)
     gb.write_u8("cheat_flags", CHEAT_INVINCIBLE)

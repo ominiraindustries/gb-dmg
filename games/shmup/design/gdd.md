@@ -171,7 +171,9 @@ Reglas comunes:
 - Oleadas (formaciones) en §6.2: DART en columna de 3 (intervalo 13 f ≈ 20 px), WAVE en fila de 4
   por la misma ruta (intervalo 16 f), SWOOP solos o en pareja (si son 2, el segundo dispara **12 f
   después** para que sus abanicos no coincidan en las mismas líneas, §7.3), CARRIER solo.
-- Vida aproximada en pantalla: DART ~100 f, WAVE ~200 f, SWOOP ~130 f, CARRIER ~200 f (lint §11).
+- Vida en pantalla (medida en el ROM: aparecen en Y 0 y salen en Y ≥ 176): DART 117 f, WAVE 235 f,
+  SWOOP ~130 f, CARRIER 235 f (las usa el lint §11; antes eran estimaciones de 100/200 f y el guion
+  pedía 7 voladores a la vez). Si la piscina está llena, la formación espera al frame siguiente.
 
 ### 2.7 Ítems
 
@@ -368,8 +370,8 @@ WAVE en columna ≤ 4 entra por la izquierda de su seno, ≥ 5 por la derecha (f
 | 18 | d(7) | 104 | f(1) |
 | 22 | w(1) | 110 | c(4) |
 | 29 | w(8) | 116 | t(2) t(7) |
-| 36 | d(2) d(7) | 118 | d(3) |
-| 40 | c(4) | 124 | f(8) |
+| 39 | d(2) d(7) (antes 36) | 118 | d(3) |
+| 44 | c(4) (antes 40) | 124 | f(8) |
 | 48 | t(1) | 132 | d(2) |
 | 52 | t(8) f(2) | 136 | t(1) t(8) g(4) |
 | 60 | t(2) t(7) | 142 | f(1) |

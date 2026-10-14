@@ -10,7 +10,7 @@
 uint8_t hud_buf[20], hud_dirty;
 uint8_t score[3], hiscore[3], new_record;
 uint8_t hud_msg, hud_msg_timer, hud_bar_px, boss_bar_on;
-static uint8_t hud_msg_age, shown_lives, shown_bombs, shown_power, shown_bar = 0xFF;
+static uint8_t score_dirty, hud_msg_age, shown_lives, shown_bombs, shown_power, shown_bar = 0xFF;
 static uint8_t msg_buf[20], msg_dirty;
 
 // text writes for screens (blinking strings, counters): copied in VBlank
@@ -80,12 +80,31 @@ void hud_init(void) {
 }
 
 // Extra lives at 20 000 and 50 000 (GDD 2.4): score[2] holds the two top BCD digits
+// The digits are composed once per frame in hud_update (12 kills in a bomb frame composed them
+// 12 times: ~720 T each, QA bug).
 void add_score(const uint8_t *bcd) {
     bcd_add3(score, bcd);
-    bcd_tiles(hud_buf, score);
-    hud_dirty |= HUD_SCORE;
+    score_dirty = 1;
     if (score[2] >= 0x02 && !(extends & 1)) { extends |= 1; if (lives < 9) lives++; sfx(SFX_EXTEND); }
     if (score[2] >= 0x05 && !(extends & 2)) { extends |= 2; if (lives < 9) lives++; sfx(SFX_EXTEND); }
+}
+
+// n x 100 points (n <= 255)
+void add_score_hundreds(uint8_t n) {
+    uint8_t v[3], t = 0;
+    v[2] = 0;
+    while (n >= 100) { n -= 100; v[2]++; }
+    while (n >= 10) { n -= 10; t++; }
+    v[0] = 0; v[1] = (t << 4) | n;
+    add_score(v);
+}
+
+// n x 10 points (n <= 99)
+void add_score_tens(uint8_t n) {
+    uint8_t v[3], t = 0;
+    while (n >= 10) { n -= 10; t++; }
+    v[0] = n << 4; v[1] = t; v[2] = 0;
+    add_score(v);
 }
 
 void hiscore_update(void) {
@@ -109,6 +128,7 @@ static void bar_tiles(void) {
 }
 
 void hud_update(void) {
+    if (score_dirty) { score_dirty = 0; bcd_tiles(hud_buf, score); hud_dirty |= HUD_SCORE; }
     if (lives != shown_lives) { hud_buf[8] = T_DIGIT0 + (shown_lives = lives); hud_dirty |= HUD_LIVES; }
     if (bombs != shown_bombs) { hud_buf[11] = T_DIGIT0 + (shown_bombs = bombs); hud_dirty |= HUD_BOMBS; }
     if (power != shown_power) { hud_buf[14] = T_DIGIT0 + (shown_power = power); hud_dirty |= HUD_POWER; }
