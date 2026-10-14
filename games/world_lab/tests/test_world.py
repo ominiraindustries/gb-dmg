@@ -68,7 +68,23 @@ def _s16(v):
 def test_selftest_asm_equals_c(gb):
     gb.frames(2)
     mism, cases = gb.selftest()
-    assert mism == 0 and cases == (2 * 65536) & 0xFFFF       # u16 counter: 131072 cases wrap to 0
+    assert mism == 0 and cases == ((2 * 65536) + 200) & 0xFFFF   # world 131072 (u16 wraps) + gact 200
+
+
+def actor_errors(gb):
+    """Cells taken by actors (x,y and target) never shared, never solid, never the player's."""
+    raw = gb.bytes("gact", 24 * 12)
+    taken, errs = {}, []
+    player = {(gb.u8("px"), gb.u8("py"))}
+    for i in range(12):
+        r = raw[i * 24:(i + 1) * 24]
+        if not r[0]:
+            continue
+        for cell in {(r[1], r[2]), (r[3], r[4])}:
+            if cell in taken or cell in player or MAP.at(*cell) in SOLID:
+                errs.append((i, cell, taken.get(cell)))
+            taken[cell] = i
+    return errs
 
 
 def test_start_region_drawn(gb):
@@ -96,6 +112,8 @@ def test_random_walk_visible_equals_map(gb):
             e = visible_errors(gb, prev)
             if e:
                 bad.append((frames, (gb.u8("px"), gb.u8("py")), e[:3]))
+            if frames % 4 == 0:
+                bad += [("actor", frames, a) for a in actor_errors(gb)]
             prev = cam(gb)
     for b in DIRS + ["b"]:
         gb.pyboy.button_release(b)
@@ -110,6 +128,7 @@ def test_random_walk_visible_equals_map(gb):
 
 
 def test_solid_cells_block(gb):
+    gb.write_bytes("gact", [0] * 24 * 12)          # no actors in the way
     # walk left until the sand/water border stops the player: water is solid
     gb.pyboy.button_press("left")
     gb.frames(16 * 40)

@@ -36,6 +36,7 @@ List the files in `"common_src"`; their headers are on the include path.
 | `gbe_menu.c` | vertical menu: cursor tile, repeat 16/6 f, wrap, disabled options, A / B | - | dungeon (M1b) |
 | `gbe_rng.c` | xorshift16 `rng_next` / `rng_range`; `gb.rng_next(state)` predicts it in tests | seed `rng_state` | dungeon |
 | `gbe_world.c` `gbe_world.s` | 4-way scrolling world of 16x16 metatiles (top-down RPGs): maps of sectors (16x16 cells) from `res/maps/*.map` (`harness/world.py`, banked), 3x3 sector cache in WRAM (half a sector loaded per frame), BG ring with a 13x12-cell drawn region, edge queue of lines drawn 3 metatiles per VBlank, asm `wmt_at`/`wprep_cell` | `GBE_WORLD_MT`, `world_metatiles()` from `mt_tiles`/`mt_attr` | world_lab: worst ~10k T per frame (C first version 38k), screen == map model every frame of a 7000-frame walk |
+| `gbe_gact.c` `gbe_gact.s` | grid actors on gbe_world: 24-byte records, walking at N frames per cell (8.8), both cells taken, generic behaviours (STILL LOOK WANDER CHASE FLEE HOME FOLLOW), one thinker per frame, 16x16 drawing with the PRIO cell bit cached per cell; asm move/draw/`gact_at` | `gact_terrain_ok()` from the game, `gact_px/py/px2/py2`, `GBE_GACT_MAX` | world_lab, 12 actors: move 2.6k T, draw 11.9k T (~950 T each: to optimise), think 4-8k; C was 51k |
 | `gbe_selftest.c` | asm-vs-C equivalence of all the above, run in the ROM | call `gbe_selftest()` when `gbe_eq_request` | test: `gb.selftest()` |
 
 Header: `gbe.h` (documents every function and the rules). The game provides `src/gbe_config.h`:

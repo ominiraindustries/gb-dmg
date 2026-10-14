@@ -14,6 +14,7 @@ static const int8_t dir_dy[4] = { 1, -1, 0, 0 };
 
 uint8_t px, py, pdir, pstep_px, moving, pspeed;
 uint16_t steps;
+uint8_t actors_on = 1;                 // tests may clear it before the first frame
 int16_t want_cam_x, want_cam_y;
 
 static int16_t cam_for(uint8_t x, uint8_t y, uint8_t dir, uint8_t off, uint8_t axis_x) {
@@ -44,6 +45,26 @@ void init(void) {
     DISPLAY_ON;
 }
 
+// gbe_gact: actors may walk on any non-solid cell
+uint8_t gact_terrain_ok(uint8_t i, uint8_t x, uint8_t y) {
+    (void)i;
+    return !(wattr_at(x, y) & ATTR_SOLID);
+}
+
+// 12 actors around the start: wanderers, 2 that flee, a leader with 2 followers
+static void spawn_actors(void) {
+    static const uint8_t ax[12] = { 30, 38, 36, 28, 40, 33, 26, 42, 35, 37, 39, 29 };
+    static const uint8_t ay[12] = { 30, 30, 38, 36, 34, 27, 33, 38, 40, 26, 28, 40 };
+    uint8_t k, i, beh;
+    for (k = 0; k < 12; k++) {
+        beh = k < 7 ? GACT_WANDER : k < 9 ? GACT_FLEE : k == 9 ? GACT_WANDER : GACT_FOLLOW;
+        i = gact_spawn(1 | GACT_ANIM2, ax[k], ay[k], SPR_CRITTER, beh);
+        gact_speed(i, k & 1 ? 12 : 24);
+        gact[i].radius = 5;
+        if (k >= 10) { gact[i].leader = k - 1; gact_speed(i, 12); }
+    }
+}
+
 static uint8_t held_dir(void) {
     if (keys & J_DOWN) return 0;
     if (keys & J_UP) return 1;
@@ -57,6 +78,7 @@ static void try_start(void) {
     if (d == 0xFF) return;
     pdir = d;
     if (wattr_at(px + dir_dx[d], py + dir_dy[d]) & ATTR_SOLID) return;
+    if (gact_at(px + dir_dx[d], py + dir_dy[d]) != 0xFF) return;
     moving = 1;
     pstep_px = 0;
 }
@@ -76,12 +98,16 @@ void update(void) {
         }
     }
     camera();
+    gact_px = px; gact_py = py;
+    gact_px2 = moving ? px + dir_dx[pdir] : px;
+    gact_py2 = moving ? py + dir_dy[pdir] : py;
 }
 
 void main(void) {
     init();
     vsync();
     vram_late = 0;
+    if (actors_on) spawn_actors();
     while (1) {
         vsync();
         world_draw_vram();
@@ -90,6 +116,8 @@ void main(void) {
         if (gbe_eq_request) { gbe_eq_request = 0; gbe_selftest(); skip_measure = 1; }
         update();
         world_update(px, py, want_cam_x, want_cam_y);
+        gact_update();
+        gact_draw(2);
         oam16(0, 64 + 8, 64 + 16, SPR_PLAYER, 0);
         frame_end();
     }

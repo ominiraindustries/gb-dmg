@@ -8,6 +8,8 @@
     "gbe_bank.c",
     "gbe_vram.s",
     "gbe_world.c",
+    "gbe_gact.c",
+    "gbe_gact.s",
     "gbe_world.s",
     "gbe_selftest.c"
   ],

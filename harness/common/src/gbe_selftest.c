@@ -233,6 +233,57 @@ static void eq_world(void) {
 }
 #endif
 
+#ifdef GBE_SELFTEST_GACT
+// gact_move_all / gact_draw / gact_at: random records around the camera, C vs asm on copies
+// (records and the OAM range compared); uses OAM 20-39 as scratch
+static gact_t eq_gsave[GBE_GACT_MAX], eq_gref[GBE_GACT_MAX];
+static uint8_t eq_oref[GBE_GACT_MAX * 8];
+static void eq_gact_random(void) {
+    uint8_t i, cx = (uint8_t)((uint16_t)cam_x >> 4), cy = (uint8_t)((uint16_t)cam_y >> 4);
+    gact_t *a = gact;
+    for (i = 0; i < GBE_GACT_MAX; i++, a++) {
+        a->type = (rnd8() & 3) ? (rnd8() | 1) : 0;
+        a->x = cx + (rnd8() & 15) - 3;
+        a->y = cy + (rnd8() & 15) - 3;
+        a->dir = rnd8() & 3;
+        a->moving = rnd8() & 1;
+        a->tx = a->x + (a->dir == 3) - (a->dir == 2);
+        a->ty = a->y + (a->dir == 0) - (a->dir == 1);
+        a->step = rnd8() & 15;
+        a->sub = rnd8();
+        a->rate_lo = rnd8();
+        a->rate_hi = rnd8() & 1;
+        a->timer = rnd8() & 3;
+        a->anim = rnd8() & 1;
+        a->tile = rnd8() & 0x7C;
+        a->prop = rnd8() & 0x10;
+        a->prio = (rnd8() & 1) ? 0xFF : (rnd8() & 0x80);
+    }
+}
+static void eq_gact(void) {
+    uint8_t k, x, y, first = 40 - GBE_GACT_MAX * 2;
+    for (k = 0; k < 200; k++) {
+        eq_gact_random();
+        memcpy(eq_gsave, gact, sizeof(eq_gsave));
+        gact_move_all_c();
+        gact_draw_c(first);
+        memcpy(eq_gref, gact, sizeof(eq_gref));
+        memcpy(eq_oref, &shadow_OAM[first], sizeof(eq_oref));
+        memcpy(gact, eq_gsave, sizeof(eq_gsave));
+        gact_move_all();
+        gact_draw(first);
+        if (memcmp(eq_gref, gact, sizeof(eq_gref)) || memcmp(eq_oref, &shadow_OAM[first], sizeof(eq_oref)))
+            gbe_eq_mismatch++;
+        for (y = 0; y < 8; y++) {
+            x = gact[rnd8() % GBE_GACT_MAX].x + (rnd8() & 1);
+            if (gact_at(x, gact[y].ty) != gact_at_c(x, gact[y].ty)) gbe_eq_mismatch++;
+        }
+        gbe_eq_count++;
+    }
+    memset(gact, 0, sizeof(eq_gsave));
+}
+#endif
+
 void gbe_selftest(void) {
     gbe_eq_mismatch = gbe_eq_count = 0;
 #ifdef GBE_SELFTEST_MAP
@@ -253,6 +304,9 @@ void gbe_selftest(void) {
 #endif
 #ifdef GBE_SELFTEST_WORLD
     eq_world();
+#endif
+#ifdef GBE_SELFTEST_GACT
+    eq_gact();
 #endif
 #ifdef GBE_SELFTEST_VIEW
     eq_view();

@@ -288,6 +288,41 @@ uint8_t wmt_at_c(uint8_t x, uint8_t y);
 uint8_t wattr_at(uint8_t x, uint8_t y);
 void world_set_cell(uint8_t x, uint8_t y, uint8_t mt);   // temporary patch (until the sector reloads)
 
+// ---------------------------------------------------------------- gbe_gact.c
+// Grid actors on gbe_world (NPCs, creatures): cell-by-cell walking at N frames per cell, generic
+// behaviours, one thinker per frame, 16x16 drawing (2 OAM per slot) with the PRIO cell bit.
+// The game implements gact_terrain_ok(i, x, y) and keeps gact_px/py (+ px2/py2 while stepping).
+// Config: GBE_GACT_MAX (default 12). gact_type: 0 = free, any id; | GACT_ANIM2 = 2-frame layout.
+#ifndef GBE_GACT_MAX
+#define GBE_GACT_MAX 12
+#endif
+#define GACT_ANIM2 0x80
+#define GACT_PRIO_DIRTY 0xFF
+enum { GACT_STILL, GACT_LOOK, GACT_WANDER, GACT_CHASE, GACT_FLEE, GACT_HOME, GACT_FOLLOW };
+typedef struct {                       // 24 bytes; offsets 0-15 are fixed in gbe_gact.s
+    uint8_t type, x, y, tx, ty, dir, step, sub, rate_lo, rate_hi, moving, timer, anim, tile, prop, prio;
+    uint8_t beh, hx, hy, ox, oy, radius, leader, bumped;
+} gact_t;
+extern gact_t gact[];
+extern const uint8_t gact_count, gact_npc_frame[4];
+extern uint8_t gact_px, gact_py, gact_px2, gact_py2, gact_prio_mask, gact_rng;
+uint8_t gact_terrain_ok(uint8_t i, uint8_t x, uint8_t y);    // provided by the game
+uint8_t gact_spawn(uint8_t type, uint8_t x, uint8_t y, uint8_t tile, uint8_t beh);   // 0xFF = full
+void gact_free(uint8_t i);
+void gact_speed(uint8_t i, uint8_t frames_per_cell);
+uint8_t gact_at(uint8_t x, uint8_t y);                         // asm: actor on/entering a cell, 0xFF
+uint8_t gact_at_c(uint8_t x, uint8_t y);
+uint8_t gact_free_cell(uint8_t i, uint8_t x, uint8_t y);
+uint8_t gact_try_move(uint8_t i, uint8_t dir);
+uint8_t gact_step_toward(uint8_t i, uint8_t x, uint8_t y, uint8_t away);
+void gact_update(void);                // gact_move_all + one thinker
+void gact_move_all(void);              // asm
+void gact_move_all_c(void);
+void gact_draw(uint8_t first_oam);     // asm
+void gact_draw_c(uint8_t first_oam);
+int16_t gact_wx(uint8_t i);
+int16_t gact_wy(uint8_t i);
+
 // ---------------------------------------------------------------- gbe_selftest.c
 // Equivalence of every asm routine with its C reference (gb-asm procedure). Tests call
 // gb.selftest() (sets gbe_eq_request; the game calls gbe_selftest()). Which modules are checked
