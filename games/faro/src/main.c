@@ -24,6 +24,12 @@
 #include "battle_erizal.h"
 #include "battle_polifaro.h"
 
+// Field tilesets end below the HUD's sprite tiles 252-255 (ui.md 1.4; the BG tiles 128-255 and the
+// sprite tiles 128-255 are the same VRAM): a tileset that grows past it fails the build here
+typedef char hud_vram_overworld[(VRAM_OVERWORLD + OVERWORLD_COUNT <= HUD_TILE) ? 1 : -1];
+typedef char hud_vram_interior[(VRAM_INTERIOR + INTERIOR_COUNT <= HUD_TILE) ? 1 : -1];
+typedef char hud_vram_faro[(VRAM_FARO + FARO_COUNT <= HUD_TILE) ? 1 : -1];
+
 uint8_t state, field_sub, cheat_flags;   // cheat_flags: written by tests only
 // tests drive the battle core directly (tests/test_battle.py vs tests/battle_model.py):
 // bt_cmd 1 = battle_begin(a, b, c), 2 = battle_turn(a, b, c), 3 = battle_open_turn(), 4 = player_new(),
@@ -82,10 +88,9 @@ void screen_build(uint8_t which) {
     if (which == ST_TITLE) { field_set = 0xFF; title_build(); }   // the title overwrites the set's slot
     else if (which == ST_BATTLE) battle_enter();
     else if (which == ST_FIELD) {
-        HIDE_WIN;
         field_enter(warp_map, warp_x, warp_y, warp_dir);
         warp_pending = 0;
-        SHOW_BKG; SHOW_SPRITES;
+        SHOW_BKG; SHOW_SPRITES; SHOW_WIN;           // the window is hidden by WY = 144 (main loop)
     }
     DISPLAY_ON;
 }
@@ -135,9 +140,10 @@ void init(void) {
     video_init(0, 0xE4, 0xE4, 0xD8);          // ui.md: BGP/OBP0 0xE4
     sound_init();
     rules_load();
+    survival_init();
     ui_init();
     vq_budget = 32;
-    gact_think_every = 2;                       // NPCs think on even frames, creatures on odd ones                             // 48 + tiles + world overran VBlank (vram_late)
+    gact_think_every = 2;                       // NPCs think on even frames, creatures on odd ones
     show_screen_now(ST_TITLE);
 }
 
@@ -148,10 +154,12 @@ void main(void) {
     while (1) {
         vsync();
         if (LY_REG < 144) vsync();               // stale: the last frame ran past VBlank
+        frame_vsync_ly = LY_REG;
         world_draw_vram();                      // fixed-size copies first,
         tiles_draw_vram();
         vq_draw_vram();                         // the queue last: it stops by itself at the end of VBlank
-        WY_REG = (tbox_visible && state == ST_FIELD) ? 96 : 144;
+        if (panel_state && state == ST_FIELD) { WY_REG = 0; WX_REG = panel_wx; }
+        else { WX_REG = 7; WY_REG = (tbox_visible && state == ST_FIELD) ? 96 : 144; }
         frame_vram_check();
         frame_begin();
         if (gbe_eq_request) { gbe_eq_request = 0; gbe_selftest(); skip_measure = 1; }
@@ -170,11 +178,16 @@ void main(void) {
                 battle_update();
                 break;
             case ST_FIELD:
+                if (panel_state) { panel_update(); break; }    // the field is paused under the panel
                 if (tbox_visible || script_active) { tbox_update(); script_update(); }
                 field_update();
                 field_vblank();
                 break;
             }
+        }
+        if (state != ST_TITLE && ++play_f >= 60) {   // play time (59.7 Hz: close enough for h:mm)
+            play_f = 0;
+            if (++play_sec >= 60) { play_sec = 0; if (play_min < 5999) play_min++; }
         }
         tiles_prepare();
         if (state == ST_FIELD) field_draw();

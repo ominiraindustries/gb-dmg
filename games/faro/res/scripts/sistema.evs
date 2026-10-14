@@ -14,3 +14,26 @@ script nueva_partida
   vset V_TUTO 0
   warp MAP_CASA_INES 11 6 0      ; al pie de la cama de Leo (cama en 11,4-11,5), mirando abajo
   end
+
+; ---------------------------------------------------------------- avisos de supervivencia (GDD 2.5)
+; El kit los lanza una sola vez al cruzar el umbral (survival.c): cada guion pone su bandera.
+script aviso_hambre
+  speaker ""
+  say "Te suenan las tripas. Toca comer algo pronto."
+  say "Con hambre pegas mas flojo y no recuperas energia."
+  set F_AVISO_HAMBRE
+  end
+
+script aviso_debil
+  speaker ""
+  say "Te tiemblan las piernas. Estas desfallecido."
+  say "Si no comes, iras perdiendo vida poco a poco."
+  set F_AVISO_DEBIL
+  end
+
+script aviso_pasado
+  speaker ""
+  say "Algo huele mal en la mochila. Parte de la carne se ha pasado."
+  say "Pasada aun sirve de cebo. O sala la carne en el campamento."
+  set F_AVISO_PASADO
+  end

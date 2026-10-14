@@ -24,7 +24,8 @@ uint8_t cr_ids[GBE_GACT_MAX];                  // actor slots of the living crea
                                                // the per-frame loops visit 5 creatures, not 16 slots
                                                // (an SDCC loop iteration costs 150-300 T even when empty)
 uint8_t battle_actor = 0xFF;                    // the creature of the current battle
-uint8_t pend_point = 0xFF, pend_sp, pend_lv;    // a spawn rolled last attempt, created this one
+uint8_t pend_point = 0xFF, pend_sp, pend_lv;    // a spawn in progress (spawn_pending: 3 attempts)
+static uint8_t pend_slot = 0xFF, pend_spd, pend_vis, pend_beh2, pend_beh;
 
 #define R8(id) ((uint8_t)RULE(id))
 
@@ -57,7 +58,7 @@ void creatures_reset(void) BANKED {
     sp_n = 0;
     cr_alive = 0;
     cr_emotes = 0;
-    pend_point = 0xFF;
+    pend_point = pend_slot = 0xFF;
     for (i = 0; i < GBE_GACT_MAX; i++) cr[i].species = 0xFF;
 }
 
@@ -113,31 +114,41 @@ static uint8_t free_actor(void) {
     return 0;
 }
 
-// Spawning in two frames (one did ~30k T): phase 1 checks the point and rolls the species and level;
-// phase 2 (the next attempt) picks the sprite slot and creates the actor. Only 5 bytes of the
-// species row are read (the whole row is ~110 bytes).
-
-
+// Spawning in three attempts (4 frames apart; one frame did ~30k T, two still made a 120-line frame):
+// 1 checks the point and rolls the species and level; 2 picks the sprite slot (its tiles go to the
+// queue: tiles_prepare's cost lands in this frame) and reads 5 bytes of the species row; 3 creates
+// the actor.
 #define SP_FIELD(sp, f) bank_read8(BANK(tbl_species), &tbl_species[sp].f)
 
+static uint8_t point_free(uint8_t i) {
+    return sp_actor[i] == 0xFF && gact_at(sp_x[i], sp_y[i]) == 0xFF && !on_screen(sp_x[i], sp_y[i]);
+}
+
 static void spawn_pending(void) {
-    uint8_t i = pend_point, sp = pend_sp, slot, a, beh;
+    uint8_t i = pend_point, sp = pend_sp, slot = pend_slot, a;
     cr_t *c;
-    pend_point = 0xFF;
-    if (sp_actor[i] != 0xFF || gact_at(sp_x[i], sp_y[i]) != 0xFF || on_screen(sp_x[i], sp_y[i])) return;
-    slot = sprite_slot(sp, SP_FIELD(sp, fspr));
-    if (slot == 0xFF) { sp_wait[i] = 60; return; }           // 4 species already resident
+    if (slot == 0xFF) {                                       // attempt 2
+        if (!point_free(i)) { pend_point = 0xFF; return; }
+        slot = sprite_slot(sp, SP_FIELD(sp, fspr));
+        if (slot == 0xFF) { sp_wait[i] = 60; pend_point = 0xFF; return; }   // 4 species already resident
+        pend_slot = slot;
+        pend_spd = SP_FIELD(sp, spd); pend_vis = SP_FIELD(sp, vis);
+        pend_beh2 = SP_FIELD(sp, beh2); pend_beh = SP_FIELD(sp, beh);
+        return;
+    }
+    pend_point = 0xFF;                                        // attempt 3
+    pend_slot = 0xFF;
+    if (!point_free(i)) return;
     a = gact_spawn(ACT_CREATURE | GACT_ANIM2, sp_x[i], sp_y[i], SPR_CRITTER + slot * 8, GACT_WANDER);
     if (a == 0xFF) return;
-    gact_speed(a, SP_FIELD(sp, spd));
+    gact_speed(a, pend_spd);
     gact[a].radius = sp_radius[i];
     c = &cr[a];
     c->species = sp; c->level = pend_lv; c->point = i;
     c->alert = 0; c->timer = 0;
-    c->vis = SP_FIELD(sp, vis); c->beh2 = SP_FIELD(sp, beh2);
-    beh = SP_FIELD(sp, beh);
-    c->sleep = beh == SPECIES_BEH_DORMILON;
-    if (c->sleep || beh == SPECIES_BEH_GUARDIAN) gact[a].beh = GACT_STILL;
+    c->vis = pend_vis; c->beh2 = pend_beh2;
+    c->sleep = pend_beh == SPECIES_BEH_DORMILON;
+    if (c->sleep || pend_beh == SPECIES_BEH_GUARDIAN) gact[a].beh = GACT_STILL;
     sp_actor[i] = a;
     cr_ids[cr_alive++] = a;
 }
@@ -217,7 +228,7 @@ void creatures_update(void) BANKED {
     uint8_t k, a, e = 0, think_done = !gact_think_frame;   // creatures think on the NPCs' off frames
     cr_t *c;
     gact_t *g;
-    if (sp_n && !(++cr_spawn_t & 3)) {           // one spawn point every 4 frames
+    if (sp_n && !(++cr_spawn_t & 3) && !step_frame) {   // one spawn point every 4 frames, not with a step's end
         if (++cr_point_turn >= sp_n) cr_point_turn = 0;
         try_spawn(cr_point_turn);
     }
@@ -228,7 +239,7 @@ void creatures_update(void) BANKED {
         if (c->timer) c->timer--;
         if (c->alert == 1 || c->sleep) e++;
         if (g->moving) continue;
-        if (c->alert == 2 && g->beh == GACT_CHASE && dist(g->x, px) + dist(g->y, py) == 1) {
+        if (c->alert == 2 && g->beh == GACT_CHASE && dist(g->x, px) + dist(g->y, py) == 1 && !(cheat_flags & 1)) {
             battle_actor = a;                    // a chasing creature next to Leo attacks: ambush
             battle_request(c->species, c->level, 2);
             return;
@@ -242,7 +253,7 @@ void creatures_update(void) BANKED {
 // Leo walked into / used A on a creature: advantage unless it had seen him
 uint8_t creature_touch(uint8_t a) BANKED {
     cr_t *c = &cr[a];
-    if (c->species == 0xFF) return 0;
+    if (c->species == 0xFF || (cheat_flags & 1)) return 0;   // tests: 1 = creatures never start battles
     battle_actor = a;
     battle_request(c->species, c->level, (c->alert && !c->sleep) ? 0 : 1);
     return 1;
@@ -263,4 +274,14 @@ void creatures_draw(void) BANKED {
         }
     }
     for (; n < 4; n++) shadow_OAM[OAM_FX + n].y = 0;
+}
+
+// A creature that has seen Leo (alert) at <= d cells (Chebyshev): no camping (GDD 2.7)
+uint8_t creatures_alert_near(uint8_t d) BANKED {
+    uint8_t k, a;
+    for (k = 0; k < cr_alive; k++) {
+        a = cr_ids[k];
+        if (cr[a].alert && dist(gact[a].x, px) <= d && dist(gact[a].y, py) <= d) return 1;
+    }
+    return 0;
 }

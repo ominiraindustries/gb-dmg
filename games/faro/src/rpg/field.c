@@ -17,6 +17,9 @@ uint8_t focus_sx, focus_sy, field_set = 0xFF;   // field_set: metatile set in VR
 uint8_t script_actor = 0xFF;                      // the NPC whose script runs (face_player, walk)
 uint8_t auto_dir, auto_n, npc_dir, npc_n, npc_walking, emote_who, emote_e, emote_t, was_script;
 uint8_t demo_end_request;
+uint8_t step_frame;                               // a step ended this frame (heavy): no creature spawn
+static uint8_t pend_despawn, pend_sec_n, pend_sec[8];   // deferred: despawn_far, loaded sectors (x, y)
+static void pop_sector(void) { memcpy(pend_sec, pend_sec + 2, 6); }   // forward copy: overlap is fine
 
 #define TURN_FRAMES 6            // a tap shorter than this only turns (GDD 2.1)
 #define BUMP_FRAMES 16
@@ -138,6 +141,8 @@ void field_enter(uint8_t map, uint8_t x, uint8_t y, uint8_t dir) {
     uint8_t i, sx, sy;
     for (i = 0; i < GBE_GACT_MAX; i++) gact_free(i);
     creatures_reset();
+    hud_reset();
+    pend_despawn = pend_sec_n = 0;
     px = x; py = y; pdir = dir;
     pmoving = pstep_px = pbump = phold = 0;
     camera();
@@ -233,6 +238,7 @@ static void step_done(void) {
     px += dir_dx[pdir];
     py += dir_dy[pdir];
     pmoving = pstep_px = 0;
+    step_frame = 1;
     steps++;
     survival_step();
     creatures_step();
@@ -241,8 +247,13 @@ static void step_done(void) {
         return;
     }
     e = world_event_at(px, py);
+    if (e && e->type == OBJ_WARP) { warp_to(e); return; }
+    if (survival_script != 0xFFFF) {                // a one-shot warning (hunger, food gone off)
+        script_run_id(survival_script);
+        survival_script = 0xFFFF;
+        return;
+    }
     if (e) {
-        if (e->type == OBJ_WARP) { warp_to(e); return; }
         if (e->type == OBJ_TRIGGER && !flag_get(EV_U16(e, 2))) {   // the SCRIPT sets the flag when
             script_run_id(EV_U16(e, 0));                         // it is done (a locked door that
             return;                                              // says "closed" keeps firing)
@@ -255,7 +266,7 @@ void field_update(void) {
     if (warp_pending) return;
     if (pbump) pbump--;
     if (!pmoving && !script_active && !tbox_visible) {
-        if (pressed & J_START) { menu_open_panel(); return; }
+        if (pressed & J_START) { panel_open(); return; }
         if (pressed & J_A) { use_front(); camera(); return; }
         try_walk(0);
     }
@@ -268,19 +279,31 @@ void field_update(void) {
         psneak = (keys & J_B) && !auto_n ? 1 : 0;
         if (!psneak || (psub ^= 1)) pstep_px++;           // sneaking: 0.5 px/f (GDD 2.1)
         if ((pstep_px & 7) == 0) panim ^= 1;
+        if (pstep_px == 8 && !psub)                 // mid-step: load the next cell's sector events now,
+            world_event_at(px + dir_dx[pdir], py + dir_dy[pdir]);   // not in the heavy step-end frame (9k T)
         if (pstep_px >= 16) step_done();
     }
     camera();
 }
 
 // After the logic: world streaming, objects of newly loaded sectors, actors, creatures
-// cheat_flags bits 0x10-0x80 switch parts off so tests can measure real frame lines with and
+// cheat_flags (tests only): 1 = creatures start no battles, 2 = frozen creatures; bits 0x10-0x80 switch parts off so tests can measure real frame lines with and
 // without them (the A/B that found the creature costs; the profiler alone misled)
 void field_vblank(void) {
     uint8_t sx = px >> 4, sy = py >> 4;
     world_update(px, py, cam_want_x, cam_want_y);
-    if (sx != focus_sx || sy != focus_sy) { focus_sx = sx; focus_sy = sy; despawn_far(); }
-    if (world_loaded_slot != 0xFF) sector_loaded(world_loaded_sx, world_loaded_sy);
+    // far objects out / a new sector's objects in: never in a step's end frame, one per frame (the
+    // sector crossing frame did both + the step: 129 lines). Loads queue up (a row crossing = 3).
+    if (sx != focus_sx || sy != focus_sy) { focus_sx = sx; focus_sy = sy; pend_despawn = 1; }
+    if (world_loaded_slot != 0xFF) {
+        if (pend_sec_n == 4) { sector_loaded(pend_sec[0], pend_sec[1]); pend_sec_n--; pop_sector(); }
+        pend_sec[pend_sec_n * 2] = world_loaded_sx; pend_sec[pend_sec_n * 2 + 1] = world_loaded_sy;
+        pend_sec_n++;
+    }
+    if (!step_frame) {
+        if (pend_despawn) { pend_despawn = 0; despawn_far(); }
+        else if (pend_sec_n) { sector_loaded(pend_sec[0], pend_sec[1]); pend_sec_n--; pop_sector(); }
+    }
     if (cheat_flags & 0x10) { }                      // tests: measure without the AI
     else if (!script_active) {
         if (!(cheat_flags & 0x40)) gact_update(); else gact_move_all();   // tests: without NPC thinking
@@ -294,6 +317,7 @@ void field_vblank(void) {
     if (was_script && !script_active) refresh_patches();   // flags a script set (a lit lens...)
     was_script = script_active;
     if (emote_t) emote_t--;
+    step_frame = 0;
 }
 
 // Leo: down 0 / up 8 / side 16 (+4 stepping; down/up alternate steps flipped), left = side flipped
@@ -308,6 +332,11 @@ void field_draw(void) {
     }
     if (wattr_at(px, py) & ATTR_PRIO) prop |= S_PRIORITY;
     oam16(OAM_LEO, 64 + 8, 64 + 16, tile, prop);
+    hud_draw();
+    if (panel_state) {                              // the panel covers the right half: no actors
+        memset(&shadow_OAM[OAM_FX], 0, (40 - OAM_FX) * 4);
+        return;
+    }
     if (!(cheat_flags & 0x20)) gact_draw(OAM_ACTORS);   // tests: measure without the actors' sprites
     creatures_draw();
     if (emote_t) {                                  // above Leo or the speaking NPC

@@ -11,6 +11,8 @@ uint8_t reg_seen[6], reg_caught[6], kills[SPECIES_SLOTS];
 uint8_t recipe_known[4];
 uint8_t full_n, full_sp[FULL_SLOTS], full_lv[FULL_SLOTS];
 uint8_t has_zurron;
+uint16_t play_min;
+uint8_t play_sec, play_f;
 
 // The balance constants of rules.tbl, copied to WRAM once (RULE(id)): reading them from their bank
 // through a BANKED call cost ~500 T each, and the creatures' AI read several per frame (11k T).
@@ -69,6 +71,8 @@ void player_new(void) BANKED {
     skills_known = 0;
     lamp_ring = 0;
     has_zurron = 0;
+    play_min = 0; play_sec = 0;
+    food_age = 0;
 }
 
 // XP and plevel ups: PV/EN rise as much as their maximum (GDD 3.2). Returns the levels gained.

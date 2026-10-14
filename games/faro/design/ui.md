@@ -180,9 +180,10 @@ Ventana WY = 96, WX = 7: filas de pantalla 12-17 = filas 0-5 del mapa de la vent
 Es un **cajón**: borde izquierdo (col 10), bordes superior e inferior hasta el borde de la pantalla, sin
 borde derecho.
 
-**Entrada**: Start en WALK. El panel entra deslizando **8 px/f durante 10 f** (WX 167 → 87): en el
-frame n se escribe la columna n de la ventana (18 tiles) y WX = 167 − 8n, así nunca se ve una columna sin
-escribir (≤ 18 tiles/frame). Salida: WX += 8 por frame sin escribir nada. SFX `MENU_OK` / `MENU_BACK`.
+**Entrada**: Start en WALK. Se escriben las 18 filas con la ventana aún fuera (WX 167, 2 frames, una
+entrada de cola por fila) y luego entra deslizando **8 px/f durante 10 f** (WX 167 → 87). Salida: WX += 8
+por frame sin escribir nada. SFX `MENU_OK` / `MENU_BACK`. (Medido: escribir una columna por frame son
+18 entradas de 1 tile a ~90 T cada una; la cola se quedaba sin VBlank y perdía columnas.)
 
 | Elemento | Posición | Notas |
 |---|---|---|
@@ -557,7 +558,7 @@ de ficha 3 x 18, mejora de plato ≤ 10.
 |---|---|---|
 | Abrir cuadro de texto | 120 (marco) | cola, 6 frames, ventana escondida hasta acabar |
 | Escribir texto | ≤ 4 por frame | cola (gbe_tbox) |
-| Abrir panel | 180 | 1 columna (18) por frame durante el deslizamiento |
+| Abrir panel | 180 | 9 filas por frame con la ventana fuera (2 frames), luego desliza |
 | Estadísticas del panel / aviso / guardar | ≤ 63 | cola, 4 frames |
 | Submenú de combate | 152 | cola, 8 frames |
 | Barra de combate | 1 por paso | directo en VBlank |

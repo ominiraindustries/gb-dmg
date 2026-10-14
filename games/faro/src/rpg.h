@@ -24,6 +24,7 @@ extern uint8_t state, field_sub;
 #define SPR_CRITTER  80
 #define SPR_FX       112
 #define OAM_HUD      0          // 2 HUD icons
+#define HUD_TILE     252        // their 4 sprite tiles (= BG 252-255): field tilesets end below
 #define OAM_LEO      2          // 2
 #define OAM_FX       4          // 4: shadow / stone / emotes
 #define OAM_ACTORS   8          // 12 actors x 2
@@ -48,6 +49,9 @@ void field_enter(uint8_t map, uint8_t x, uint8_t y, uint8_t dir);   // LCD off
 void field_update(void);
 void field_draw(void);
 void field_vblank(void);
+void hud_reset(void);                    // src/rpg/hud.c (bank 0): heart + bowl sprites
+void hud_draw(void);
+extern uint8_t hud_band[2], hud_panel;
 void map_gfx(uint8_t mtset);          // glue (main.c): LCD off, load a metatile set's tiles + table
 extern uint8_t field_set;
 
@@ -55,12 +59,14 @@ extern uint8_t field_set;
 // (stubs until each module exists; the field calls them)
 uint8_t player_has_ability(uint16_t ability_mask);   // bank 0 (src/rpg/script_ops.c)
 void survival_step(void) BANKED;                // once per completed step (hunger, spoilage, regen)
+void survival_init(void) BANKED;                // boot: the perishable item list
+extern uint16_t survival_script;                // a warning script to run after the step (0xFFFF none)
+extern uint8_t food_age;
 void creatures_sector(uint8_t sx, uint8_t sy) BANKED;   // spawn points of a sector that loaded
 void creatures_update(void) BANKED;
 uint8_t creature_touch(uint8_t act) BANKED;     // player bumped into a creature actor: 1 = battle
 void item_pickup(uint8_t item, uint8_t n) BANKED;
 void forage(uint8_t table, uint8_t x, uint8_t y) BANKED;
-void menu_open_panel(void) BANKED;
 
 // ---------------------------------------------------------------- screens (src/rpg/title.c ...)
 #define TITLE_NONE 0xFF
@@ -148,7 +154,20 @@ void field_face_player(void);
 uint8_t field_npc_walk(uint8_t dir, uint8_t n);     // 1 = busy (resumes the script when done)
 uint8_t field_auto_walk(uint8_t dir, uint8_t n);
 void field_emote(uint8_t who, uint8_t e);
-extern uint8_t demo_end_request, script_actor;
+extern uint8_t demo_end_request, script_actor, step_frame;
+
+// ---------------------------------------------------------------- Start panel (panel.c) + camp (camp.c)
+extern uint8_t panel_state, panel_wx;           // panel_state 0 = closed (the field runs)
+void panel_open(void) BANKED;
+void panel_update(void) BANKED;
+uint8_t camp_check(void) BANKED;                // MSG_* refusal or 0xFF
+uint8_t creatures_alert_near(uint8_t d) BANKED;
+extern uint16_t play_min;                       // play time (saved), ticked by the main loop
+extern uint8_t play_sec, play_f;
+
+// ---------------------------------------------------------------- messages (src/rpg/msg.c, msgs.tbl)
+void msg_expand(uint8_t msg, const char *s, const char *o, uint16_t n, char *dst, uint8_t max) BANKED;
+uint8_t msg_wrap(const char *src, char *dst, uint8_t w, uint8_t paged) BANKED;   // returns the lines
 
 // ---------------------------------------------------------------- save (src/rpg/save.c, GDD 8.7)
 void game_save(void) BANKED;

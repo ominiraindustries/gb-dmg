@@ -37,38 +37,8 @@ static void row_name(uint8_t kind, uint8_t id, char *dst) {
 
 // message template + {S} {O} {N} -> tbox_text, wrapped to 18-char lines, 2 lines per page
 static void say(uint8_t msg, const char *s, const char *o, uint16_t n) {
-    msgs_t m;
-    char num[6], *d = tmp, *w, *line, *src;
-    uint8_t col, lines, k, len;
-    bank_memcpy(BANK(tbl_msgs), &m, &tbl_msgs[msg], sizeof(m));
-    for (src = m.t; *src && d < tmp + 112; src++) {
-        if (*src == '{' && src[2] == '}') {
-            if (src[1] == 'S') for (w = (char *)s; *w; ) *d++ = *w++;
-            else if (src[1] == 'O') for (w = (char *)o; *w; ) *d++ = *w++;
-            else {
-                k = 0;
-                do { num[k++] = '0' + n % 10; n /= 10; } while (n);
-                while (k) *d++ = num[--k];
-            }
-            src += 2;
-        } else *d++ = *src;
-    }
-    *d = 0;
-    // greedy wrap at spaces
-    d = tbox_text; col = 0; lines = 0; line = tmp;
-    for (src = tmp; ; ) {
-        for (w = src; *w && *w != ' '; w++) ;
-        len = (uint8_t)(w - src);
-        if (col && col + 1 + len > 18) {
-            *d++ = (++lines & 1) ? 0x0A : 0x0C;
-            col = 0;
-        } else if (col) { *d++ = ' '; col++; }
-        memcpy(d, src, len); d += len; col += len;
-        if (!*w) break;
-        src = w + 1;
-    }
-    *d = 0;
-    (void)line;
+    msg_expand(msg, s, o, n, tmp, 112);
+    msg_wrap(tmp, tbox_text, 18, 1);
     tbox_start(TB_SAY);
 }
 

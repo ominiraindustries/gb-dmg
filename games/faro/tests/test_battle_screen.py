@@ -60,5 +60,5 @@ def test_battle_from_field_attack_until_it_ends(gb):
     assert settle(gb)
     assert gb.u8("wmap_id") == MAP_IDS["MAP_ISLA"] and (gb.u8("px"), gb.u8("py")) == pos
     assert gb.u8("b_result") in (1, 5)               # hunted (or fainted at worst)
-    assert gb.u8("vram_late") == 0
+    assert gb.u8("vram_late") == 0, (gb.u8("vram_late_ly"), gb.u8("vram_late_ly0"))
     gb.screenshot("after_battle")

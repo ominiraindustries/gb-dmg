@@ -91,57 +91,57 @@ SEA               21  22  22  21   SOLID K_DEEP              ; same art as WATER
 TREE_00           35  36  37  38   SOLID
 TREE_01           39  40  41  42   SOLID
 TREE_10           43  44   0  45   SOLID
-TREE_11           46  47  48  49   SOLID
-BUSH              50  51  52  53   SOLID
-BERRY             54  55  56  53   SOLID K_FORAGE            ; FORAGE ready; when picked -> BUSH
-BRAMBLE           57  58  59  60   SOLID K_BRAMBLE           ; cut with CUT -> GRASS
-BOULDER           61  62  63  64   SOLID
-CLIFF_S           65  66  67  68   SOLID                     ; 1-high cliff face (plateau above)
-CLIFF_SW          69  66  70  68   SOLID
-CLIFF_SE          65  71  67  72   SOLID
-CLIFF_TOP         65  66  73  74   SOLID                     ; 2-high cliff: TOP above BASE (FACE between for 3+)
-CLIFF_FACE        74  73  73  74   SOLID
-CLIFF_BASE        74  73  67  68   SOLID
-CLIFF_W           75   1  75   0   SOLID                     ; plateau west edge (rim on the left half)
-CLIFF_E            2  76   0  76   SOLID
-CLIFF_N            0   1  77  77   SOLID                     ; plateau north edge (rim on the lower half)
-CLIFF_NW           0   0  78  77   SOLID
-CLIFF_NE           0   0  77  79   SOLID
-LEDGE_D            1   2  80  80   K_LEDGE_D                 ; jump down (M2); LEDGE_L/R not drawn yet
-STAIRS            81  82  81  82                             ; stone steps up a cliff
-CAMPSITE          83  84  85  86   CAMP                      ; old fire ring: marks good camp spots
-SIGN              87  88  89  90   SOLID                     ; SIGN event
-FENCE_H            1   2  91  91   SOLID
-FENCE_V           92   2  92   1   SOLID
-BARREL            93  94  95  96   SOLID
-PIER_V            97  98  97  98                             ; jetty over water, 1 wide
-PIER_H            99  99 100 100                             ; quay planks; lower edge drops to water
-BOAT_00          101 102 103 104   SOLID
-BOAT_01          105 106 104 107   SOLID
-FOG              108 109 110 111   SOLID K_BRUMA             ; BRUMA wall: solid while lamp_ring < the ring of its event
-ROOF_TOP_L       112 113 114 115   SOLID
-ROOF_TOP_M       113 113 115 115   SOLID
-ROOF_TOP_R       113 116 115 117   SOLID
-ROOF_CHIMNEY     113 118 115 115   SOLID
-ROOF_BOT_L       114 115 119 120   SOLID
-ROOF_BOT_M       115 115 120 120   SOLID
-ROOF_BOT_R       115 117 120 121   SOLID
-WALL_L           122 123 124 125   SOLID
-WALL_M           123 123 125 125   SOLID
-WALL_R           123 126 125 127   SOLID
-WALL_WIN         128 129 125 125   SOLID
-WALL_DOOR        130 131 132 133   K_WARP                    ; door: WARP event
-WALL_SHOP        134 135 125 125   SOLID                     ; shop sign (sack)
-WALL_CLINIC      136 137 125 125   SOLID                     ; enfermeria sign (heart)
-WALL_INN         138 139 125 125   SOLID                     ; posada sign (steaming bowl)
-LIGHTHOUSE_00      0 140   0 141   SOLID
-LIGHTHOUSE_01    142   0 143   0   SOLID
-LIGHTHOUSE_10    144 145 146 147   SOLID
-LIGHTHOUSE_11    148 149 150 151   SOLID
-LIGHTHOUSE_20    152 153 152 154   SOLID
-LIGHTHOUSE_21    155 156 157 156   SOLID
-LIGHTHOUSE_30    152 153 152   0   SOLID
-LIGHTHOUSE_31    155 156 158 156   SOLID
-LIGHTHOUSE_40    159 160 161 162   SOLID
-LIGHTHOUSE_41    163 164 165 166   SOLID
-DRYBUSH          167 168 169 170   SOLID K_FORAGE            ; FORAGE_RAMAS (dry twigs); appended to keep ids stable
+TREE_11           46  47  48   0   SOLID
+BUSH              49  50  51  52   SOLID
+BERRY             53  54  51  52   SOLID K_FORAGE            ; FORAGE ready; when picked -> BUSH
+BRAMBLE           55  56  57  58   SOLID K_BRAMBLE           ; cut with CUT -> GRASS
+BOULDER           59  60  61  62   SOLID
+CLIFF_S           63  64  65  66   SOLID                     ; 1-high cliff face (plateau above)
+CLIFF_SW          67  64  68  66   SOLID
+CLIFF_SE          63  69  65  70   SOLID
+CLIFF_TOP         63  64  71  72   SOLID                     ; 2-high cliff: TOP above BASE (FACE between for 3+)
+CLIFF_FACE        72  71  71  72   SOLID
+CLIFF_BASE        72  71  65  66   SOLID
+CLIFF_W           73   1  73   0   SOLID                     ; plateau west edge (rim on the left half)
+CLIFF_E            2  74   0  74   SOLID
+CLIFF_N            0   1  75  75   SOLID                     ; plateau north edge (rim on the lower half)
+CLIFF_NW           0   0  76  75   SOLID
+CLIFF_NE           0   0  75  77   SOLID
+LEDGE_D            1   2  78  78   K_LEDGE_D                 ; jump down (M2); LEDGE_L/R not drawn yet
+STAIRS            79  80  79  80                             ; stone steps up a cliff
+CAMPSITE          81  82  83  84   CAMP                      ; old fire ring: marks good camp spots
+SIGN              85  86  87  88   SOLID                     ; SIGN event
+FENCE_H            1   2  89  89   SOLID
+FENCE_V           90   2  90   1   SOLID
+BARREL            91  92  93  94   SOLID
+PIER_V            95  96  95  96                             ; jetty over water, 1 wide
+PIER_H            97  97  98  98                             ; quay planks; lower edge drops to water
+BOAT_00           99 102 100 101   SOLID
+BOAT_01          102 103 101 104   SOLID
+FOG              105 106 107 108   SOLID K_BRUMA             ; BRUMA wall: solid while lamp_ring < the ring of its event
+ROOF_TOP_L       109 110 111 112   SOLID
+ROOF_TOP_M       110 110 112 112   SOLID
+ROOF_TOP_R       110 113 112 114   SOLID
+ROOF_CHIMNEY     110 115 112 112   SOLID
+ROOF_BOT_L       111 112 116 117   SOLID
+ROOF_BOT_M       112 112 117 117   SOLID
+ROOF_BOT_R       112 114 117 118   SOLID
+WALL_L           119 120 121 122   SOLID
+WALL_M           120 120 122 122   SOLID
+WALL_R           120 123 122 124   SOLID
+WALL_WIN         125 126 122 122   SOLID
+WALL_DOOR        127 128 129 130   K_WARP                    ; door: WARP event
+WALL_SHOP        131 132 122 122   SOLID                     ; shop sign (sack)
+WALL_CLINIC      133 134 122 122   SOLID                     ; enfermeria sign (heart)
+WALL_INN         135 136 122 122   SOLID                     ; posada sign (steaming bowl)
+LIGHTHOUSE_00      0 137   0 138   SOLID
+LIGHTHOUSE_01    139   0 140   0   SOLID
+LIGHTHOUSE_10    141 142 143 144   SOLID
+LIGHTHOUSE_11    145 146 147 148   SOLID
+LIGHTHOUSE_20    149 150 149 151   SOLID
+LIGHTHOUSE_21    152 153 154 153   SOLID
+LIGHTHOUSE_30    149 150 149   0   SOLID
+LIGHTHOUSE_31    152 153 155 153   SOLID
+LIGHTHOUSE_40    156 157 158 159   SOLID
+LIGHTHOUSE_41    160 161 162 163   SOLID
+DRYBUSH          164 165 166 167   SOLID K_FORAGE            ; FORAGE_RAMAS (dry twigs); appended to keep ids stable

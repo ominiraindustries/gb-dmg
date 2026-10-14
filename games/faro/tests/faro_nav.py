@@ -1,18 +1,29 @@
 """FARO test helpers: start a game, read the maps as Python models, walk Leo along BFS paths.
 Shared by the tests and the playtester's bots (ROM addresses come from the .noi via gbtest)."""
+import json
 from collections import deque
 from pathlib import Path
 
 import metatiles  # noqa: F401  (world.load needs it importable)
+import preview
+import screens
 import world
+from gbtest import GB
 
 GAME = Path(__file__).resolve().parents[1]
 MAP_IDS = world.map_ids(GAME)                      # {"MAP_ISLA": n, ...}
 MAP_NAMES = {v: k[4:] for k, v in MAP_IDS.items()}
 _MAPS = {}
+BASES = screens.vram_bases(json.loads((GAME / "game.json").read_text(encoding="utf-8"))["vram_order"],
+                           preview.find_tilesets(GAME))
 ST_TITLE, ST_FIELD = 0, 1
 DIRS = {(0, 1): "down", (0, -1): "up", (-1, 0): "left", (1, 0): "right"}
 DIR_IDS = {"down": 0, "up": 1, "left": 2, "right": 3}
+
+
+def screen_text(gb):
+    """The 18 text rows the player sees (BG + window as LCDC shows them; other tiles = spaces)."""
+    return [GB.tile_text(r, BASES["font"], BASES["font_lower"], BASES["font_es"]) for r in gb.screen_tiles()]
 
 
 def map_model(name):
@@ -81,13 +92,16 @@ def step(gb, d):
     if gb.u8("pdir") != DIR_IDS[d]:
         gb.tap(d)
         gb.frames(2)
-    gb.pyboy.button_press(d)
-    for _ in range(40):
+    gb.pyboy.button_press(d)                        # held until the step starts, not longer: a
+    for _ in range(12):                             # held button chains the next step
         gb.frames(1)
-        if (gb.u8("px"), gb.u8("py")) != (x, y) and not gb.u8("pmoving"):
+        if gb.u8("pmoving") or (gb.u8("px"), gb.u8("py")) != (x, y):
             break
     gb.pyboy.button_release(d)
-    gb.frames(1)
+    for _ in range(80):
+        if not gb.u8("pmoving"):
+            break
+        gb.frames(1)
     return (gb.u8("px"), gb.u8("py")) != (x, y)
 
 

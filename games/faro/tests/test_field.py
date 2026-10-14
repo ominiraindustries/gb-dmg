@@ -70,6 +70,7 @@ def test_walk_varadero_screen_matches_map(gb):
     walk_to(gb, (7, 11))
     settle(gb)
     gb.write_u8("max_frame_lines", 0)                     # the title's menu frame is not the field
+    gb.write_u8("cheat_flags", 1)                         # creatures live (their cost counts) but start no battle
     for goal in ((40, 86), (50, 88), (36, 84)):
         walk_to(gb, goal, limit=80)
         gb.frames(10)

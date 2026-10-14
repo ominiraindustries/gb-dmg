@@ -14,28 +14,28 @@ legend:
 ┈ overworld:0
 ┉ overworld:45
 ┊ overworld:48
-┋ overworld:49
+┋ overworld:0
 ┌ overworld:2
 ┍ overworld:35
 ┎ overworld:36
 ┏ overworld:39
 ┐ overworld:40
-┑ overworld:69
-┒ overworld:66
-┓ overworld:81
-└ overworld:82
-┕ overworld:65
+┑ overworld:67
+┒ overworld:64
+┓ overworld:79
+└ overworld:80
+┕ overworld:63
 ┖ overworld:37
 ┗ overworld:38
 ┘ overworld:41
 ┙ overworld:42
-┚ overworld:70
-┛ overworld:68
-├ overworld:67
-┝ overworld:57
-┞ overworld:58
-┟ overworld:59
-┠ overworld:60
+┚ overworld:68
+┛ overworld:66
+├ overworld:65
+┝ overworld:55
+┞ overworld:56
+┟ overworld:57
+┠ overworld:58
 ┡ overworld:6
 ┢ overworld:7
 ┣ overworld:4
@@ -45,10 +45,10 @@ legend:
 ┧ overworld:26
 ┨ overworld:21
 ┩ overworld:22
-┪ overworld:61
-┫ overworld:62
-┬ overworld:63
-┭ overworld:64
+┪ overworld:59
+┫ overworld:60
+┬ overworld:61
+┭ overworld:62
 grid:
 ─━│┃─━│┃┄┅┅┆┇┈┇┈─━│┃
 ┈┉┊┋┈┉┊┋┄┅┅┆┈┌┈┌┈┉┊┋
