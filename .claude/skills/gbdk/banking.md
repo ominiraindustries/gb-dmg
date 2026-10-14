@@ -52,6 +52,14 @@ Add `-Wf--max-allocs-per-node50000` too (see `toolchain.md`). Our harness rebuil
 source in one lcc call, so bankpack re-evaluates all autobanked files every build (the docs'
 `-Wb-ext=.rel` advice is only needed for incremental Makefile builds).
 
+## Harness support (use this first)
+- game.json `"banked_res": [<stems>]`: generated tilesets / levels / `screen_<name>` go to banks via
+  `#pragma bank 255` + `BANKREF(<stem>)` (gb.py `bank_generated`); headers get `BANKREF_EXTERN`.
+- `harness/common/src/gbe_bank.c`: `bank_set_bkg_data(BANK(x), first, n, x_tiles)`,
+  `bank_set_sprite_data`, `bank_memcpy`, `bank_read8` (bank 0, save/restore the current bank).
+- Build check: with banks, anything fixed (non `_CODE_N`) ending past 0x4000 stops the build.
+- Verified in games/gbe_lab (`test_banked_assets_load_from_their_banks`).
+
 ## Putting code/data in banks
 - `#pragma bank 255` at the top of a file = "autobank this file" (bankpack picks the bank).
   `#pragma bank 2` = fixed bank 2. One bank per source file; split large assets into several files.

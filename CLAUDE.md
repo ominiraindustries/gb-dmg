@@ -117,11 +117,15 @@ Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `
 - Profiler (`gb.profile`): solo ve funciones **no static**; una función que acaba con llamada final
   (`jp`) se atribuye a la llamada. Para perfilar el interior de un módulo, quitar `static`.
 
-## Bancos de ROM (pendiente antes de más contenido)
-games/platformer ya enlaza código de forma plana en 0x0000-0x5FFF (banco 0 al 98%) confiando en que el
-banco 1 de MBC5 queda mapeado. En cuanto haya `SWITCH_ROM` (música, más niveles, `-autobank`) el código
-del banco 1 desaparecería y el juego se colgaría. Plan: código del juego y ISRs en banco 0/fijo,
-datos de niveles/tilesets/música en bancos con `#pragma bank 255`, cargados con el LCD apagado.
+## Bancos de ROM
+- `"banked_res": ["walls", "level1", "screen_title"]` en game.json mete esos assets generados en bancos
+  conmutables (`#pragma bank 255` + `BANKREF(<stem>)`); con flags MBC5 + `-autobank`
+  (`["-autobank", "-Wm-yt0x1B", "-Wm-yo8", "-Wm-ya1"]`). Se leen con `gbe_bank.c`
+  (`bank_set_bkg_data(BANK(walls), ...)`, `bank_memcpy`), que vive en el banco 0. Probado en games/gbe_lab.
+- El build **para** si con bancos algo del banco 0 (código, `_HOME`, `_GSINIT`...) pasa de 0x4000
+  (SWITCH_ROM lo desmapearía), y **avisa** de las builds planas que lo pasan sin bancos
+  (platformer y shmup hoy: funcionan mientras no se conmute). Código grande: funciones `BANKED`.
+  Detalle: skill `gbdk` `banking.md`.
 
 ## Reglas de hardware DMG
 Detalle completo: skill `gb-hardware`. Lo imprescindible:

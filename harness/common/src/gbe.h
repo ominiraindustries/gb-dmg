@@ -176,6 +176,15 @@ void sound_update(void);      // once per frame
 void vram_col16(uint8_t *dst, const uint8_t *src);  // 16 tiles down a BG map column (stride 32)
 void vram_mt4_list(uint8_t **dst, const uint8_t *tiles, uint8_t n);   // n metatiles (n >= 1)
 
+// ---------------------------------------------------------------- gbe_bank.c
+// Banked assets: game.json "banked_res": ["walls", "level1"] puts the generated files in switchable
+// banks (BANKREF(<stem>)); load them with BANK(<stem>) from any code:
+//   bank_set_bkg_data(BANK(walls), first, WALLS_COUNT, walls_tiles);
+void bank_set_bkg_data(uint8_t bank, uint8_t first, uint8_t n, const uint8_t *data) NONBANKED;
+void bank_set_sprite_data(uint8_t bank, uint8_t first, uint8_t n, const uint8_t *data) NONBANKED;
+void bank_memcpy(uint8_t bank, void *dst, const void *src, uint16_t n) NONBANKED;
+uint8_t bank_read8(uint8_t bank, const uint8_t *p) NONBANKED;
+
 // ---------------------------------------------------------------- gbe_selftest.c
 // Equivalence of every asm routine with its C reference (gb-asm procedure). Tests call
 // gb.selftest() (sets gbe_eq_request; the game calls gbe_selftest()). Which modules are checked

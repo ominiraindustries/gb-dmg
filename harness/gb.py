@@ -146,6 +146,48 @@ def check_sources(gdir, cfg):
     return problems
 
 
+def bank_generated(c_file):
+    """Move a generated asset into a switchable ROM bank: '#pragma bank 255' (bankpack picks the
+    bank) + BANKREF(<stem>) in the .c, BANKREF_EXTERN(<stem>) in the .h. Code reads it with
+    BANK(<stem>) through the gbe_bank.c helpers (bank 0)."""
+    c_file = Path(c_file)
+    stem = c_file.stem
+    c = c_file.read_text(encoding="utf-8")
+    if "#pragma bank" not in c:
+        c_file.write_text("#pragma bank 255\n#include <gb/gb.h>\n" + c + f"\nBANKREF({stem})\n",
+                          encoding="utf-8")
+    h_file = c_file.with_suffix(".h")
+    h = h_file.read_text(encoding="utf-8")
+    if "BANKREF_EXTERN" not in h:
+        h_file.write_text(h + f"#include <gb/gb.h>\nBANKREF_EXTERN({stem})\n", encoding="utf-8")
+
+
+def check_bank0(map_file, cfg):
+    """With banks in use, everything that is not in a switchable bank must end below 0x4000: a flat
+    build that runs past it (games/platformer, games/shmup: code up to 0x6DA1) works only until the
+    first SWITCH_ROM unmaps the code. Returns (errors, warnings)."""
+    import re
+    areas = {}
+    for m in re.finditer(r"^(_\w+)\s+([0-9A-F]{8})\s+([0-9A-F]{8}) =", map_file.read_text(encoding="utf-8"),
+                         re.M):
+        name, addr, size = m.group(1), int(m.group(2), 16), int(m.group(3), 16)
+        if size:
+            areas[name] = (addr, size)
+    banked = [n for n, (a, z) in areas.items() if re.match(r"_CODE_[1-9]\d*$", n)]
+    fixed = [(n, a + z) for n, (a, z) in areas.items()
+             if (a & 0xFFFF) < 0x8000 and not re.match(r"_CODE_[1-9]\d*$", n) and a < 0x10000]
+    end = max((e for _, e in fixed), default=0)
+    if end <= 0x4000:
+        return [], []
+    past = ", ".join(f"{n} to 0x{e:04X}" for n, e in fixed if e > 0x4000)
+    if banked or "-autobank" in cfg.get("lcc_flags", []):
+        return [f"bank 0 overflow ({past}): code/const data past 0x4000 is unmapped by SWITCH_ROM; "
+                "move data to banks (game.json \"banked_res\", #pragma bank 255) or code into "
+                "BANKED functions"], []
+    return [], [f"flat build past 0x4000 ({past}): fine without bank switching; before using banks "
+                f"(music, more levels) see CLAUDE.md \"Bancos de ROM\""]
+
+
 def tileset_labels(gdir, mt_file):
     """{LABEL: index} of the tileset a metatiles.mt names (game res/ first, then harness/common)."""
     ts = None
@@ -207,6 +249,12 @@ def build(name):
             sources.append(levels.convert(lvl, gen, cfg.get("levels", {})))
         except ValueError as e:
             die(str(e))
+    banked = cfg.get("banked_res", [])
+    for stem in banked:
+        c_file = gen / f"{stem}.c"
+        if not c_file.exists():
+            die(f"banked_res '{stem}': no generated {c_file.name} (tileset, level or screen_<name>)")
+        bank_generated(c_file)
     cmd = [
         str(LCC),
         f"-I{gen}",  # generated asset headers
@@ -230,6 +278,11 @@ def build(name):
         die("build stopped on warnings that are always bugs here:\n  " + "\n  ".join(problems))
     if res.returncode != 0 or not out.exists():
         die("build failed")
+    errors, warnings = check_bank0(out.with_suffix(".map"), cfg)
+    for w in warnings:
+        print("warning: " + w)
+    if errors:
+        die("\n  ".join(errors))
     print(f"OK {out.relative_to(ROOT)} ({out.stat().st_size} bytes)")
     usage = subprocess.run([str(ROMUSAGE), str(out.with_suffix(".map")), "-g"],
                            capture_output=True, text=True)

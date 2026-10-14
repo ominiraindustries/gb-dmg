@@ -10,7 +10,18 @@
     "gbe_pool.c",
     "gbe_pool.s",
     "gbe_spr.c",
-    "gbe_selftest.c"
+    "gbe_selftest.c",
+    "gbe_bank.c"
   ],
-  "lcc_flags": []
+  "lcc_flags": [
+    "-autobank",
+    "-Wm-yt0x1B",
+    "-Wm-yo8",
+    "-Wm-ya1"
+  ],
+  "banked_res": [
+    "bank0",
+    "bank1",
+    "bank2"
+  ]
 }

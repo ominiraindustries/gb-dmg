@@ -3,6 +3,9 @@
 // Scenario 1 (shmup peak, games/shmup GDD 9.3): 8 shots + 12 enemy bullets + 6 enemies (16x16)
 // moving, shots x enemies and bullets/enemies x player collisions, OAM built by priority groups.
 #include "gbe.h"
+#include "bank0.h"
+#include "bank1.h"
+#include "bank2.h"
 #include "bg.h"
 #include "spr.h"
 
@@ -83,9 +86,16 @@ void draw_sprites(void) {
     if (++spr_rot == 48) spr_rot = 0;
 }
 
+uint8_t bank_ids[3];
+
 void main(void) {
     DISPLAY_OFF;
     set_bkg_data(0, BG_COUNT, bg_tiles);
+    // banking test (tests/test_game.py): three banked tilesets into VRAM 0x8800.. (BG 128+)
+    bank_set_bkg_data(BANK(bank0), 128, 32, bank0_tiles);
+    bank_set_bkg_data(BANK(bank1), 160, 32, bank1_tiles);
+    bank_set_bkg_data(BANK(bank2), 192, 32, bank2_tiles);
+    bank_ids[0] = BANK(bank0); bank_ids[1] = BANK(bank1); bank_ids[2] = BANK(bank2);
     set_sprite_data(0, SPR_COUNT, spr_tiles);
     init_bkg(BG_DOT);
     SPRITES_8x16;

@@ -26,6 +26,7 @@ List the files in `"common_src"`; their headers are on the include path.
 | `gbe_vram.s` | `vram_col16` (16 tiles down a BG column), `vram_mt4_list` (queued 2x2 metatiles; used by gbe_map and gbe_vmap) | - | platformer: 32 T/tile; metatile 600 -> 100 T |
 | `gbe_pool.c` `gbe_pool.s` | many-object pools (bullets, shots, enemies) in 8-bit OAM coords: `pool_alloc`, asm `pool_move` (free on exit), asm `hit_first` (box vs range, one compare per axis) | `GBE_POOL_MAX` | shmup: move ~250 T, hit ~100 T per object |
 | `gbe_spr.c` (+ asm `spr_group` in `gbe_pool.s`) | OAM groups with fixed ranges (lower range = priority); each group starts half a group further on odd frames, so a sprite dropped on a >10 line is drawn the next frame | `spr_rot` cycling through 2 x a common multiple of the slot counts (< 64) | shmup: ~300 T per drawn object |
+| `gbe_bank.c` | read banked const data from any code (bank 0, restores the bank): `bank_set_bkg_data`, `bank_set_sprite_data`, `bank_memcpy`, `bank_read8` | game.json `"banked_res"` + MBC flags | gbe_lab: 3 banked tilesets loaded and checked byte by byte |
 | `gbe_selftest.c` | asm-vs-C equivalence of all the above, run in the ROM | call `gbe_selftest()` when `gbe_eq_request` | test: `gb.selftest()` |
 
 Header: `gbe.h` (documents every function and the rules). The game provides `src/gbe_config.h`:
