@@ -1,8 +1,8 @@
 // CABALLERITO - shared declarations. Design: design/gdd.md, UI: design/ui.md.
+// Engine pieces (frame loop, OAM, fades/transitions, HUD cut, actors, scrolling map, SFX) come
+// from the shared library harness/common/src/gbe*.c/.s (see gbe.h).
 #pragma once
-#include <gb/gb.h>
-#include <gb/metasprites.h>  // hide_sprites_range
-#include <stdint.h>
+#include "gbe.h"
 #include "metatiles.h"
 #include "bg.h"
 #include "font.h"
@@ -12,9 +12,8 @@
 
 // World coordinates (GDD §2.0): x = u16 px, y = u8 px with Y_BIAS (level row 0 starts at y = 32).
 // With the HUD on top and SCY = 0xF0, OAM y == world y and OAM x == x - camera_x + 8.
-#define Y_BIAS        32
-#define LEVEL_ROWS    8
-#define LEVEL_MAX_COLS 255
+#define Y_BIAS        GBE_Y_BIAS
+#define LEVEL_ROWS    GBE_MAP_ROWS
 #define PIT_Y         (Y_BIAS + LEVEL_ROWS * 16)   // top edge below this row = fell in a pit
 
 enum { STATE_TITLE, STATE_INTRO, STATE_PLAY, STATE_PAUSE, STATE_DYING, STATE_GOAL, STATE_CLEAR,
@@ -25,43 +24,29 @@ enum { STATE_TITLE, STATE_INTRO, STATE_PLAY, STATE_PAUSE, STATE_DYING, STATE_GOA
 #define TILE_UI       (BG_COUNT + FONT_COUNT)
 
 // --- main.c
-extern uint8_t state, keys, prev_keys, pressed;
-extern uint8_t frame_lines, max_frame_lines, skip_measure, vram_late;
+extern uint8_t state;
 extern uint8_t cheat_flags;                        // written by tests only
 #define CHEAT_INVINCIBLE 1
 #define CHEAT_NO_TIMER   2
-
-extern uint8_t hud_cut;                            // LYC ISR cuts the window at line 15
-extern uint8_t bgp_shadow, obp0_shadow, obp1_shadow;   // palettes written in VBlank (fades)
 void new_game(void);
 void load_level(void);                             // LCD off: level, enemies, Teo, HUD
 
-// --- flow.c (screens, transitions, goal)
+// --- flow.c (screens, goal); transitions come from gbe_screen
 enum { SCR_TITLE, SCR_INTRO, SCR_CLEAR, SCR_GAMEOVER };
-void transition(uint8_t next);                     // fade out, rebuild with LCD off, fade in
-void show_screen_now(uint8_t which);
-uint8_t update_transition(void);                   // 1 while a transition owns the frame
 void update_screens(void);
 void ui_draw_vram(void);
-void set_fade(uint8_t k);
 void goal_reset(void);
 uint8_t goal_check(void);
 void update_goal(void);
 void draw_banner(void);
 extern uint8_t record[3];
 
-// --- level.c
-extern uint8_t level[];
-extern uint8_t level_cols;                         // N metatile columns
-extern uint16_t camera_x;
-extern uint8_t scx_shadow;
-extern uint16_t cols_written;                      // next tile column to stream
-void level_load(uint16_t cam);                     // LCD must be off; camera starts at cam
-void level_update_camera(void);
-uint8_t mt_at(uint16_t x, uint8_t y);              // metatile id at a world pixel (pits/walls handled)
-uint8_t solid_at(uint16_t x, uint8_t y);
-void level_draw_vram(void);
-void block_set(uint8_t col, uint8_t row, uint8_t mt);   // change level[] and redraw if on screen
+// --- level.c (game layer over gbe_map)
+#define CAMERA_LEAD   64                           // Teo stays <= 64 px from the left edge (GDD §2.5)
+void level_load(uint16_t cam);                     // LCD off: map, coin columns, HUD-behind rows
+#define level_update_camera() map_follow(player_x, CAMERA_LEAD)
+#define level_draw_vram()     map_draw_vram()
+#define block_set(c, r, m)    map_set(c, r, m)
 
 // --- blocks.c
 void block_hit(uint8_t col, uint8_t row);          // hit from below by the player
@@ -100,18 +85,15 @@ void player_kill(void);                            // time over
 void player_animate(void);
 extern uint8_t player_dead;                        // 1 = pit, 2 = killed
 
-// --- actors.c  (struct of arrays, fixed slot ranges = fixed OAM ranges, GDD §7.3)
-#define A_ENEMY0  0                                // 5 enemies (step 3)
+// --- actors.c  (slot ranges = fixed OAM ranges, GDD §7.3; arrays live in gbe_actors)
+#define A_ENEMY0  0                                // 5 enemies
 #define A_ITEM    5
 #define A_SHOT0   6                                // 2 projectiles
 #define A_DEBRIS0 8                                // 4 brick pieces
 #define A_COIN0   12                               // 2 coins popping out of blocks
-#define ACT_MAX   14
+#define ACT_MAX   GBE_ACT_MAX
 enum { T_NONE, T_WALKER, T_SHELL, T_ITEM_GROW, T_ITEM_SHOT, T_ITEM_1UP, T_SHOT, T_PUF, T_DEBRIS,
        T_COINPOP };
-extern uint8_t act_type[], act_y[], act_state[], act_timer[];
-extern uint16_t act_x[];
-extern int16_t act_vx[], act_vy[];
 void actors_clear(void);
 void actors_update(void);
 void actors_draw(void);
@@ -120,21 +102,13 @@ void spawn_debris(uint8_t col, uint8_t row);
 void spawn_coinpop(uint8_t col, uint8_t row);
 uint8_t spawn_shot(uint16_t x, uint8_t y, uint8_t left);
 void bump_actors_on_block(uint8_t col, uint8_t row);
-void oam16(uint8_t nb, uint8_t ox, uint8_t y, uint8_t tile, uint8_t prop);  // 16x16 = 2 sprites
-void act_move(uint8_t i);                          // asm (vram.s): position += velocity, 8.8
 // enemies.c
 void enemies_reset(uint16_t from_x);               // spawn list restarts at the first object >= x
 void enemies_update(void);
 void enemies_draw(void);
 void bump_enemies_on_block(uint16_t x, uint8_t top);
 
-// --- sound.c
+// --- sound.c: the effect table for gbe_sfx
 enum { SFX_JUMP_SMALL, SFX_JUMP_BIG, SFX_COIN, SFX_STOMP, SFX_BUMP, SFX_BREAK, SFX_POWER_APPEAR,
        SFX_POWER_GET, SFX_SHOOT, SFX_KICK, SFX_HURT, SFX_ONEUP, SFX_TICK, SFX_PAUSE, SFX_DEATH,
        SFX_HURRY, SFX_COUNT };
-void sound_init(void);
-void sfx(uint8_t id);
-void sound_update(void);
-
-// --- vram.s (call only in VBlank or with the LCD off)
-void vram_col16(uint8_t *dst, const uint8_t *src);  // 16 tiles down a BG map column (stride 32)

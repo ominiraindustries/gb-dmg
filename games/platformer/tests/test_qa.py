@@ -867,7 +867,7 @@ def test_qa_five_enemies_on_screen_frame_budget(gb):
     gb.frames(2)
     gb.write_u8("max_frame_lines", 0)
     p = gb.profile(["update_play", "enemies_update", "enemies_draw", "walk_on_map", "enemy_vs_enemy",
-                    "prepare_column", "actors_draw", "player_draw", "collect_coins", "move_x",
+                    "map_column", "actors_draw", "player_draw", "collect_coins", "move_x",
                     "move_y", "draw_vram", "shots_vs_enemy", "player_touches"])
     gb.pyboy.button_press("right")
     gb.pyboy.button_press("b")

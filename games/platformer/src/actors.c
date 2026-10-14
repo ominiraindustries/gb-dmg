@@ -3,11 +3,6 @@
 #include <string.h>
 #include "game.h"
 
-uint8_t act_type[ACT_MAX], act_xs[ACT_MAX], act_y[ACT_MAX], act_ys[ACT_MAX];
-uint8_t act_state[ACT_MAX], act_timer[ACT_MAX], act_flip[ACT_MAX];
-uint16_t act_x[ACT_MAX];
-int16_t act_vx[ACT_MAX], act_vy[ACT_MAX];
-
 // First OAM sprite of each slot (GDD §7.3) and how many 8x16 sprites it uses
 static const uint8_t act_spr[ACT_MAX] = { 4, 6, 8, 10, 12, 14, 16, 17, 18, 19, 20, 21, 22, 23 };
 
@@ -26,25 +21,6 @@ static const uint8_t act_spr[ACT_MAX] = { 4, 6, 8, 10, 12, 14, 16, 17, 18, 19, 2
 void actors_clear(void) {
     uint8_t i;
     for (i = 0; i < ACT_MAX; i++) act_type[i] = T_NONE;
-}
-
-// Reference C version of act_move (the game uses the asm one in vram.s)
-void act_move_c(uint8_t i) {
-    uint16_t t = (uint16_t)act_xs[i] + (uint8_t)act_vx[i];
-    act_xs[i] = (uint8_t)t;
-    act_x[i] += (int8_t)(act_vx[i] >> 8) + (t >> 8);
-    t = (uint16_t)act_ys[i] + (uint8_t)act_vy[i];
-    act_ys[i] = (uint8_t)t;
-    act_y[i] += (int8_t)(act_vy[i] >> 8) + (t >> 8);
-}
-
-void act_spawn(uint8_t i, uint8_t type, uint16_t x, uint8_t y) {
-    act_type[i] = type;
-    act_x[i] = x;
-    act_y[i] = y;
-    act_xs[i] = act_ys[i] = 0;
-    act_vx[i] = act_vy[i] = 0;
-    act_state[i] = act_timer[i] = act_flip[i] = 0;
 }
 
 // ---------------------------------------------------------------- spawners
@@ -203,22 +179,6 @@ void actors_update(void) {
 }
 
 // ---------------------------------------------------------------- drawing
-
-// Direct shadow OAM writes: ~3x cheaper than set_sprite_tile/prop + move_sprite per sprite.
-// A 16x16 object = two 8x16 sprites (tile, tile + 2); with S_FLIPX the halves swap.
-void oam16(uint8_t nb, uint8_t ox, uint8_t y, uint8_t tile, uint8_t prop) {
-    OAM_item_t *o = &shadow_OAM[nb];
-    uint8_t t2 = tile + 2;
-    if (prop & S_FLIPX) { t2 = tile; tile += 2; }
-    o->y = y; o->x = ox; o->tile = tile; o->prop = prop;
-    o++;
-    o->y = y; o->x = ox + 8; o->tile = t2; o->prop = prop;
-}
-
-static void oam8(uint8_t nb, uint8_t ox, uint8_t y, uint8_t tile, uint8_t prop) {
-    OAM_item_t *o = &shadow_OAM[nb];
-    o->y = y; o->x = ox; o->tile = tile; o->prop = prop;
-}
 
 void actors_draw(void) {
     static const uint8_t spin_tile[4] = { SPR_COIN_SPIN0, SPR_COIN_SPIN1, SPR_COIN_SPIN2, SPR_COIN_SPIN1 };

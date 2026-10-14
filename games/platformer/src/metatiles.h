@@ -17,7 +17,9 @@ enum {
 enum { OBJ_START, OBJ_WALKER, OBJ_SHELL, OBJ_CHECKPOINT, OBJ_PLANT, OBJ_HOPPER };
 
 // Collision class in the low bits, ATTR_SOLID set when it blocks movement (GDD §2.6)
-#define ATTR_SOLID   0x80
+#ifndef ATTR_SOLID
+#define ATTR_SOLID   0x80                       // same value as gbe.h (map convention: bit 7 = solid)
+#endif
 #define CLS_MASK     0x0F
 enum { CLS_EMPTY, CLS_SOLID, CLS_BRICK, CLS_Q_COIN, CLS_Q_POWER, CLS_HIDDEN_1UP, CLS_COIN, CLS_POLE };
 

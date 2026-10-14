@@ -112,3 +112,10 @@ and tests run with GBDK 4.5.0 (marked *tested*).
 - `set_bkg_tiles` / `set_bkg_tile_xy` cost ~130 M-cycles per tile and wait for STAT mode outside
   VBlank: fine for a few tiles, ruinous for whole rows every frame (games/tetris measured 4 rows +
   HUD going to 120 scanlines). In VBlank write the map directly (`0x9800 + y*32 + x`).
+- **SDCC 4.5.1 codegen bug (seen in harness/common/src/gbe_map.c map_load):**
+  `level_px_w = (uint16_t)cols << 4;` computed the value in HL but stored `0` as the high byte
+  (`xor a` / `ld (_level_px_w + 1), a`), with or without `--max-allocs-per-node`. Not reproducible
+  in small files: it depends on the surrounding function. `(uint16_t)cols * 16` compiled correctly.
+  Lesson: a test must read every important 16-bit value back (here the whole map read as solid);
+  when a value is "half right", read the asm (`lcc -S`) before suspecting the logic.
+

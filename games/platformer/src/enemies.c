@@ -4,9 +4,6 @@
 #include <string.h>
 #include "level1_1.h"
 
-void act_move(uint8_t i);
-void act_spawn(uint8_t i, uint8_t type, uint16_t x, uint8_t y);
-extern uint8_t act_flip[], act_xs[], act_ys[];
 
 enum { E_WALK, E_SQUASH, E_FLIP, E_BALL, E_BALL_MOVE };
 

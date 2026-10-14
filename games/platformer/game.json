@@ -54,7 +54,18 @@
     }
   },
   "common_src": [
-    "bcd.s"
+    "bcd.s",
+    "gbe_frame.c",
+    "gbe_oam.c",
+    "gbe_video.c",
+    "gbe_screen.c",
+    "gbe_actors.c",
+    "gbe_actors.s",
+    "gbe_map.c",
+    "gbe_map.s",
+    "gbe_sfx.c",
+    "gbe_vram.s",
+    "gbe_selftest.c"
   ],
   "screens": [
     "title",

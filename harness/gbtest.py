@@ -108,6 +108,19 @@ class GB:
         a = self.addr(name)
         return [self._read(a + i) for i in range(n)]
 
+    # --- gbe engine selftest ---
+    def selftest(self, max_frames=60000):
+        """Run the gbe library's asm-vs-C equivalence checks inside the ROM (gbe_selftest.c; the
+        game calls gbe_selftest() when gbe_eq_request is set). Returns (mismatches, cases)."""
+        self.write_u8("gbe_eq_done", 0)
+        self.write_u8("gbe_eq_request", 1)
+        for _ in range(max_frames // 100):
+            self.frames(100)
+            if self.u8("gbe_eq_done"):
+                break
+        assert self.u8("gbe_eq_done"), "gbe selftest did not finish"
+        return self.u16("gbe_eq_mismatch"), self.u16("gbe_eq_count")
+
     # --- profiling ---
     def profile(self, funcs):
         """Start measuring T-cycles per call of the given C functions (by name).
@@ -139,6 +152,8 @@ class Profiler:
     def __init__(self, gb, funcs, context_var=None):
         self.gb, self.pb = gb, gb.pyboy
         funcs = list(dict.fromkeys(funcs))   # one hook per address: ignore repeated names
+        self.missing = [f for f in funcs if f not in gb.syms]   # renamed/static: reported, not fatal
+        funcs = [f for f in funcs if f in gb.syms]
         self.stats = {f: {"calls": 0, "total": 0, "max": 0, "ctx": None} for f in funcs}
         self.pending = {}      # return address -> list of (func, start cycles, context)
         self.ret_hooks = set()
@@ -187,4 +202,6 @@ class Profiler:
         for f, s in sorted(self.stats.items(), key=lambda kv: -kv[1]["max"]):
             avg = s["total"] // s["calls"] if s["calls"] else 0
             lines.append(f"{f:<20}{s['calls']:>7}{avg:>9}{s['max']:>9}{s['max'] / 456:>11.1f}  {s['ctx']}")
+        if self.missing:
+            lines.append(f"(not found, skipped: {', '.join(self.missing)})")
         return "\n".join(lines)

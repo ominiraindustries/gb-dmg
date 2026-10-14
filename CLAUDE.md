@@ -16,6 +16,10 @@ el profiling lo justifica y con una prueba de equivalencia contra la versión C.
     ui-designer se convierten al compilar en mapas de tiles (`screen_<nombre>_map[360]` + sprites) con
     `"screens": [...]` y `"vram_order": ["bg", "font", "ui"]` (bases de VRAM) en game.json
     (`harness/screens.py`). Lo que diseña el agente es exactamente lo que sale en el juego.
+  - **Librería de motor `gbe`** (`harness/common/src/gbe*.c/.s`, ver `harness/common/README.md`):
+    bucle de frame y medición, OAM directo, fundidos/transiciones, HUD con corte LYC, actores con
+    `act_move` asm, mapa con scroll y consultas asm, SFX con prioridad, autoprueba asm-vs-C
+    (`gb.selftest()`). Juegos nuevos parten de ella en vez de reescribirla.
   - Código compartido en `harness/common/src/` (p. ej. `bcd.s` + `bcd.h`, suma BCD con `daa`):
     `"common_src": ["bcd.s"]` en game.json; sus headers están en el include path.
   - `res/*.lvl`: niveles en ASCII (rejilla + `@ clave valor`), convertidos a `build/gen/<nivel>.c/.h`

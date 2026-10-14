@@ -15,25 +15,6 @@ uint8_t record[3];                       // packed BCD like score (RAM only in M
 uint8_t blink60;                         // 0..59, the 30/30 f blink of screen texts
 uint8_t new_record;
 uint8_t screen_timer;
-uint8_t bgp_shadow = 0xE4, obp0_shadow = 0xE4, obp1_shadow = 0xD8;   // written in VBlank
-
-// ---------------------------------------------------------------- fades (ui.md §1.2)
-
-static uint8_t fade_pal(uint8_t pal, uint8_t k) {
-    uint8_t out = 0, i, c;
-    for (i = 0; i < 8; i += 2) {
-        c = (pal >> i) & 3;
-        c = c > k ? c - k : 0;
-        out |= c << i;
-    }
-    return out;
-}
-
-void set_fade(uint8_t k) {               // 0 = normal .. 3 = white
-    bgp_shadow = fade_pal(0xE4, k);
-    obp0_shadow = fade_pal(0xE4, k);
-    obp1_shadow = fade_pal(0xD8, k);
-}
 
 // ---------------------------------------------------------------- small VRAM jobs for blinking text
 // Prepared outside VBlank, copied by ui_draw_vram() (called from draw_vram)
@@ -83,25 +64,12 @@ static void update_record(void) {
     }
 }
 
-static void lcd_off_common(void) {
-    DISPLAY_OFF;
-    hide_sprites_range(0, 40);
-    set_fade(3);
-    BGP_REG = OBP0_REG = OBP1_REG = 0;        // white while drawing (ISR keeps the shadows)
-    hud_cut = 0;
-    HIDE_WIN;
-    HIDE_SPRITES;
-    SCX_REG = SCY_REG = 0;
-    scx_shadow = 0;
-    skip_measure = 1;
-}
-
 // ---------------------------------------------------------------- TITLE (ui.md §8)
 
 uint8_t press_tiles[11];
 
 static void build_title(void) {
-    lcd_off_common();
+    lcd_off_redraw_begin();
     put_screen(screen_title_map);
     put_bcd6(BG_MAP + 12 * 32 + 10, record);
     memcpy(press_tiles, screen_title_map + 10 * 20 + 4, 11);   // "PULSA START" as drawn
@@ -144,7 +112,7 @@ static void update_title(void) {
 static void build_intro(void) {
     uint8_t *w = WIN_MAP;
     uint8_t r;
-    lcd_off_common();
+    lcd_off_redraw_begin();
     load_level();                             // level + HUD rows 0-1 (main.c)
     for (r = 2; r < 18; r++) memcpy(w + r * 32, blanks, 20);
     put_text(w + 6 * 32 + 5, "MUNDO 1-1");
@@ -192,7 +160,7 @@ static void update_intro(void) {
 uint8_t nr_tiles[13];
 
 static void build_result(uint8_t clear) {
-    lcd_off_common();
+    lcd_off_redraw_begin();
     update_record();
     if (clear) {
         put_screen(screen_clear_map);
@@ -218,58 +186,16 @@ static void update_result(void) {
     if (t >= 180 || (t >= 30 && (pressed & (J_START | J_A)))) transition(SCR_TITLE);
 }
 
-// ---------------------------------------------------------------- transitions (ui.md §1.3)
+// ---------------------------------------------------------------- screens for gbe_screen
 
-uint8_t trans_phase, trans_timer, trans_next;   // phase 0 none, 1 fading out, 2 fading in
-
-void transition(uint8_t next) {
-    trans_phase = 1;
-    trans_timer = 0;
-    trans_next = next;
-}
-
-static void build(uint8_t which) {
+// Called by gbe_screen with the screen faded to white
+void screen_build(uint8_t which) {
     switch (which) {
     case SCR_TITLE: build_title(); break;
-    case SCR_INTRO: build_intro(); break;
+    case SCR_INTRO: build_intro(); trans_own_fadein = 1; break;   // the intro has its own timeline
     case SCR_CLEAR: build_result(1); break;
     case SCR_GAMEOVER: build_result(0); break;
     }
-}
-
-void show_screen_now(uint8_t which) {          // boot: no fade-out first
-    build(which);
-    trans_phase = 2;
-    trans_timer = 0;
-}
-
-// Returns 1 while a transition owns the frame (game logic frozen)
-uint8_t update_transition(void) {
-    uint8_t k;
-    if (trans_phase == 1) {
-        k = 1 + (trans_timer >> 2);
-        set_fade(k > 3 ? 3 : k);
-        if (++trans_timer == 16) {
-            build(trans_next);
-            trans_phase = 2;
-            trans_timer = 0;
-        }
-        return 1;
-    }
-    if (trans_phase == 2) {
-        if (state == STATE_INTRO) {            // the intro runs its own timeline
-            trans_phase = 0;
-            return 0;
-        }
-        k = trans_timer >> 2;
-        set_fade(k >= 3 ? 0 : 3 - k);
-        if (++trans_timer == 16) {
-            trans_phase = 0;
-            set_fade(0);
-        }
-        return 1;
-    }
-    return 0;
 }
 
 void update_screens(void) {
