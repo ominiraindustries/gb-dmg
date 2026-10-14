@@ -1,5 +1,5 @@
 - [User taste](user_taste.md) — classic-game clones, original themes (chose medieval knight), gentle difficulty, Spanish UI, classic top HUD
 - [Shmup project](project_shmup.md) — games/shmup doubles as harness stress test; designs must list reused gbe modules + new engine items
-- [Faro project](project_faro.md) — games/faro commercial capture+survival RPG (GDD v0.1), data-driven RPG kit, E1-E16 engine list
+- [Faro project](project_faro.md) — games/faro capture+survival RPG (GDD v1.1), protagonist Leo, M1b data in res/data/*.tbl, fixed ids
 - [Commercial scope](feedback_commercial_scope.md) — faro must be a real commercial product; decide theme/story myself, ask only expensive choices
 - [Dungeon project](project_dungeon.md) — games/dungeon first-person crawler (TORRE HUNDIDA, approved v1.0), double-buffered view, E1-E16 engine list incl. banking

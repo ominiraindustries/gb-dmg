@@ -1,0 +1,6 @@
+; FARO - variables de historia (harness/script.py): id = orden de linea, max 16, solo se anade al final.
+V_TOMASA           ; charla rotativa de Tomasa (0..n)
+V_PESCADOR         ; charla rotativa del pescador
+V_VECINA           ; charla rotativa de la vecina
+V_ENCARGO          ; plumas entregadas en el encargo del pescador (0-3)
+V_TUTO             ; paso del tutorial del prologo (0 inicio .. 5 hecho)

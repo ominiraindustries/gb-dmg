@@ -1,0 +1,55 @@
+; FARO - tecnicas del jugador (GDD 3.5). d1/d2: descripcion 2 x 12 (combate y Equipo).
+; nivel: se aprende al subir a ese nivel (0 = por guion, op learn_skill).
+; efecto (regla del kit):
+;   ENERGIA   +val EN y pierde el turno              VER       muestra PV y debilidades, anota el Cuaderno
+;   ATAQUE    dano: dtype/pot ('-'/0 = los del arma elegida en el submenu Atacar), d = (d * mul) >> 3
+;             (8 = x1; GDD 3.4 paso 'mods'), golpes, suave = nunca deja a 0 PV, retro = recibes d >> retro,
+;             defsh = usa DEF >> defsh, arma = exige un arma de ese tipo
+;   ESTADO    sin dano                               CURA      +PV max >> val; limpia = cura estados
+;   PUNTERIA  el siguiente ataque acierta seguro y su critico es RULE CRIT_AIM
+;   DEBUFF    ATQ de la criatura - (ATQ >> val) durante turnos
+; Estados: fams '-' = a todas: st con stp y st2 seguro. Si fams tiene familias: a esas st con stp y
+; st2 seguro; al resto st con stp2 y sin st2. hab: habilidad necesaria. campo: se usa fuera de combate.
+@ table skills
+@ prefix SKILL
+@ col name text 14
+@ col d1 text 12
+@ col d2 text 12
+@ col en u8
+@ col nivel u8
+@ col efecto enum ENERGIA VER ATAQUE ESTADO CURA PUNTERIA DEBUFF
+@ col dtype ref dtypes
+@ col pot u8
+@ col mul u8
+@ col golpes u8
+@ col suave bool
+@ col retro u8
+@ col defsh u8
+@ col arma ref dtypes
+@ col hab flags CUT LIGHT FISH SLING HOOK BIKE BOAT FLY
+@ col st ref statuses
+@ col stp u8
+@ col fams flags BICHO BESTIA AVE PEZ REPTIL FLORA BRUMA
+@ col stp2 u8
+@ col st2 ref statuses
+@ col val u8
+@ col turnos u8
+@ col limpia bool
+@ col campo bool
+;id           name            d1             d2             en nivel efecto   dtype pot mul golpes suave retro defsh arma  hab   st       stp fams       stp2 st2       val turnos limpia campo
+CONCENTRAR    "Concentrar"    "Recupera 3"   "EN y espera." 0  1     ENERGIA  -     0   8   0      no    0     0     -     -     -        0   -          0    -         3   0      no     yes
+OJO           "Ojo de farero" "Ves sus PV y" "debilidades." 1  2     VER      -     0   8   0      no    0     0     -     -     -        0   -          0    -         0   0      no     no
+GOLPE_SUAVE   "Golpe suave"   "Ataque que"   "nunca mata."  2  3     ATAQUE   -     0   6   1      yes   0     0     -     -     -        0   -          0    -         0   0      no     no
+ATURDIR       "Aturdir"       "Golpe que"    "aturde."      3  6     ATAQUE   GOLPE 6   8   1      no    0     0     -     -     ATURDIDO 154 -          0    -         0   0      no     no
+VENDAJE       "Vendaje"       "Cura un"      "cuarto de PV" 5  8     CURA     -     0   8   0      no    0     0     -     -     -        0   -          0    -         2   0      no     yes
+SILBIDO       "Silbido"       "Duerme aves"  "y bestias."   3  0     ESTADO   -     0   8   0      no    0     0     -     -     DORMIDO  115 BESTIA+AVE 38   -         0   0      no     no
+TAJO_DOBLE    "Tajo doble"    "Dos cortes"   "con el arma." 4  11    ATAQUE   -     0   5   2      no    0     0     CORTE -     -        0   -          0    -         0   0      no     no
+PUNTERIA      "Punteria"      "Acierto y"    "critico."     2  14    PUNTERIA -     0   8   0      no    0     0     -     -     -        0   -          0    -         0   0      no     no
+GRITO         "Grito"         "Baja su"      "ataque."      3  17    DEBUFF   -     0   8   0      no    0     0     -     -     -        0   -          0    -         2   3      no     no
+CALMA         "Calma"         "Calma a la"   "criatura."    4  0     ESTADO   -     0   8   0      no    0     0     -     -     CALMADO  154 -          0    -         0   0      no     no
+RAFAGA        "Rafaga de luz" "Luz que"      "ilumina."     8  0     ATAQUE   LUZ   18  8   1      no    0     0     -     LIGHT -        0   -          0    ILUMINADO 0   0      no     no
+EMBESTIDA     "Embestida"     "Doble fuerza" "y te hiere."  6  21    ATAQUE   -     0   16  1      no    3     0     -     -     -        0   -          0    -         0   0      no     no
+RED_RAPIDA    "Red rapida"    "Enreda sin"   "gastar red."  5  25    ESTADO   -     0   8   0      no    0     0     -     -     ENREDADO 128 -          0    -         0   0      no     no
+RESPIRO       "Respiro"       "Media vida y" "cura estados" 10 29    CURA     -     0   8   0      no    0     0     -     -     -        0   -          0    -         1   0      yes    yes
+GOLPE_CERTERO "Golpe certero" "Ignora media" "defensa."     6  33    ATAQUE   -     0   8   1      no    0     1     -     -     -        0   -          0    -         0   0      no     no
+CANTO         "Canto de faro" "Ilumina y"    "calma bruma." 12 0     ESTADO   -     0   8   0      no    0     0     -     -     CALMADO  255 BRUMA      0    ILUMINADO 0   0      no     no

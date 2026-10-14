@@ -1,0 +1,107 @@
+; FARO - STUBS of the scripts the M1b maps reference (res/maps/*.map). Written by the pixel artist so
+; the build works; the game designer replaces each one (delete it here when it moves to its real
+; .evs file, or the build says "defined twice"). Intent of every object: design/map_objects.md.
+
+; ---- Varadero (exterior)
+script cartel_varadero
+  say "Cartel: Varadero. Puerto de la isla de Albor."
+  end
+
+script cartel_bruma
+  say "Cartel: Camino de las Marismas. Cerrado por la bruma."
+  end
+
+script vecina_rosa
+  say "STUB: vecina mayor, amiga de Ines. Recuerdos del faro encendido."
+  end
+
+script vecina_plaza
+  say "STUB: vecina de la plaza. Pista de tienda y enfermeria."
+  end
+
+script pescador_redes
+  say "STUB: pescador en la playa. Pista: los Pinzarro de la arena."
+  end
+
+script intro_muelle
+  say "STUB: escena del muelle, primera vez. Los barcos no salen por la bruma."
+  end
+
+script pescador_muelle
+  say "STUB: pescador del muelle. Honda y encargo de 3 plumas: da el Machete."
+  end
+
+script aviso_sendero
+  say "STUB: aviso al salir hacia el Sendero del Cabo y el faro."
+  end
+
+; ---- Claro tras las zarzas
+script claro_entrada
+  say "STUB: entras al claro. Luces de Polifaro entre la hierba."
+  end
+
+script cartel_claro
+  say "STUB: cartel viejo. Ines acampaba aqui."
+  end
+
+; ---- Sendero y Cabo
+script cartel_sendero
+  say "Cartel: Sendero del Cabo. Faro de Albor al sur."
+  end
+
+script cartel_faro
+  say "Placa: Faro de Albor. Su luz guia a los barcos."
+  end
+
+script faro_cerrado
+  say "STUB: la puerta del faro esta cerrada. Si no esta abierta, Leo retrocede."
+  end
+
+; ---- Interiores
+script ines_estanteria
+  say "STUB: libros de Ines sobre criaturas y faros."
+  end
+
+script ines_cuadro
+  say "STUB: un cuadro del faro encendido sobre el mar."
+  end
+
+script tomasa
+  say "STUB: Tomasa. Diario y farolillos, cocina y posada."
+  end
+
+script huesped_pescador
+  say "STUB: huesped de la posada. Habla de la bruma en el mar."
+  end
+
+script huesped_vecina
+  say "STUB: huesped de la posada. Pista de cocina."
+  end
+
+script tendera
+  say "STUB: tendera. Abre la tienda de Varadero."
+  end
+
+script cliente_tienda
+  say "STUB: cliente de la tienda. Pista de cebos o lena."
+  end
+
+script enfermera
+  say "STUB: enfermera. Cura gratis y fija el punto de despertar."
+  end
+
+script paciente
+  say "STUB: paciente. Se perdio en la bruma, aviso del peligro."
+  end
+
+script faro_bitacora
+  say "STUB: bitacora de Ines en el faro. Pagina 1 del diario."
+  end
+
+script lente_vista
+  say "STUB: la gran lente apagada. Seis anillos negros."
+  end
+
+script faro_lente
+  say "STUB: mesa del farero. Con 5 especies se enciende el anillo 1."
+  end

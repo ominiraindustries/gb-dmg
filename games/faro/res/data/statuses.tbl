@@ -1,0 +1,36 @@
+; FARO - estados de combate (GDD 3.8). Tabla de REGLAS: el kit usa estas filas por nombre
+; (ST_DORMIDO...), el orden es fijo; lo que se puede cambiar son los numeros y textos.
+; abbr: 3 letras del combate/Equipo (ui.md 6.1; ENVENENADO = VEN). msg/fin: '{S} <msg>.'
+; kind PRINCIPAL = el estado unico 'st'; BANDERA = bit de 'b_flags' (bit = fila - ST_ENREDADO).
+; tmin..tmax: turnos (0 = todo el combate). q: Q_st de la captura (GDD 3.6; sin estado = RULE QST_NONE;
+; se usa el mayor de los activos). pierde: pierde el turno. dot: -(PV max >> dot) por turno (0 = no).
+; dmgsh: su dano d - (d >> dmgsh) (0 = no). accsh: acierto >> accsh. agish: AGI >> agish.
+; despierta: prob./256 de acabar al recibir dano. El jugador ENVENENADO no se cura solo (RULE).
+@ table statuses
+@ prefix ST
+@ col abbr text 3
+@ col name text 10
+@ col msg text 12
+@ col fin text 12
+@ col kind enum PRINCIPAL BANDERA
+@ col tmin u8
+@ col tmax u8
+@ col q u8
+@ col pierde bool
+@ col dot u8
+@ col dmgsh u8
+@ col accsh u8
+@ col agish u8
+@ col despierta u8
+;id        abbr  name         msg            fin           kind      tmin tmax q  pierde dot dmgsh accsh agish despierta
+DORMIDO    "DOR" "Dormido"    "se duerme"    "despierta"   PRINCIPAL 2    4    8  yes    0   0     0     0     128
+ATURDIDO   "ATU" "Aturdido"   "se aturde"    "se recupera" PRINCIPAL 1    1    6  yes    0   0     0     0     0
+CEGADO     "CEG" "Cegado"     "no ve nada"   "ya ve bien"  PRINCIPAL 3    3    4  no     0   0     1     0     0
+ENVENENADO "VEN" "Envenenado" "se envenena"  "ya no sufre" PRINCIPAL 5    5    4  no     3   0     0     0     0
+QUEMADO    "QUE" "Quemado"    "se quema"     "ya no arde"  PRINCIPAL 4    4    4  no     4   2     0     0     0
+RENDIDO    "REN" "Rendido"    "se rinde"     ""            PRINCIPAL 0    0    12 yes    0   0     0     0     0
+ENREDADO   "ENR" "Enredado"   "se enreda"    "se suelta"   BANDERA   3    3    6  no     0   0     0     1     0
+CALMADO    "CAL" "Calmado"    "se calma"     "se agita"    BANDERA   2    3    5  no     0   0     0     0     0
+ILUMINADO  "ILU" "Iluminado"  "brilla"       "se apaga"    BANDERA   4    4    4  no     0   0     0     0     0
+VOLANDO    "VOL" "Volando"    "vuela"        ""            BANDERA   0    0    4  no     0   0     0     0     0
+DERRIBADO  "DER" "Derribado"  "cae al suelo" ""            BANDERA   0    0    6  no     0   0     0     0     0

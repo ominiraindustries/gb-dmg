@@ -1,0 +1,19 @@
+; FARO - familias (GDD 3.4). debil/resiste/inmune = valores por defecto de la familia; cada
+; especie lleva los suyos en species.tbl (test_data comprueba que las de M1b coinciden).
+; inmune: ILUMINADO anula las inmunidades (regla del kit, GDD 3.4 BRUMA).
+; icon: tile FAM_* de uimenu.tiles relativo a FAM_BICHO.
+@ table families
+@ prefix FAM
+@ col name text 6
+@ col debil flags CORTE GOLPE PUNTA FUEGO LUZ
+@ col resiste flags CORTE GOLPE PUNTA FUEGO LUZ
+@ col inmune flags CORTE GOLPE PUNTA FUEGO LUZ
+@ col icon u8
+;id    name     debil       resiste     inmune            icon
+BICHO  "Bicho"  GOLPE       CORTE       -                 0
+BESTIA "Bestia" CORTE       -           -                 1
+AVE    "Ave"    PUNTA       GOLPE       -                 2
+PEZ    "Pez"    PUNTA       FUEGO       -                 3
+REPTIL "Reptil" FUEGO       CORTE       -                 4
+FLORA  "Flora"  CORTE+FUEGO GOLPE+PUNTA -                 5
+BRUMA  "Bruma"  LUZ         -           CORTE+GOLPE+PUNTA 6

@@ -1,6 +1,6 @@
 # FARO: la isla en la bruma — Documento de diseño
 
-Estado: aprobado (2026-10-14)    Versión: 1.0    Autor: game-designer    Fecha: 2026-10-14
+Estado: aprobado (2026-10-14)    Versión: 1.1 (datos M1b en `res/data/*.tbl`)    Autor: game-designer    Fecha: 2026-10-14
 
 > Carpeta `games/faro`. RPG de captura y supervivencia para DMG, de calidad comercial, 10-15 h.
 > El jugador **lucha él mismo** contra criaturas visibles en el mapa, las caza para comer o las captura
@@ -127,7 +127,7 @@ del sprite (hierba alta: bit 7 de OAM, coste 0; los tiles de hierba dejan la mit
 |---|---|
 | A frente a NPC / cartel / mural / libro | guion del evento (el NPC se gira hacia ti) |
 | A frente a objeto en el suelo (destello) | lo coges (bandera de recogida, no reaparece) |
-| A frente a FORAGE listo | recolección: tabla (p. ej. Bayas x1-2, Ramas secas x1); reaparece a los **512 pasos** |
+| A frente a FORAGE listo | recolección: tabla (`forage.tbl`: p. ej. BAYAS → Bayas x1-2, RAMAS → Madera x1); reaparece a los **512 pasos** |
 | A frente a BRAMBLE (con CUT) | corta (anim 12 f, SFX `CUT`) |
 | A frente a WATER/FISHSPOT (con FISH) | pesca (§2.6) |
 | A frente a GAP con poste (con HOOK) | cruza con garfio |
@@ -135,8 +135,8 @@ del sprite (hierba alta: bit 7 de OAM, coste 0; los tiles de hierba dejan la mit
 | Start | panel de menú (§4) |
 
 **Habilidades:** los objetos llave dan bits de habilidad (datos `items.tbl`, columna `ability`):
-`CUT` (Machete), `LIGHT` (Farol de mano), `FISH` (Caña), `SLING` (Honda), `HOOK` (Garfio),
-`BIKE` (Bicicleta), `BOAT` (Bote), `FLY` (Silbato de gaviota: viaje rápido a pueblos visitados).
+`CUT` (Machete), `LIGHT` (Farol de mano), `FISH` (Vara de pesca), `SLING` (Honda), `HOOK` (Garfio),
+`BIKE` (Bicicleta), `BOAT` (Bote), `FLY` (Silbato: viaje rápido a pueblos visitados).
 El código solo pregunta por bits (`has_ability(CUT)`), nunca por un objeto concreto.
 
 **Honda (Select):** piedra en línea recta 4 casillas (sprite 8x8 a 4 px/f). Si da a una criatura: combate
@@ -213,11 +213,11 @@ horario, condición `lamp_ring ≥ n` / bandera). Reglas:
   CARNE/PESCADO en recetas.
 
 **Cómo se evita el tedio:** el hambre no mata; avisos claros solo al cruzar umbrales; comer es 1 acción
-de menú; en cada pueblo hay comida barata (Pan, Galleta marinera); cocinar tiene "Repetir receta" y
+de menú; en cada pueblo hay comida barata (Pan, Galleta); cocinar tiene "Repetir receta" y
 "Cocinar x N"; los platos dan ventajas que merecen la pena; la cuenta es por pasos (pensar o leer no
 gasta); un plato medio (40-60) cubre 9-14 min.
 
-### 2.6 Pesca (artilugio Caña, `FISH`)
+### 2.6 Pesca (artilugio Vara de pesca, `FISH`)
 - A frente a WATER/FISHSPOT: lanzas (anim 16 f). Si hay un NADADOR a ≤ 3 casillas, se acerca (1 casilla
   cada 24 f) y muerde; si no, con 50 % muerde un pez pequeño de la tabla de pesca del mapa a los
   60-180 f.
@@ -229,7 +229,7 @@ gasta); un plato medio (40-60) cubre 9-14 min.
 |---|---|
 | Dónde | mapa con bandera `OUTDOOR` + casilla con `CAMP` bajo el jugador + casilla de delante libre (ahí va la hoguera) |
 | Cuándo no | ninguna criatura alerta a ≤ 5 casillas ("No es seguro"); nunca en pueblos |
-| Coste | **1 Leña** (máx. 9; 4 C en tiendas, o "Ramas secas" en arbustos FORAGE) |
+| Coste | **1 Madera** (objeto con rol `LENA`; máx. 9; 4 C en tiendas o en las ramas secas: recolección RAMAS) |
 | Pantalla | escena de campamento (§4): Leo, hoguera animada, olla, mochila |
 | Cocinar | gratis mientras dure el campamento |
 | Descansar | PV +50 % del máximo, EN al máximo, cura todos los estados; `sac −8`; pasa a la siguiente fase (día ↔ noche, M2); reinicia todos los spawns y recolecciones |
@@ -300,6 +300,7 @@ turno (estados, contadores). Iniciativa: jugador primero si `AGI_j + rng(0-7) �
 | PX para subir | `8 + 4L + L²` | 13 | 53 | 148 | 488 | 1028 | — |
 
 PX acumulados hasta L35: 16 337 (u16). Al subir: PV y EN suben lo mismo que el máximo (no se llenan).
+Leo empieza en **Nv 2** (`RULE_START_LEVEL`): Golpe suave (Nv 3) llega tras 2-3 combates.
 
 ### 3.3 Estadísticas de las criaturas
 Cada especie tiene niveles (tiers) 1-15 de PV/AT/DF/AG. Con nivel L:
@@ -319,6 +320,7 @@ d    = (POT × R16) >> 4                    ; POT ≤ 60 → ≤ 240
 tipo : débil d << 1 · resiste d >> 1 · inmune 0      (2 bits por tipo de daño en la especie)
 crít : 1/16 (1/2 con Puntería) → d + (d >> 1)
 mods : Hambriento d − (d >> 2) · Desfallecido d >> 1 · FUERZA d + (d >> 2) · QUEMADO (atacante) d − (d >> 2)
+téc  : d = (d × mul) >> 3                 ; mul de la técnica en octavos (skills.tbl): Golpe suave 6, Tajo doble 5, Embestida 16
 azar : d − ((d × rng(0..31)) >> 8)         ; 88-100 %
 mín. 1 (salvo inmune); Golpe suave: si d ≥ PV → d = PV − 1
 ```
@@ -350,35 +352,35 @@ especie puede cambiarlas):
 **Armas** (`weapons` en `items.tbl`):
 | Arma | Tipo | POT | Extra | Dónde / precio |
 |---|---|---|---|---|
-| Cuchillo de pesca | CORTE | 8 | — | inicial |
+| Cuchillo | CORTE | 8 | — | inicial |
 | Remo viejo | GOLPE | 7 | ATURDIDO 10 % | Varadero (casa) |
 | Machete | CORTE | 13 | habilidad CUT | Acto 1 (encargo en Salinas) |
 | Arpón corto | PUNTA | 12 | — | tienda Salinas 240 |
 | Antorcha | FUEGO | 14 | QUEMADO 20 % | Robledo 450 |
 | Maza de raíz | GOLPE | 17 | ATURDIDO 15 % | Robledo 600 |
 | Arpón de hueso | PUNTA | 22 | — | Hondura 1100 |
-| Farol de guerra | LUZ | 24 | ILUMINADO 50 % | Altamar 1800 |
-| Martillo de faro | GOLPE | 30 | ATURDIDO 20 % | Altamar 2400 |
-| Sable del farero | CORTE | 36 | crít 1/8 | Acto 5 (historia) |
+| Farol guerra | LUZ | 24 | ILUMINADO 50 % | Altamar 1800 |
+| Martillo faro | GOLPE | 30 | ATURDIDO 20 % | Altamar 2400 |
+| Sable farero | CORTE | 36 | crít 1/8 | Acto 5 (historia) |
 
-**Ropa** (DEF): Ropa de faena +1 (inicial), Chubasquero +3 (60), Chaleco de corcho +6 (300), Capa de
-lona +9 (700), Coraza de concha +13 (1500), Abrigo de farero +18 (historia).
+**Ropa** (DEF): Ropa de faena +1 (inicial), Chubasquero +3 (60), Chaleco corcho +6 (300), Capa de
+lona +9 (700), Coraza concha +13 (1500), Abrigo farero +18 (historia).
 
 **Técnicas** (16; `skills.tbl`):
 | Técnica | EN | Efecto | Se aprende |
 |---|---|---|---|
 | Concentrar | 0 | recupera 3 EN, pierdes el turno | L1 |
 | Ojo de farero | 1 | muestra PV exactos y debilidades; anota datos en el Cuaderno | L2 |
-| Golpe suave | 2 | arma elegida ×0.75 (`d − (d >> 2)`), **nunca mata** | L3 |
+| Golpe suave | 2 | arma elegida ×0.75 (`(d × 6) >> 3`), **nunca mata** | L3 |
 | Aturdir | 3 | GOLPE POT 6, ATURDIDO 60 % | L6 |
-| Primeros auxilios | 5 | +25 % PV máx | L8 |
+| Vendaje | 5 | +25 % PV máx | L8 |
 | Silbido | 3 | DORMIDO 45 % a BESTIA/AVE, 15 % al resto | libro, Acto 1 |
-| Tajo doble | 4 | 2 golpes ×0.6 con arma de CORTE | L11 |
+| Tajo doble | 4 | 2 golpes ×5/8 (`(d × 5) >> 3`) con arma de CORTE | L11 |
 | Puntería | 2 | el siguiente ataque acierta seguro y crítico 1/2 | L14 |
 | Grito | 3 | ATQ de la criatura −25 % 3 turnos | L17 |
 | Calma | 4 | CALMADO 60 % (3 turnos) | Tomasa, Acto 2 |
 | Ráfaga de luz | 8 | LUZ POT 18 + ILUMINADO; requiere LIGHT | Acto 2 |
-| Embestida | 6 | arma ×2, recibes 1/8 del daño | L21 |
+| Embestida | 6 | arma ×2 (`mul` 16), recibes 1/8 del daño | L21 |
 | Red rápida | 5 | ENREDADO 50 % sin gastar red | L25 |
 | Respiro | 10 | +50 % PV, cura estados | L29 |
 | Golpe certero | 6 | usa `DEF >> 1` | L33 |
@@ -388,9 +390,9 @@ lona +9 (700), Coraza de concha +13 (1500), Abrigo de farero +18 (historia).
 | Artilugio | Efecto | Precio |
 |---|---|---|
 | Red | ENREDADO 3 turnos (90 %); a una VOLANDO la DERRIBA | 12 |
-| Cebo dulce / de carne / de pescado | si le gusta: CALMADO 2 turnos y `Q_bait` 6 si es su favorito, 5 si no; si no come nada, turno perdido | 8 |
+| Cebo dulce / Cebo de carne / Cebo pescado | si le gusta: CALMADO 2 turnos y `Q_bait` 6 si es su favorito, 5 si no; si no come nada, turno perdido | 8 |
 | Bengala | FUEGO POT 18, CEGADO 30 % | 25 |
-| Dardo somnífero | DORMIDO 70 % (2-4 turnos) | 30 |
+| Somnifero (dardo) | DORMIDO 70 % (2-4 turnos) | 30 |
 | Honda (llave) | PUNTA POT 6, ATURDIDO 25 %; VOLANDO → DERRIBADO 50 % | — |
 | Farol de mano (llave) | ILUMINADO 4 turnos; CEGADO 40 % a especies nocturnas | — |
 | Garfio (llave) | VOLANDO → DERRIBADO 100 % | — |
@@ -401,8 +403,8 @@ v = catch[especie]                         (0-255, datos)
 v = (v × Q_hp)   >> 2    Q_hp:   PV > 50 % → 2 · ≤ 50 % → 4 · ≤ 25 % → 6 · ≤ 12.5 % → 8
                                   (pv×2 ≤ max, pv×4 ≤ max, pv×8 ≤ max: solo desplazamientos)
 v = (v × Q_st)   >> 2    Q_st:   ninguno 4 · CALMADO 5 · ENREDADO/ATURDIDO/DERRIBADO 6 · DORMIDO 8 · RENDIDO 12 (el mejor)
-v = (v × Q_tool) >> 2    Q_tool: Farolillo 4 · Farolillo fino 6 · Farolillo de plata 8 · Farolillo de bruma 12 (BRUMA) / 4 (resto)
-                                 (+2 con MANO_FIRME) · Farolillo maestro → v = 255
+v = (v × Q_tool) >> 2    Q_tool: Farolillo 4 · Farolillo fino 6 · Farol de plata 8 · Farol de bruma 12 (BRUMA) / 4 (resto)
+                                 (+2 con MANO_FIRME) · Farol maestro → v = 255
 v = (v × Q_bait) >> 2    Q_bait: cebo favorito comido en este combate 6 · otro cebo comido 5 · ninguno 4
 condición de especie no cumplida → v = 0 ("La luz se escapa")
 v ≥ 255 → seguro; si no, capturada si rng_next() < v            (u16 en los pasos; ≤ 255 × 12)
@@ -426,13 +428,14 @@ sacudidas al fallar: 2 si roll < 2v, 1 si roll < 4v, si no 0 (solo animación)
   (3) CALMADO → solo movimientos sin daño o nada ("observa"); (4) mismo movimiento de defensa 2 veces
   seguidas → peso 0.
 - Jefes: 2 juegos de movimientos y umbral de PV (p. ej. ≤ 50 % cambia al juego 2 con mensaje).
-- **Movimientos de ejemplo:** Pinza (CORTE 6), Picotazo (PUNTA 7), Embestida (GOLPE 10), Mordisco
+- **Movimientos de ejemplo:** Pinza (CORTE 6), Picotazo (PUNTA 7), Topetazo (GOLPE 10), Carga (GOLPE 14), Mordisco
   (CORTE 12), Aguijón (PUNTA 8, ENVENENADO 30 %), Esporas (DORMIDO 40 %), Tinta (CEGADO 60 %),
   Coraza (DEF +25 % 3 turnos), Robar (quita 1 comida de la mochila; Gavirata), Llamarada (FUEGO 16,
   QUEMADO 20 %), Niebla (CEGADO 50 %), Huir (escapa con 50 %).
 
 ### 3.8 Estados
-Un estado principal (`st`, `st_turns`) + banderas con su contador.
+Un estado principal (`st`, `st_turns`) + banderas con su contador. Abreviaturas de 3 letras (combate, Equipo; `statuses.tbl`):
+DOR ATU CEG VEN QUE REN.
 | Estado | Efecto | Duración | Fin |
 |---|---|---|---|
 | DORMIDO | pierde el turno; al recibir daño 50 % despierta | 2-4 turnos | |
@@ -458,14 +461,15 @@ Pinzarro: PV `10 + (54 >> 3)` = 16, ATQ `4 + (45 >> 4)` = 6, DEF `3 + (63 >> 4)`
 ATQ 8, DEF 6 + 1 = 7, AGI 8.
 - Cuchillo (CORTE 8): `R16 = (8 × 170) >> 6 = 21`, `d = (8 × 21) >> 4 = 10`, resiste → **5** (4 golpes).
 - Remo (GOLPE 7): `d = (7 × 21) >> 4 = 9`, débil → **18 ≥ 16: lo mata de un golpe** (caza, no captura).
-- Golpe suave con remo: `18 − 4 = 13` → quedan **3 PV** (3 × 4 = 12 ≤ 16 → banda ≤ 25 %, `Q_hp` 6).
+- Golpe suave con remo: `(18 × 6) >> 3 = 13`, con el azar 12-13 → quedan **3-4 PV** (4 × 4 = 16 ≤ 16 → banda
+  ≤ 25 %, `Q_hp` 6, con cualquier tirada).
   Captura con Farolillo: `v = 150 × 6 >> 2 = 225` → **88 %**.
-- Pinza (CORTE 6) contra Leo: `R16 = (6 × 146) >> 6 = 13`, `d = (6 × 13) >> 4 = 4` → 3-4 por golpe.
-**B. Mitad: Leo L20 (ATQ 34, DEF 28 + 9, AGI 25) contra Musgali L20** (tiers 9/9/7/6; BESTIA, débil CORTE).
+- Pinza (CORTE 6) contra Leo: `R16 = (6 × 146) >> 6 = 13`, `d = (6 × 13) >> 4 = 4` → **4** por golpe (el azar no baja un daño < 9).
+**B. Mitad: Leo L20 (ATQ 34, DEF 28 + 9 Capa de lona, AGI 25) contra Musgali L20** (tiers 9/9/7/6; BESTIA, débil CORTE).
 Musgali: PV 77, ATQ 37, DEF 29, AGI 24.
 - Machete (CORTE 13): `R16 = (34 × 35) >> 6 = 18`, `d = (13 × 18) >> 4 = 14`, ×2 = **28** → 2 golpes: 21 PV
   (21 × 2 = 42 ≤ 77 → banda ≤ 50 %).
-- Embestida de Musgali (GOLPE 14): `R16 = (37 × 27) >> 6 = 15`, `d = (14 × 15) >> 4 = 13` → Leo aguanta 7-8.
+- Carga de Musgali (GOLPE 14): `R16 = (37 × 27) >> 6 = 15`, `d = (14 × 15) >> 4 = 13` → Leo aguanta 7-8.
 - Captura `catch` 80, ≤ 50 %, DORMIDO (dardo), Farolillo fino: `80 → 80 → 160 → 240` = **94 %**; sin dardo **47 %**.
 - Huir: `128 + 8 × (25 − 24) = 136` → 53 %. Acierto del jugador: 242 (95 %).
 
@@ -537,12 +541,12 @@ No hay HUD fijo: el mapa se ve entero. Dos iconos 8x16 en x 4 y x 14, y 4 (OAM 0
 ### 5.1 Ingredientes (categorías en `items.tbl`, máscara de bits)
 `CARNE, PESCADO, MARISCO, HUEVO, VERDURA, FRUTA, HONGO, GRANO, ESPECIA, DULCE`. Un ingrediente puede
 tener varias. Fuentes: criaturas (cazar / abrir farolillo), recolección, pesca, tiendas (Sal, Harina,
-Aceite, Miel, Pimienta de roca), encargos.
+Aceite, Miel, Pimienta), encargos. M1b: Bayas, Algas, Hinojo y Madera salen de la recolección.
 
 ### 5.2 Cocina
 - **Dónde:** campamento, cocina de posada, casa de Tomasa.
-- **Cómo:** eliges 1-3 ingredientes → se buscan las recetas en orden de la tabla (las específicas antes
-  que las de categoría); cada receta tiene 1-3 huecos (objeto concreto o categoría) y casa sin importar
+- **Cómo:** eliges 1-3 ingredientes → se buscan las recetas (gana la de más huecos de objeto concreto y, a
+  igualdad, la de fila menor de `recipes.tbl`); cada receta tiene 1-3 huecos (objeto concreto o categoría) y casa sin importar
   el orden (como mucho 3! = 6 permutaciones x 32 recetas: se calcula una vez al pulsar Cocinar).
 - **Receta conocida:** sale el plato. **Desconocida pero válida:** sale el plato y "¡Nueva receta!"
   (jingle, bandera `recipe_known`). **Ninguna:** "Mejunje" (+10 saciedad). Los ingredientes se gastan.
@@ -556,18 +560,18 @@ Aceite, Miel, Pimienta de roca), encargos.
 | # | Plato | Ingredientes | Sac. | Efecto | Se conoce |
 |---|---|---|---|---|---|
 | 1 | Asado simple | CARNE | 20 | +10 PV | inicio |
-| 2 | Pescado a la brasa | PESCADO | 18 | +12 PV | inicio |
-| 3 | Cangrejo con sal | Carne de cangrejo + Sal | 30 | +25 PV, CORAZA 384 pasos | Tomasa (M1) |
-| 4 | Ancas con bayas | Ancas de sapo + FRUTA | 30 | +15 PV, FUERZA 384 | experimentar (pista en Sapoyo) |
-| 5 | Tortilla marinera | HUEVO + HUEVO + Aceite | 40 | +20 PV, AGIL 384 | diario 1 (M1) |
-| 6 | Estofado de cabo | CARNE + VERDURA + VERDURA | 55 | +30 PV, VIGOR 512 | experimentar |
-| 7 | Mermelada de duna | FRUTA + FRUTA + Miel | 20 | +20 EN, SIGILO 384 | Tomasa (M1) |
+| 2 | Pescado asado | PESCADO | 18 | +12 PV | inicio |
+| 3 | Cangrejo y sal | Carne cangrejo + Sal | 30 | +25 PV, CORAZA 384 pasos | Tomasa (M1) |
+| 4 | Ancas y bayas | Ancas de sapo + FRUTA | 30 | +15 PV, FUERZA 384 | experimentar (pista en Sapoyo) |
+| 5 | Tortilla mar | HUEVO + HUEVO + Aceite | 40 | +20 PV, AGIL 384 | diario 1 (M1) |
+| 6 | Estofado | CARNE + VERDURA + VERDURA | 55 | +30 PV, VIGOR 512 | experimentar |
+| 7 | Mermelada | FRUTA + FRUTA + Miel | 20 | +20 EN, SIGILO 384 | Tomasa (M1) |
 | 8 | Caldo de algas | VERDURA + Sal | 15 | +10 EN, cura veneno | inicio |
-| 9 | Anguila ahumada | Filete de anguila + ESPECIA | 35 | +25 PV, MANO_FIRME 384 | Salinas |
+| 9 | Anguila curada | Filete anguila + ESPECIA | 35 | +25 PV, MANO_FIRME 384 | Salinas |
 | 10 | Pan de algas | GRANO + VERDURA | 35 | +10 PV | Salinas |
 | 11 | Sopa de setas | HONGO + HONGO + ESPECIA | 30 | EN llena, OLFATO 512 | Robledo |
-| 12 | Guiso del cazador | CARNE + HONGO + ESPECIA | 60 | +40 PV, CAZADOR 512 | diario 4 |
-| 13 | Empanada de mar | GRANO + MARISCO + Aceite | 50 | +30 PV, CORAZA 512 | Hondura |
+| 12 | Guiso cazador | CARNE + HONGO + ESPECIA | 60 | +40 PV, CAZADOR 512 | diario 4 |
+| 13 | Empanada | GRANO + MARISCO + Aceite | 50 | +30 PV, CORAZA 512 | Hondura |
 | 14 | Queso de cabra | Leche de cabra + Sal | 25 | +20 PV, cura quemado | Hondura |
 | 15 | Lomo a la miel | Lomo de jabali + Miel + ESPECIA | 70 | PV llenos, FUERZA 768 | Altamar |
 | 16 | Caldo de luz | Medusa de luz + VERDURA + Sal | 25 | EN llena, MANO_FIRME 768 | diario 9 |
@@ -592,7 +596,7 @@ cangrejo 1-2, Concha 50 %, Perla 1/16. BRUMA no da carne (Esencia de bruma, mate
 | Fuente | Valor |
 |---|---|
 | Dinero inicial | 300 C + 5 Farolillos |
-| Materiales (solo se venden) | Concha 12, Pluma 14, Piel 16, Escama 18, Aguijón 12, Cuarzo 45, Polvo de luz 30, Perla 100, Ámbar 150 |
+| Materiales (solo se venden) | Concha 12, Pluma 14, Piel 16, Escama 18, Aguijón 12, Púa 12, Cuarzo 45, Polvo de luz 30, Perla 100, Ámbar 150 |
 | Venta de cualquier otro objeto | mitad del precio de compra (llaves no) |
 | Encargos (tablón en cada pueblo, guiones) | 100-800 C + receta/objeto |
 | Dinero en el mapa | 50-300 C (objetos de suelo) |
@@ -602,11 +606,11 @@ cangrejo 1-2, Concha 50 %, Perla 1/16. BRUMA no da carne (Esencia de bruma, mate
 |---|---|---|---|---|
 | Poción (+30 PV) | 20 | | Farolillo | 15 |
 | Poción fuerte (+80) | 60 | | Farolillo fino | 40 |
-| Elixir (todo) | 200 | | Farolillo de plata | 90 |
-| Tónico (+15 EN) | 30 | | Farolillo de bruma (tras anillo 5) | 120 |
+| Elixir (todo) | 200 | | Farol de plata | 90 |
+| Tónico (+15 EN) | 30 | | Farol de bruma (tras anillo 5) | 120 |
 | Antídoto / Ungüento | 10 | | Red / Cebo | 12 / 8 |
-| Pan (+15 sac.) / Galleta marinera (+20, no perece) | 8 / 12 | | Bengala / Dardo somnífero | 25 / 30 |
-| Sal / Harina / Aceite / Miel / Pimienta | 6 / 5 / 10 / 12 / 8 | | Leña | 4 |
+| Pan (+15 sac.) / Galleta (+20, no perece) | 8 / 12 | | Bengala / Somnifero | 25 / 30 |
+| Sal / Harina / Aceite / Miel / Pimienta | 6 / 5 / 10 / 12 / 8 | | Madera | 4 |
 | Enfermería | gratis | | Posada | 15 (Varadero) - 40 (Altamar) |
 Objetivo del bot de economía: terminar cada acto con 100-600 C tras comprar lo necesario (no hay que
 "farmear" para avanzar; sí para comprar el arma opcional del pueblo).
@@ -649,11 +653,11 @@ Cada carácter = 1 sector de 16x16 casillas. `~` = mar (3 sectores de mar compar
 | Parte | Zonas | Especies nuevas (acum.) | Anillo (capturas) | Artilugio / hito | Niveles | Tiempo (acum.) |
 |---|---|---|---|---|---|---|
 | Prólogo | Varadero, Sendero, Faro | 6 (6) | 1 (5) | Cuchillo, Remo, Honda | 2-6 | 0.75 h (0.75) |
-| Acto 1 | Marismas, Salinas | 7 (13) | 2 (11) | Machete, Caña, Sal | 5-11 | 2 h (2.75) |
+| Acto 1 | Marismas, Salinas | 7 (13) | 2 (11) | Machete, Vara de pesca, Sal | 5-11 | 2 h (2.75) |
 | Acto 2 | Bosque Viejo, Robledo, Cueva del Eco | 9 (22) | 3 (19) | Farol, Bici, Zurrón | 10-17 | 2.25 h (5) |
 | Acto 3 | Desfiladero, Hondura, Minas | 8 (30) | 4 (26) | Garfio | 16-24 | 2.25 h (7.25) |
 | Acto 4 | Acantilados, Altamar, Ruinas | 8 (38) | 5 (33) | Silbato (viaje), Bote | 22-30 | 2.5 h (9.75) |
-| Acto 5 | Mar, Cenizal, Volcán | 6 (44) | 6 (39) | Farolillo maestro | 29-34 | 2 h (11.75) |
+| Acto 5 | Mar, Cenizal, Volcán | 6 (44) | 6 (39) | Farol maestro | 29-34 | 2 h (11.75) |
 | Final | Corazón de la Bruma | 1 (45) | — | Canto de faro | 33-38 | 0.75 h (12.5) |
 | Posjuego | Bruma nocturna en toda la isla | 3 (48) | luz completa | final verdadero | 35-40 | 1.5-2.5 h (14-15) |
 Holgura: al acabar cada acto hay ≥ 2 especies más de las que pide el anillo (no hay que capturarlo todo).
@@ -662,14 +666,14 @@ Holgura: al acabar cada acto hay ≥ 2 especies más de las que pide el anillo (
 Tiers PV/AT/DF/AG (1-15). `catch` 0-255. Comportamiento → al alertarse. Hor.: D día, N noche, S siempre.
 | # | Nombre | Familia | Zona | Comport. | Nv | Tiers | catch | Hor. | Cond. | Botín principal |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Pinzarro | BICHO | playa Varadero | ERRANTE | 2-5 | 6/5/7/3 | 150 | S | — | Carne de cangrejo |
-| 2 | Dunejo | BESTIA | Sendero | ASUSTADIZO | 2-5 | 5/4/4/9 | 140 | D | — | Muslo de conejo |
-| 3 | Gavirata | AVE | costa | VOLADOR | 3-6 | 5/6/4/8 | 120 | D | — | Huevo de gaviota |
+| 1 | Pinzarro | BICHO | playa Varadero | ERRANTE | 2-5 | 6/5/7/3 | 150 | S | — | Carne cangrejo |
+| 2 | Dunejo | BESTIA | Sendero | ASUSTADIZO | 2-5 | 5/4/4/9 | 140 | D | — | Muslo conejo |
+| 3 | Gavirata | AVE | costa | VOLADOR | 3-6 | 5/6/4/8 | 120 | D | — | Huevo gaviota |
 | 4 | Sapoyo | REPTIL | charcas | DORMILON → ERRANTE | 3-6 | 8/5/5/3 | 140 | D duerme | — | Ancas de sapo |
-| 5 | Erizal | BICHO | rocas | PERSEGUIDOR lento (24) | 3-6 | 6/6/9/2 | 120 | S | — | Huevas de erizo |
+| 5 | Erizal | BICHO | rocas | PERSEGUIDOR lento (24) | 3-6 | 6/6/9/2 | 120 | S | — | Huevas erizo |
 | 6 | Polifaro | BICHO | claro tras zarzas | ERRANTE | 5-6 | 5/5/4/8 | 70 | S | — | Polvo de luz |
 | 7 | Zancuda | AVE | marisma | ASUSTADIZO | 5-9 | 6/7/5/9 | 100 | D | — | Huevo de garza |
-| 8 | Fangila | PEZ | canales | NADADOR | 6-10 | 7/7/5/7 | 110 | S | — | Filete de anguila |
+| 8 | Fangila | PEZ | canales | NADADOR | 6-10 | 7/7/5/7 | 110 | S | — | Filete anguila |
 | 9 | Tabarro | BICHO | juncal | MANADA → PERSEGUIDOR | 6-10 | 4/6/4/9 | 140 | D | — | Aguijón |
 | 10 | Salitorta | REPTIL | salinas | DORMILON | 7-11 | 12/5/13/2 | 90 | S | DORMIDA | Caparazón |
 | 11 | Juncabato | BESTIA | juncal | PERSEGUIDOR | 7-11 | 8/9/6/6 | 110 | S | — | Lomo de jabato |
@@ -727,7 +731,7 @@ vaciar la isla de luces es lo que alimenta la Bruma).
 | Acto 2 | Robledo, pueblo de carpinteros: arreglan la bici de Ines con 3 piezas (encargo). El Farol en la Cueva del Eco; el Osoroble protege a sus crías. **Anillo 3** |
 | Acto 3 | Hondura: el Gremio compra "piedra-luz" a los mineros; en las Minas, el Ciempiedra. El Garfio. **Anillo 4** |
 | Acto 4 | Altamar: Celso y la biblioteca (por qué el faro necesita criaturas *libres* en el Vivero); el almacén de Ofelia con cientos de farolillos llenos: los liberas (escena). Silbato de gaviota y Bote. Ruinas Hundidas: murales de los primeros fareros. **Anillo 5** |
-| Acto 5 | Cenizal, el islote del volcán donde Ines acampó; la Serpemar. Farolillo maestro (de Ines). **Anillo 6**: el haz atraviesa el mar hasta el Ojo de la Bruma |
+| Acto 5 | Cenizal, el islote del volcán donde Ines acampó; la Serpemar. Farol maestro (de Ines). **Anillo 6**: el haz atraviesa el mar hasta el Ojo de la Bruma |
 | Final | En el Corazón de la Bruma está Ines, mayor, calmando sola a la Madrebruma. Combate que solo se gana capturando (Canto de faro + ILUMINADA). La Bruma se levanta, vuelven los barcos, Ines vuelve a casa. Créditos |
 | Posjuego | De noche aparecen las 3 últimas criaturas de bruma. **48/48**: final verdadero, el Vivero lleno y el faro "a plena luz" |
 
@@ -926,7 +930,7 @@ criaturas congeladas, 2 captura segura, 3 sin hambre; solo los escriben los test
 | Hito | Alcance | Criterios de salida |
 |---|---|---|
 | **M1a — motor** | E1-E7, E9-E12, E14-E16 (§10.5) con referencias C y `gbe_selftest`; demo en `games/gbe_lab` o `faro`: mapa de prueba 4x4 sectores, andar/bici con streaming, 12 actores errantes, cuadro de texto con un guion, panel deslizante, guardar/cargar | selftest 0 fallos; VRAM visible == modelo tras 2000 pasos de bot; `max_frame_lines` y costes **medidos** apuntados en `budgets.md`; banco 0 ≤ 14 KB |
-| **M1b — slice jugable** | Varadero (2x1 sectores: casa de Ines, casa/cocina de Tomasa con posada, tienda, enfermería), Sendero del Cabo (1x2), cabo con el Faro (planta baja + Sala de la Lente), claro tras zarzas (1x1); especies 1-6 (5 comportamientos: errante, asustadizo, volador, dormilón, perseguidor); combate completo (3 armas, 4 técnicas, red/cebo/honda, pociones, comida, 2 tipos de farolillo, huir); cazar + botín; PX hasta ~L8; saciedad, estropeado y sal; campamento; cocina (recetas 1-8, 2 por descubrir); Cuaderno (6 fichas); anillo 1 (escena) y "Fin de la demo"; machete como recompensa de un encargo (prueba de puertas por habilidad); guardar/continuar; desmayo; título; SFX; día fijo | bot completa el slice (≥ 5 capturas → anillo 1) en 25-45 min de juego simulado; tests de §11 verdes; el usuario lo juega |
+| **M1b — slice jugable** | Varadero (2x1 sectores: casa de Ines, casa/cocina de Tomasa con posada, tienda, enfermería), Sendero del Cabo (1x2), cabo con el Faro (planta baja + Sala de la Lente), claro tras zarzas (1x1); especies 1-6 (5 comportamientos: errante, asustadizo, volador, dormilón, perseguidor); combate completo (3 armas, 4 técnicas, red/cebo/honda, pociones, comida, 2 tipos de farolillo, huir); cazar + botín; PX hasta ~L8; saciedad, estropeado y sal; campamento; cocina (recetas 1-8, 2 por descubrir); Cuaderno (6 fichas); anillo 1 (escena) y "Fin de la demo"; machete como recompensa de un encargo (el pescador pide 3 Plumas; prueba de puertas por habilidad); guardar/continuar; desmayo; título; SFX; día fijo | bot completa el slice (≥ 5 capturas → anillo 1) en 25-45 min de juego simulado; tests de §11 verdes; el usuario lo juega |
 | **M2 — Acto 1 + sistemas** | Marismas, Salinas, Garzareal; pesca, día/noche, bordillos, emboscadas, manadas; música (E8) con 5 pistas; nombre del jugador; texto con diccionario si hace falta; **paquete de contenido alternativo** de prueba (§10.2) | bot de equilibrio del Acto 1 dentro de objetivos; test de contenido alternativo verde |
 | **M3 — Actos 2-3** | Bosque, Robledo, Cueva, Desfiladero, Hondura, Minas; bici, farol, garfio, zurrón; 17 especies | tiempos por región del bot en ±25 % de §6.2 |
 | **M4 — Actos 4-5 + final** | Acantilados, Altamar, Ruinas, mar, Cenizal, Corazón; silbato, bote; final y créditos; posjuego | bot completa la historia con trampas de tiempo; 48/48 alcanzable (lint) |
@@ -957,12 +961,16 @@ Ganchos del sistema (dinero, farolillo maestro, habilidades) se marcan en los da
 ### 10.3 Datos y formatos (fuentes ASCII revisables por agentes; conversores en `harness/`)
 | Fuente | Conversor | Salida (con banco) | Contenido |
 |---|---|---|---|
-| `res/data/*.tbl` | `harness/tables.py` (E12) | structs C + cargador Python para tests | `species` (tiers, catch, xp, familia, resistencias 5x2 bits, movimientos y pesos, comportamiento, vista, velocidad, horario, cebo, cond, botín, sprites), `moves`, `items` (categoría, tope, precio, efecto, ability, role, perece), `recipes`, `skills`, `player` (por nivel), `shops`, `spawns`, `fishing`, `forage`, `caps` |
+| `res/data/*.tbl` | `harness/tables.py` (E12) | structs C + cargador Python para tests | `species` (tiers, catch, xp, familia, resistencias 5x2 bits, movimientos y pesos, comportamiento, vista, velocidad, horario, cebo, cond, botín, sprites), `moves`, `items` (categoría, tope, precio, efecto, ability, role, perece), `recipes`, `skills`, `player` (por nivel), `shops`, `spawns`, `fishing`, `forage`, `caps`, `statuses`, `buffs`, `families`, `dtypes`, `looks` (aspectos de NPC), `rules` (constantes sueltas de este documento: `RULE_*`) |
 | `res/metatiles_<set>.mt` | `metatiles.py` (+ E16: `kind` y grupos de animación) | `mt_tiles`, `mt_attr` por tileset | §2.2 |
 | `res/maps/<mapa>.map` | `harness/world.py` (E10) | sectores sin repetir, cabecera de mapa (tileset, rejilla de sectores, borde, música, banderas), eventos por sector | rejilla ASCII 1 carácter = metatile (leyenda del `.mt`), capa de objetos, líneas `@` |
 | `res/scripts/*.evs` | `harness/script.py` (E11) | bytecode + tabla de textos con diccionario | guiones y diálogos |
 | `res/*.pic` | `harness/pictures.py` (E9) | tiles sin repetir + mapa | imágenes grandes (criaturas, título, espaldas, final) |
 | `res/*.tiles` | `asciitiles.py` (existe) | tiles | sprites, tilesets, UI |
+
+**Datos de M1b (v1.1):** los esquemas (columnas y su significado) están en la cabecera de cada
+`res/data/*.tbl`; `tests/test_data.py` reproduce los ejemplos de §3.10 con esas tablas (semilla de
+`battle_model.py`). Nombres cortos de ui.md §17 adoptados (Cuchillo, Farol de plata, Madera, VEN...).
 
 **Ejemplo de mapa** (`res/maps/varadero.map`):
 ```

@@ -1,0 +1,25 @@
+; FARO - recetas (GDD 5.2; 32 en el juego completo, M1b: 1-8). Fila = numero de receta - 1.
+; res: plato (items.tbl; sus efectos estan en su fila). Huecos a/b/c: objeto concreto (aX) o
+; categoria (aC: casa si el objeto tiene ese bit en items.ing); vacio = '-' NINGUNA. Las recetas casan
+; con 1-3 ingredientes en cualquier orden y sin sobrantes; si casan varias, gana la de mas huecos
+; concretos y, a igualdad, la de fila menor. Ninguna: Mejunje (items MEJUNJE).
+; inicio: conocida al empezar (las demas: guion learn_recipe o descubrirla cocinando).
+@ table recipes
+@ prefix RECIPE
+@ col res ref items
+@ col ax ref items
+@ col ac enum NINGUNA CARNE PESCADO MARISCO HUEVO VERDURA FRUTA HONGO GRANO ESPECIA DULCE
+@ col bx ref items
+@ col bc enum NINGUNA CARNE PESCADO MARISCO HUEVO VERDURA FRUTA HONGO GRANO ESPECIA DULCE
+@ col cx ref items
+@ col cc enum NINGUNA CARNE PESCADO MARISCO HUEVO VERDURA FRUTA HONGO GRANO ESPECIA DULCE
+@ col inicio bool
+;id           res           ax             ac      bx  bc      cx     cc      inicio
+ASADO         ASADO         -              CARNE   -   NINGUNA -      NINGUNA yes
+PESCADO_ASADO PESCADO_ASADO -              PESCADO -   NINGUNA -      NINGUNA yes
+CANGREJO_SAL  CANGREJO_SAL  CARNE_CANGREJO NINGUNA SAL NINGUNA -      NINGUNA no
+ANCAS_BAYAS   ANCAS_BAYAS   ANCAS_SAPO     NINGUNA -   FRUTA   -      NINGUNA no
+TORTILLA      TORTILLA      -              HUEVO   -   HUEVO   ACEITE NINGUNA no
+ESTOFADO      ESTOFADO      -              CARNE   -   VERDURA -      VERDURA no
+MERMELADA     MERMELADA     -              FRUTA   -   FRUTA   MIEL   NINGUNA no
+CALDO_ALGAS   CALDO_ALGAS   -              VERDURA SAL NINGUNA -      NINGUNA yes

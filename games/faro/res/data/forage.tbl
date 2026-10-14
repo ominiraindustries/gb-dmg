@@ -1,0 +1,15 @@
+; FARO - recoleccion (GDD 2.3). Evento 'forage table=<ID>' del mapa. it: siempre lo..hi;
+; it2 con p2/256; reaparece a los 'pasos' pasos (o al descansar).
+@ table forage
+@ prefix FORAGE
+@ col it ref items
+@ col lo u8
+@ col hi u8
+@ col it2 ref items
+@ col p2 u8
+@ col pasos u16
+;id    it     lo hi it2    p2 pasos
+BAYAS  BAYAS  1  2  HINOJO 64 512
+RAMAS  MADERA 1  1  BAYAS  32 512
+ALGAS  ALGAS  1  2  CONCHA 32 512
+HINOJO HINOJO 1  2  BAYAS  64 512

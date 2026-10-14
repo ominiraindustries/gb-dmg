@@ -1,0 +1,22 @@
+; FARO - tiendas (GDD 5.5). Una fila por tienda (op de guion 'shop SHOP_<ID>'); i01..i16 = lo que
+; vende en ese orden ('-' = hueco vacio). Los precios estan en items.tbl (precio / venta).
+@ table shops
+@ prefix SHOP
+@ col i01 ref items
+@ col i02 ref items
+@ col i03 ref items
+@ col i04 ref items
+@ col i05 ref items
+@ col i06 ref items
+@ col i07 ref items
+@ col i08 ref items
+@ col i09 ref items
+@ col i10 ref items
+@ col i11 ref items
+@ col i12 ref items
+@ col i13 ref items
+@ col i14 ref items
+@ col i15 ref items
+@ col i16 ref items
+;id      i01    i02      i03    i04 i05     i06 i07    i08  i09    i10       i11            i12 i13        i14        i15          i16
+VARADERO POCION ANTIDOTO TONICO PAN GALLETA SAL ACEITE MIEL MADERA FAROLILLO FAROLILLO_FINO RED CEBO_DULCE CEBO_CARNE CEBO_PESCADO CHUBASQUERO

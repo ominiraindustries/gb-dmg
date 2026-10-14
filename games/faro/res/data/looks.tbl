@@ -1,0 +1,10 @@
+; FARO - aspectos de NPC (evento 'npc look=<ID>'). spr: primer tile en npc.tiles (16 tiles:
+; DOWN, UP, SIDE, STEP de 16x16). pal: 0 = OBP0, 1 = OBP1. Lint: <= 3 aspectos por 3x3 sectores.
+@ table looks
+@ prefix LOOK
+@ col spr u8
+@ col pal u8
+;id      spr pal
+ABUELA   0   0
+PESCADOR 16  0
+VECINA   32  0

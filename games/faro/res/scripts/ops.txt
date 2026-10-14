@@ -1,0 +1,28 @@
+; FARO game ops for res/scripts/*.evs (harness/script.py: opcode 0x40 + line order; the kit implements
+; them in src/rpg/script_ops.c). Operand types: u8 s8 u16 flag var sym (ids of res/data tables, MAP_*).
+; Ops that answer something set the script answer: test it with "if_answer N label".
+give         sym u8        ; item, count                      (answer 1 = it fitted, 0 = bag full)
+take         sym u8        ; item, count
+has          sym u8        ; item, count                      (answer 1 = you have at least count)
+pay          u16           ; money                            (answer 1 = paid, 0 = not enough)
+earn         u16           ; money
+battle       sym u8        ; species, level: scripted battle  (answer 0 won/captured, 1 fled, 2 fainted)
+shop         sym           ; shop id (opens the SHOP screen)
+heal                       ; enfermeria: full heal + wake-up point here
+inn          u8            ; price: inn rest (full heal, kitchen)
+cook                       ; open the kitchen (no camp needed)
+learn_recipe sym           ; recipe
+learn_skill  sym           ; technique
+reg_count    u8            ;                                   (answer 1 = species caught >= n)
+lamp_ring    u8            ; lights ring n (cutscene in the Lens Room)
+save_prompt                ; "Guardar la partida?" + save
+face_player                ; the NPC running the script turns to the player
+walk         u8 u8         ; the NPC running the script: dir (0 down 1 up 2 left 3 right), cells
+pwalk        u8 u8         ; the player: dir, cells
+emote        u8 u8         ; who (0 this NPC, 1 player), emote (0 !, 1 ?, 2 Zz, 3 heart)
+warp         sym u8 u8 u8  ; map, x, y, facing
+fade         u8            ; 0 = to black, 1 = back
+shake        u8            ; frames
+set_cell     u8 u8 u8      ; x, y, metatile (temporary patch; permanent ones are map 'patch' objects)
+name                       ; name entry screen (M2)
+demo_end                   ; FIN DE LA DEMO screen (M1b)

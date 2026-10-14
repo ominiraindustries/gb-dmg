@@ -1,0 +1,71 @@
+; FARO - especies (GDD 2.4, 3.3, 3.6, 3.7, 5.4, 6.3). Fila = numero del Cuaderno - 1 (48 en el juego
+; completo; M1b: 1-6). Las filas ocultas (fase 2 de jefes) iran despues de la 48.
+; tpv/tat/tdf/tag: tiers 1-15 (stats = GDD 3.3). catch 0-255. xp = xp_base (GDD 3.9).
+; debil/resiste/inmune: bits por tipo de dano (orden de dtypes.tbl). vuela: empieza con VOLANDO.
+; beh: comportamiento; beh2: al alertarse/despertar. spd: frames por casilla. vis: vista (Manhattan).
+; grupo: seguidores de una MANADA. hor: cuando aparece; duerme: fase en que un DORMILON duerme.
+; come: clases de cebo que come; cebo: su favorito (Q_bait RULE QBAIT_FAV; Cuaderno 'Cebo').
+; cond: condicion de captura (NINGUNA; ESTADO = debe tener cond_st; SUELO = DERRIBADA o ENREDADA;
+; FAROL = solo con el farolillo cond_it). escapa: prob./256 de escapar tras un fallo de captura.
+; m1..m4 + w1..w4: movimientos y pesos 0-15 (0 = solo por las reglas de IA, p. ej. HUIR con PV bajos).
+; fase2: fila con los movimientos del jefe a PV <= max >> RULE BOSS_PHASE_SH ('-' = no es jefe).
+; Botin: b1 siempre b1lo-b1hi; b2 con b2p/256; b3 con b3p/256 (GDD 5.4).
+; fspr: hueco de critters.tiles (8 tiles: base = fspr * 8). pic: imagen de combate (battle_*.tiles).
+; zona (<= 12), d1-d3 (ficha del Cuaderno, 3 x 18), nota de cocina (<= 16).
+@ table species
+@ prefix SPECIES
+@ col name text 10
+@ col fam ref families
+@ col tpv u8
+@ col tat u8
+@ col tdf u8
+@ col tag u8
+@ col catch u8
+@ col xp u8
+@ col debil flags CORTE GOLPE PUNTA FUEGO LUZ
+@ col resiste flags CORTE GOLPE PUNTA FUEGO LUZ
+@ col inmune flags CORTE GOLPE PUNTA FUEGO LUZ
+@ col vuela bool
+@ col beh enum ERRANTE ASUSTADIZO PERSEGUIDOR DORMILON MANADA EMBOSCADA VOLADOR NADADOR GUARDIAN
+@ col beh2 enum ERRANTE ASUSTADIZO PERSEGUIDOR DORMILON MANADA EMBOSCADA VOLADOR NADADOR GUARDIAN
+@ col spd u8
+@ col vis u8
+@ col grupo u8
+@ col hor enum SIEMPRE DIA NOCHE
+@ col duerme enum NUNCA DIA NOCHE
+@ col come flags DULCE CARNE PESCADO
+@ col cebo ref items
+@ col cond enum NINGUNA ESTADO SUELO FAROL
+@ col cond_st ref statuses
+@ col cond_it ref items
+@ col escapa u8
+@ col m1 ref moves
+@ col w1 u8
+@ col m2 ref moves
+@ col w2 u8
+@ col m3 ref moves
+@ col w3 u8
+@ col m4 ref moves
+@ col w4 u8
+@ col fase2 ref species
+@ col b1 ref items
+@ col b1lo u8
+@ col b1hi u8
+@ col b2 ref items
+@ col b2p u8
+@ col b3 ref items
+@ col b3p u8
+@ col fspr u8
+@ col pic u8
+@ col zona text 12
+@ col d1 text 18
+@ col d2 text 18
+@ col d3 text 18
+@ col nota text 16
+;id      name       fam    tpv tat tdf tag catch xp debil resiste inmune vuela beh         beh2        spd vis grupo hor     duerme come          cebo         cond    cond_st cond_it escapa m1       w1 m2       w2 m3       w3 m4   w4 fase2 b1             b1lo b1hi b2     b2p b3    b3p fspr pic zona      d1                   d2                  d3                  nota
+PINZARRO "Pinzarro" BICHO  6   5   7   3   150   14 GOLPE CORTE   -      no    ERRANTE     ERRANTE     24  3   0     SIEMPRE NUNCA  CARNE+PESCADO CEBO_PESCADO NINGUNA -       -       0      PINZA    8  CORAZA   4  BURBUJAS 3  -    0  -     CARNE_CANGREJO 1    2    CONCHA 128 PERLA 16  0    0   "Playa"   "Anda de lado y"     "nunca suelta lo"   "que coge."         "Con sal es mejor"
+DUNEJO   "Dunejo"   BESTIA 5   4   4   9   140   14 CORTE -       -      no    ASUSTADIZO  ASUSTADIZO  12  5   0     DIA     NUNCA  DULCE         CEBO_DULCE   NINGUNA -       -       64     COZ      8  ARENA    4  HUIR     0  -    0  -     MUSLO_CONEJO   1    2    PIEL   128 AMBAR 16  1    1   "Sendero" "Salta entre las"    "dunas y huye de"   "todo lo que oye."  "Asado, sin mas"
+GAVIRATA "Gavirata" AVE    5   6   4   8   120   16 PUNTA GOLPE   -      yes   VOLADOR     VOLADOR     8   5   0     DIA     NUNCA  CARNE+PESCADO CEBO_PESCADO NINGUNA -       -       64     PICOTAZO 8  PICADO   4  ROBAR    3  HUIR 0  -     HUEVO_GAVIOTA  1    2    PLUMA  128 PERLA 16  2    2   "Costa"   "Roba la comida"     "de los pescadores" "y vuela en giros." "Huevo: tortilla"
+SAPOYO   "Sapoyo"   REPTIL 8   5   5   3   140   16 FUEGO CORTE   -      no    DORMILON    ERRANTE     24  3   0     SIEMPRE DIA    CARNE         CEBO_CARNE   NINGUNA -       -       0      LENGUA   8  BABA     4  CROAR    3  -    0  -     ANCAS_SAPO     1    2    PIEL   128 AMBAR 16  3    3   "Charcas" "Duerme todo el dia" "en las charcas."   "De noche canta."   "Ancas con bayas"
+ERIZAL   "Erizal"   BICHO  6   6   9   2   120   18 GOLPE CORTE   -      no    PERSEGUIDOR PERSEGUIDOR 24  4   0     SIEMPRE NUNCA  CARNE         CEBO_CARNE   NINGUNA -       -       0      PUAS     8  RODAR    5  CORAZA   3  -    0  -     HUEVAS_ERIZO   1    2    PUA    128 PERLA 16  4    4   "Rocas"   "Rueda tras quien"   "pisa sus rocas."   "Sus puas pican."   "Huevas muy finas"
+POLIFARO "Polifaro" BICHO  5   5   4   8   70    24 GOLPE CORTE   -      no    ERRANTE     ERRANTE     16  4   0     SIEMPRE NUNCA  DULCE         CEBO_DULCE   NINGUNA -       -       0      CHISPA   6  DESTELLO 6  HUIR     0  -    0  -     POLVO_LUZ      1    1    -      0   AMBAR 16  5    5   "Claro"   "Su luz guiaba a"    "los barcos de"     "noche. Muy rara."  "Luz, no comida"

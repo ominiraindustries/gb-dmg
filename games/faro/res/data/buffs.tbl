@@ -1,0 +1,19 @@
+; FARO - mejoras de plato (GDD 2.5). 1 activa (la nueva sustituye), dura los pasos del plato.
+; name: Equipo 'Plato activo' (<= 10). kind = regla del kit; val:
+;   ATQ/DEF/AGI: stat + (stat >> val)      REGEN: +1 PV cada val pasos (sustituye a Lleno)
+;   VISTA: vista de las criaturas - val    CAZA: +val del botin principal al cazar
+;   CAPTURA: Q_tool + val                  RAREZA: peso << val de las entradas raras de spawns
+@ table buffs
+@ prefix BUFF
+@ col name text 10
+@ col kind enum ATQ DEF AGI REGEN VISTA CAZA CAPTURA RAREZA
+@ col val u8
+;id        name         kind    val
+FUERZA     "Fuerza"     ATQ     2
+CORAZA     "Coraza"     DEF     2
+AGIL       "Agil"       AGI     2
+VIGOR      "Vigor"      REGEN   6
+SIGILO     "Sigilo"     VISTA   1
+CAZADOR    "Cazador"    CAZA    1
+MANO_FIRME "Mano firme" CAPTURA 2
+OLFATO     "Olfato"     RAREZA  1

@@ -1,0 +1,13 @@
+; FARO - tipos de dano (GDD 3.4). REGLA: el orden de las filas es el orden de los bits de las
+; columnas flags CORTE GOLPE PUNTA FUEGO LUZ de families/species (debil, resiste, inmune).
+; icon: tile de uimenu.tiles relativo a DMG_CORTE (4 = ST_LIT, ui.md 6.4).
+@ table dtypes
+@ prefix DT
+@ col name text 6
+@ col icon u8
+;id   name    icon
+CORTE "Corte" 0
+GOLPE "Golpe" 1
+PUNTA "Punta" 2
+FUEGO "Fuego" 3
+LUZ   "Luz"   4

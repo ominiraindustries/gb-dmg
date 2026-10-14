@@ -1,0 +1,42 @@
+; FARO - movimientos de las criaturas (GDD 3.7). Tabla global (hasta ~48).
+; efecto (regla del kit): DANO (dtype/pot + st/stp opcional), ESTADO (st/stp, sin dano), DEFENSA (su
+; DEF + (DEF >> val) durante turnos), DEBUFF (ATQ del jugador - (ATQ >> val) durante turnos), CURA
+; (+PV max >> val), HUIR (escapa con stp/256; falla ENREDADA o DERRIBADA), ROBAR (quita 1 objeto
+; del bolsillo Comida). acc: acierto /256 (255 = siempre; a si misma siempre). stp: prob./256.
+; M1b usa las 16 primeras; el resto son de la lista de ejemplo del GDD (CARGA: ejemplo B de 3.10).
+@ table moves
+@ prefix MOVE
+@ col name text 12
+@ col efecto enum DANO ESTADO DEFENSA DEBUFF CURA HUIR ROBAR
+@ col dtype ref dtypes
+@ col pot u8
+@ col acc u8
+@ col st ref statuses
+@ col stp u8
+@ col val u8
+@ col turnos u8
+;id       name        efecto  dtype pot acc st         stp val turnos
+PINZA     "Pinza"     DANO    CORTE 6   242 -          0   0   0
+BURBUJAS  "Burbujas"  ESTADO  -     0   242 CEGADO     102 0   0
+CORAZA    "Coraza"    DEFENSA -     0   255 -          0   2   3
+COZ       "Coz"       DANO    GOLPE 6   242 -          0   0   0
+ARENA     "Arena"     ESTADO  -     0   242 CEGADO     128 0   0
+HUIR      "Huir"      HUIR    -     0   255 -          128 0   0
+PICOTAZO  "Picotazo"  DANO    PUNTA 7   242 -          0   0   0
+PICADO    "Picado"    DANO    PUNTA 10  200 -          0   0   0
+ROBAR     "Robar"     ROBAR   -     0   220 -          0   0   0
+LENGUA    "Lengua"    DANO    GOLPE 6   242 -          0   0   0
+BABA      "Baba"      ESTADO  -     0   242 ENVENENADO 102 0   0
+CROAR     "Croar"     ESTADO  -     0   242 DORMIDO    77  0   0
+PUAS      "Puas"      DANO    PUNTA 7   242 ENVENENADO 51  0   0
+RODAR     "Rodar"     DANO    GOLPE 9   220 -          0   0   0
+DESTELLO  "Destello"  ESTADO  -     0   242 CEGADO     154 0   0
+CHISPA    "Chispa"    DANO    LUZ   8   242 -          0   0   0
+TOPETAZO  "Topetazo"  DANO    GOLPE 10  242 -          0   0   0
+MORDISCO  "Mordisco"  DANO    CORTE 12  242 -          0   0   0
+AGUIJON   "Aguijon"   DANO    PUNTA 8   242 ENVENENADO 77  0   0
+ESPORAS   "Esporas"   ESTADO  -     0   242 DORMIDO    102 0   0
+TINTA     "Tinta"     ESTADO  -     0   242 CEGADO     154 0   0
+LLAMARADA "Llamarada" DANO    FUEGO 16  230 QUEMADO    51  0   0
+NIEBLA    "Niebla"    ESTADO  -     0   242 CEGADO     128 0   0
+CARGA     "Carga"     DANO    GOLPE 14  230 -          0   0   0

@@ -1,0 +1,10 @@
+; FARO - topes de la mochila (GDD 5.3). tope normal / con el objeto de rol ZURRON.
+; La lista de farolillos llenos no es un objeto: RULE FULL_MAX / FULL_MAX_Z.
+@ table caps
+@ prefix CAP
+@ col tope u8
+@ col zurron u8
+;id       tope zurron
+NORMAL    9    19
+FAROLILLO 20   40
+UNICO     1    1

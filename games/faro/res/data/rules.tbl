@@ -1,0 +1,103 @@
+; FARO - constantes de reglas (GDD 2, 3, 5). El kit lee tbl_rules[RULE_<ID>].v: el C no tiene numeros
+; de equilibrio. Prob./256 = se cumple si rng_next() < valor (256 = siempre).
+@ table rules
+@ prefix RULE
+@ col v u16
+;id              v
+START_LEVEL      2      ; nivel inicial de Leo
+START_MONEY      300    ; dinero inicial (C)
+START_LANTERNS   5      ; farolillos que da Tomasa (guion)
+MONEY_MAX        9999
+FULL_MAX         12     ; farolillos llenos (lista)
+FULL_MAX_Z       24     ; con ZURRON
+DEATH_MONEY_SH   1      ; desmayo: dinero >> n
+WALK_F           16     ; frames por casilla andando
+SNEAK_F          32     ; con sigilo (B)
+BIKE_F           8
+BOAT_F           12
+SLOPE_F          32     ; cuesta andando
+TURN_TAP_F       6      ; toque < n frames = girar sin andar
+SAC_START        80
+SAC_MAX          100
+SAC_STEPS        32     ; -1 saciedad cada n pasos
+SAC_BATTLE       1      ; -n por combate
+SAC_SLEEP        8      ; -n al descansar
+SAC_FULL         60     ; Lleno si sac >= n
+SAC_HUNGRY       25     ; Hambriento si sac < n (y > 0)
+REGEN_STEPS      12     ; Lleno: +1 PV cada n pasos
+STARVE_STEPS     16     ; Desfallecido: -1 PV cada n pasos (minimo 1)
+EN_STEPS         24     ; +1 EN cada n pasos si no hambriento
+POISON_STEPS     8      ; VEN en el campo: -1 PV cada n pasos (minimo 1)
+HUNGRY_DMG_SH    2      ; Hambriento: tu dano d - (d >> n)
+FAINT_DMG_SH     1      ; Desfallecido: tu dano d >> n
+FAINT_AGI_SH     1      ; Desfallecido: AGI >> n
+PLAYER_VEN_SELF  0      ; 0 = el jugador no se cura solo del veneno
+AGE_STEPS        64     ; +1 age de perecederos cada n pasos
+AGE_SPOIL        40     ; a esta edad la mitad (arriba) se pasa
+AGE_AFTER        20     ; age tras estropearse
+CAMP_HEAL_SH     1      ; descansar: +PV max >> n
+CAMP_SAFE_DIST   5      ; no se acampa con criatura alerta a <= n
+CAMP_FUEL        1      ; objetos de rol LENA por campamento
+SPAWN_MAX        6      ; criaturas activas
+SPAWN_RESPAWN_F  600    ; reaparece tras desaparecer (frames)
+SPAWN_KILL_STEPS 1024   ; reaparece tras cazar/capturar (pasos)
+SPAWN_DESPAWN    14     ; desaparece a > n casillas (Chebyshev)
+RARE_W           4      ; entrada de spawn rara si peso <= n
+ALERT_F          24     ; emoticono ! antes de actuar
+AMBUSH_ALERT_F   12     ; ! de la emboscada
+STUN_F           120    ; aturdida en el mapa tras huir del combate
+WANDER_F         48     ; ERRANTE: paso cada n + rng(0..WANDER_RND) frames
+WANDER_RND       48
+WANDER_R         4      ; radio de su punto de aparicion
+FLEE_F           160    ; ASUSTADIZO: huye n frames
+CHASE_F          480    ; PERSEGUIDOR: persigue n frames
+CHASE_DIST       8      ; o hasta > n casillas
+WAKE_DIST        3      ; DORMILON: pasos a <= n casillas
+WAKE_WALK        32     ; prob./256 de despertar por paso andando
+WAKE_SNEAK       0      ; con sigilo
+WAKE_BIKE        256    ; en bici (256 = siempre)
+AMBUSH_DIST      5      ; EMBOSCADA: tiembla si estas a <= n
+AMBUSH_SHAKE_F   96     ; cada n frames
+FLY_FLEE_DIST    3      ; VOLADOR huye a <= n
+SNEAK_VIS_SH     1      ; vista con sigilo: vis >> n
+BIKE_VIS         2      ; vista con bici: vis + n
+SLING_RANGE      4      ; casillas
+SLING_SPEED      4      ; px por frame
+SLING_COOLDOWN   30     ; frames
+BAIT_F           600    ; cebo en el suelo (frames)
+BAIT_DIST        6      ; atrae a <= n casillas
+BAIT_EAT_F       240    ; comiendo (como dormida)
+BAIT_TURNS       2      ; combate: CALMADO n turnos al comer cebo
+FORAGE_STEPS     512    ; por defecto (forage.tbl manda)
+INIT_RND         7      ; iniciativa: AGI + (rng & n)
+ACC_AGI          2      ; acierto - n * (AGI def - AGI atk)
+ACC_MIN          128
+FLY_ACC          64     ; acierto - n contra VOLANDO
+CRIT             16     ; critico si rng < n (1/16)
+CRIT_AIM         128    ; con Punteria (1/2)
+DMG_RND          31     ; azar: d - ((d * (rng & n)) >> 8)
+DEF_MIN          4      ; DEF' = max(n, DEF)
+R16_MIN          2      ; clamp de R16
+R16_MAX          64
+FLEE_BASE        128    ; huir: base + FLEE_AGI * dAGI + FLEE_TRY * intentos
+FLEE_AGI         8
+FLEE_TRY         64
+FLEE_MIN         16
+FLEE_MAX         255
+QHP_HI           2      ; Q_hp con PV > 50 %
+QHP_50           4      ; PV <= 50 %
+QHP_25           6      ; PV <= 25 %
+QHP_12           8      ; PV <= 12.5 %
+QST_NONE         4      ; Q_st sin estado (el resto en statuses.tbl)
+QBAIT_NONE       4
+QBAIT_OTHER      5      ; comio otro cebo
+QBAIT_FAV        6      ; comio su favorito
+XP_SH            3      ; px = ((xp_base * L) >> n) + XP_ADD
+XP_ADD           2
+XP_NEW_SH        1      ; especie nueva: px << n
+AI_LOW_SH        2      ; IA: PV <= max >> n = PV bajos
+AI_LOW_P         128    ; prob./256 de usar HUIR/CURA con PV bajos
+AI_ST_MUL        2      ; peso x n de movimientos de estado si el jugador no tiene
+BOSS_PHASE_SH    1      ; jefe: fase 2 con PV <= max >> n
+LAMP_NIGHT_CEG   102    ; Farol de mano: CEGADO prob./256 a especies de noche
+CLINIC_JINGLE_F  90

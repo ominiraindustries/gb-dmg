@@ -1,0 +1,36 @@
+; FARO - banderas de historia (harness/script.py): id = orden de linea. SOLO SE ANADE AL FINAL
+; (ids estables = partidas compatibles). Max 1024 (flags[128] en la partida, GDD 8.7).
+; --- Prologo (M1b): historia
+F_INTRO            ; escena del muelle vista (trigger once)
+F_DIARIO           ; Tomasa te dio el Diario de Ines y los farolillos
+F_REMO             ; cogiste el Remo viejo en casa de Ines
+F_TUTO_CAZA        ; cazaste el primer Pinzarro (Tomasa lo comenta)
+F_TUTO_COCINA      ; cocinaste con Tomasa (aprendes Cangrejo y sal y Mermelada)
+F_TUTO_CAPTURA     ; primera captura hecha (tutorial de Golpe suave)
+F_HONDA            ; el pescador te dio la Honda
+F_ENCARGO_ON       ; encargo del pescador aceptado (3 Plumas)
+F_ENCARGO_OK       ; encargo entregado: Machete
+F_ENFERMERIA       ; visitaste la enfermeria de Varadero (punto de despertar)
+F_FARO_ABIERTO     ; la puerta del faro esta abierta
+F_LENTE_VISTA      ; viste la Sala de la Lente apagada (6 anillos negros)
+F_ANILLO_1         ; anillo 1 encendido (escena LAMP)
+F_BRUMA_1          ; muro de bruma Varadero-Marismas disuelto
+F_DEMO_FIN         ; pantalla FIN DE LA DEMO vista
+F_DIARIO_1         ; pagina 1 del diario (receta Tortilla mar)
+; --- Avisos de una sola vez
+F_AVISO_HAMBRE     ; "Te suenan las tripas"
+F_AVISO_DEBIL      ; desfallecido por primera vez
+F_AVISO_PASADO     ; primer perecedero estropeado
+F_AVISO_CAMPO      ; primera vez que se puede acampar (pista)
+; --- Objetos del suelo (recogidos)
+F_PICK_VAR_1
+F_PICK_VAR_2
+F_PICK_SEN_1
+F_PICK_SEN_2
+F_PICK_CABO_1
+F_PICK_CABO_2
+F_PICK_CLARO_1
+F_PICK_FARO_1
+; --- Mapas M1b (pixel-artist): avisos de una sola vez
+F_AVISO_SENDERO    ; aviso al salir de Varadero hacia el Sendero del Cabo (trigger)
+F_CLARO_VISTO      ; primer paso dentro del claro tras las zarzas (trigger)

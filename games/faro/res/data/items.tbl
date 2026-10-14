@@ -1,0 +1,139 @@
+; FARO - objetos (GDD 2.3, 3.5, 5.1-5.5). Ids <= 127 (inventario items[128]). Textos: name <= 14,
+; descripcion d1/d2 <= 12 cada linea (cabe en Mochila 2x15, combate 3x12 y Tienda 2x18 sin partir;
+; la fuente no tiene '+' ni '%': las cifras con signo las escribe el codigo).
+; cat: tipo; bolsa: bolsillo de la Mochila (EQUIPO = solo en Equipo; NINGUNA = no se guarda).
+; precio: compra en tienda (0 = no se vende en tiendas; DINERO: cantidad que da). venta: lo que paga
+;   la tienda (0 = no se puede vender). uso: donde se puede usar.
+; efecto (regla del kit) y sus columnas:
+;   CONSUMIR  sac, pv, en (255 = lleno), cura (estados), buff + bpasos, st/stp (al que come: Carne pasada)
+;   RED       st/stp a la criatura, derriba (prob./256 de DERRIBAR a una VOLANDO)
+;   CEBO      cebo (clase de cebo); en combate CALMADO RULE BAIT_TURNS + Q_bait; en el campo atrae
+;   ATAQUE    dtype/pot/acc + st/stp + derriba (Bengala, Honda)
+;   ESTADO    st/stp con acc (Somnifero)
+;   ILUMINAR  st/stp (ILUMINADO); CEGADO RULE LAMP_NIGHT_CEG a especies de hor NOCHE
+;   DERRIBAR  derriba (Garfio)
+;   CAPTURA   val = Q_tool (255 = captura segura); fam/val2 = Q_tool para esa familia
+;   ARMA      dtype/pot/acc, st/stp extra, crit (prob./256; 0 = RULE CRIT)
+;   ROPA      val = DEF
+; ability: bits de habilidad de los objetos llave (el kit pregunta has_ability, nunca por un objeto).
+; ing: categorias de ingrediente (recetas). cebo: clase de cebo si sirve de cebo.
+; perece: se estropea (age); pasado = su version pasada; salado = lo que da Salar ('-' = no se sala).
+; role: ganchos del sistema (LENA = combustible del campamento, SAL = sala, ZURRON = topes x2).
+; icon: icono 16x16 (hoja de iconos del pixel-artist; por ahora = orden).
+@ table items
+@ prefix ITEM
+@ col name text 14
+@ col d1 text 12
+@ col d2 text 12
+@ col cat enum MEDICINA COMIDA INGREDIENTE PLATO MATERIAL ARTILUGIO CEBO FAROLILLO LLAVE ARMA ROPA DINERO
+@ col bolsa enum OBJETOS COMIDA ARTILUGIOS FAROLILLOS EQUIPO NINGUNA
+@ col tope ref caps
+@ col precio u16
+@ col venta u16
+@ col uso flags CAMPO COMBATE
+@ col efecto enum NINGUNO CONSUMIR RED CEBO ATAQUE ESTADO ILUMINAR DERRIBAR CAPTURA ARMA ROPA
+@ col sac u8
+@ col pv u8
+@ col en u8
+@ col cura flags DOR ATU CEG VEN QUE
+@ col buff ref buffs
+@ col bpasos u16
+@ col dtype ref dtypes
+@ col pot u8
+@ col acc u8
+@ col crit u8
+@ col st ref statuses
+@ col stp u8
+@ col derriba u8
+@ col val u8
+@ col fam ref families
+@ col val2 u8
+@ col ability flags CUT LIGHT FISH SLING HOOK BIKE BOAT FLY
+@ col ing flags CARNE PESCADO MARISCO HUEVO VERDURA FRUTA HONGO GRANO ESPECIA DULCE
+@ col cebo flags DULCE CARNE PESCADO
+@ col perece bool
+@ col pasado ref items
+@ col salado ref items
+@ col role enum NINGUNO LENA SAL ZURRON DIARIO
+@ col icon u8
+;id            name             d1             d2             cat         bolsa      tope      precio venta uso           efecto   sac pv  en  cura                buff   bpasos dtype pot acc crit st         stp derriba val fam   val2 ability ing     cebo    perece pasado         salado  role    icon
+POCION         "Pocion"         "Cura 30 PV"   "al momento."  MEDICINA    OBJETOS    NORMAL    20     10    CAMPO+COMBATE CONSUMIR 0   30  0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 0
+POCION_FUERTE  "Pocion fuerte"  "Cura 80 PV"   "al momento."  MEDICINA    OBJETOS    NORMAL    60     30    CAMPO+COMBATE CONSUMIR 0   80  0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 1
+ELIXIR         "Elixir"         "Cura todo:"   "PV, EN, mal." MEDICINA    OBJETOS    NORMAL    200    100   CAMPO+COMBATE CONSUMIR 0   255 255 DOR+ATU+CEG+VEN+QUE -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 2
+TONICO         "Tonico"         "Recupera"     "15 de EN."    MEDICINA    OBJETOS    NORMAL    30     15    CAMPO+COMBATE CONSUMIR 0   0   15  -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 3
+ANTIDOTO       "Antidoto"       "Cura el"      "veneno."      MEDICINA    OBJETOS    NORMAL    10     5     CAMPO+COMBATE CONSUMIR 0   0   0   VEN                 -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 4
+UNGUENTO       "Unguento"       "Cura las"     "quemaduras."  MEDICINA    OBJETOS    NORMAL    10     5     CAMPO+COMBATE CONSUMIR 0   0   0   QUE                 -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 5
+PAN            "Pan"            "Quita el"     "hambre. 15"   COMIDA      COMIDA     NORMAL    8      4     CAMPO+COMBATE CONSUMIR 15  0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       GRANO   -       no     -              -       NINGUNO 6
+GALLETA        "Galleta"        "Dura y seca." "No se pasa."  COMIDA      COMIDA     NORMAL    12     6     CAMPO+COMBATE CONSUMIR 20  0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       GRANO   -       no     -              -       NINGUNO 7
+SAL            "Sal"            "Para salar"   "y cocinar."   INGREDIENTE COMIDA     NORMAL    6      3     -             NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       ESPECIA -       no     -              -       SAL     8
+ACEITE         "Aceite"         "Aceite de"    "oliva."       INGREDIENTE COMIDA     NORMAL    10     5     -             NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 9
+MIEL           "Miel"           "Dulce y"      "espesa."      INGREDIENTE COMIDA     NORMAL    12     6     CAMPO+COMBATE CONSUMIR 5   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       DULCE   -       no     -              -       NINGUNO 10
+HARINA         "Harina"         "Para pan y"   "empanadas."   INGREDIENTE COMIDA     NORMAL    5      2     -             NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       GRANO   -       no     -              -       NINGUNO 11
+PIMIENTA       "Pimienta"       "Pimienta de"  "roca. Pica."  INGREDIENTE COMIDA     NORMAL    8      4     -             NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       ESPECIA -       no     -              -       NINGUNO 12
+MADERA         "Madera"         "Para hacer"   "una hoguera." MATERIAL    OBJETOS    NORMAL    4      2     -             NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       LENA    13
+BAYAS          "Bayas"          "Bayas de las" "dunas."       INGREDIENTE COMIDA     NORMAL    0      2     CAMPO+COMBATE CONSUMIR 5   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       FRUTA   -       no     -              -       NINGUNO 14
+ALGAS          "Algas"          "Algas de la"  "orilla."      INGREDIENTE COMIDA     NORMAL    0      2     CAMPO+COMBATE CONSUMIR 3   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       VERDURA -       no     -              -       NINGUNO 15
+HINOJO         "Hinojo"         "Hierba que"   "huele a mar." INGREDIENTE COMIDA     NORMAL    0      2     CAMPO+COMBATE CONSUMIR 3   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       VERDURA -       no     -              -       NINGUNO 16
+CARNE_CANGREJO "Carne cangrejo" "Carne fresca" "Se estropea." INGREDIENTE COMIDA     NORMAL    0      6     CAMPO+COMBATE CONSUMIR 6   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       MARISCO -       yes    PESCADO_PASADO SALAZON NINGUNO 17
+MUSLO_CONEJO   "Muslo conejo"   "Carne fresca" "Se estropea." INGREDIENTE COMIDA     NORMAL    0      7     CAMPO+COMBATE CONSUMIR 8   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       CARNE   -       yes    CARNE_PASADA   CECINA  NINGUNO 18
+HUEVO_GAVIOTA  "Huevo gaviota"  "Huevo fresco" "Se estropea." INGREDIENTE COMIDA     NORMAL    0      6     CAMPO+COMBATE CONSUMIR 6   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       HUEVO   -       yes    CARNE_PASADA   -       NINGUNO 19
+ANCAS_SAPO     "Ancas de sapo"  "Carne fresca" "Se estropea." INGREDIENTE COMIDA     NORMAL    0      6     CAMPO+COMBATE CONSUMIR 6   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       CARNE   -       yes    CARNE_PASADA   CECINA  NINGUNO 20
+HUEVAS_ERIZO   "Huevas erizo"   "Marisco fino" "Se estropea." INGREDIENTE COMIDA     NORMAL    0      8     CAMPO+COMBATE CONSUMIR 5   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       MARISCO -       yes    PESCADO_PASADO SALAZON NINGUNO 21
+CARNE_PASADA   "Carne pasada"   "Huele mal."   "Es buen cebo" INGREDIENTE COMIDA     NORMAL    0      1     CAMPO+COMBATE CONSUMIR 8   0   0   -                   -      0      -     0   0   0    ENVENENADO 128 0       0   -     0    -       -       CARNE   no     -              -       NINGUNO 22
+PESCADO_PASADO "Pescado pasado" "Huele mal."   "Es buen cebo" INGREDIENTE COMIDA     NORMAL    0      1     CAMPO+COMBATE CONSUMIR 8   0   0   -                   -      0      -     0   0   0    ENVENENADO 128 0       0   -     0    -       -       PESCADO no     -              -       NINGUNO 23
+CECINA         "Cecina"         "Carne salada" "No se pasa."  INGREDIENTE COMIDA     NORMAL    0      10    CAMPO+COMBATE CONSUMIR 10  0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       CARNE   -       no     -              -       NINGUNO 24
+SALAZON        "Salazon"        "Pescado en"   "sal. Dura."   INGREDIENTE COMIDA     NORMAL    0      10    CAMPO+COMBATE CONSUMIR 10  0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       PESCADO -       no     -              -       NINGUNO 25
+MEJUNJE        "Mejunje"        "Algo salio"   "mal..."       PLATO       COMIDA     NORMAL    0      1     CAMPO+COMBATE CONSUMIR 10  0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 26
+ASADO          "Asado simple"   "Carne a la"   "brasa."       PLATO       COMIDA     NORMAL    0      8     CAMPO+COMBATE CONSUMIR 20  10  0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 27
+PESCADO_ASADO  "Pescado asado"  "Pescado a la" "brasa."       PLATO       COMIDA     NORMAL    0      8     CAMPO+COMBATE CONSUMIR 18  12  0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 28
+CANGREJO_SAL   "Cangrejo y sal" "Te protege:"  "Coraza."      PLATO       COMIDA     NORMAL    0      15    CAMPO+COMBATE CONSUMIR 30  25  0   -                   CORAZA 384    -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 29
+ANCAS_BAYAS    "Ancas y bayas"  "Da fuerza:"   "Fuerza."      PLATO       COMIDA     NORMAL    0      15    CAMPO+COMBATE CONSUMIR 30  15  0   -                   FUERZA 384    -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 30
+TORTILLA       "Tortilla mar"   "Te aligera:"  "Agil."        PLATO       COMIDA     NORMAL    0      20    CAMPO+COMBATE CONSUMIR 40  20  0   -                   AGIL   384    -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 31
+ESTOFADO       "Estofado"       "Plato fuerte" "Vigor."       PLATO       COMIDA     NORMAL    0      25    CAMPO+COMBATE CONSUMIR 55  30  0   -                   VIGOR  512    -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 32
+MERMELADA      "Mermelada"      "Dulce que da" "EN. Sigilo."  PLATO       COMIDA     NORMAL    0      15    CAMPO+COMBATE CONSUMIR 20  0   20  -                   SIGILO 384    -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 33
+CALDO_ALGAS    "Caldo de algas" "Da EN y cura" "el veneno."   PLATO       COMIDA     NORMAL    0      8     CAMPO+COMBATE CONSUMIR 15  0   10  VEN                 -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 34
+CONCHA         "Concha"         "Se vende"     "bien."        MATERIAL    OBJETOS    NORMAL    0      12    -             NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 35
+PLUMA          "Pluma"          "Se vende"     "bien."        MATERIAL    OBJETOS    NORMAL    0      14    -             NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 36
+PIEL           "Piel"           "Se vende"     "bien."        MATERIAL    OBJETOS    NORMAL    0      16    -             NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 37
+PUA            "Pua"            "Pua de erizo" "Se vende."    MATERIAL    OBJETOS    NORMAL    0      12    -             NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 38
+POLVO_LUZ      "Polvo de luz"   "Brilla en la" "oscuridad."   MATERIAL    OBJETOS    NORMAL    0      30    -             NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 39
+PERLA          "Perla"          "Muy valiosa." ""             MATERIAL    OBJETOS    NORMAL    0      100   -             NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 40
+AMBAR          "Ambar"          "Muy valioso." ""             MATERIAL    OBJETOS    NORMAL    0      150   -             NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 41
+RED            "Red"            "Enreda a la"  "criatura."    ARTILUGIO   ARTILUGIOS NORMAL    12     6     COMBATE       RED      0   0   0   -                   -      0      -     0   0   0    ENREDADO   230 255     0   -     0    -       -       -       no     -              -       NINGUNO 42
+CEBO_DULCE     "Cebo dulce"     "Atrae a los"  "golosos."     CEBO        ARTILUGIOS NORMAL    8      4     CAMPO+COMBATE CEBO     0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       DULCE   no     -              -       NINGUNO 43
+CEBO_CARNE     "Cebo de carne"  "Atrae a los"  "carnivoros."  CEBO        ARTILUGIOS NORMAL    8      4     CAMPO+COMBATE CEBO     0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       CARNE   no     -              -       NINGUNO 44
+CEBO_PESCADO   "Cebo pescado"   "Para los que" "comen pez."   CEBO        ARTILUGIOS NORMAL    8      4     CAMPO+COMBATE CEBO     0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       PESCADO no     -              -       NINGUNO 45
+BENGALA        "Bengala"        "Fuego que"    "deslumbra."   ARTILUGIO   ARTILUGIOS NORMAL    25     12    COMBATE       ATAQUE   0   0   0   -                   -      0      FUEGO 18  242 0    CEGADO     77  0       0   -     0    -       -       -       no     -              -       NINGUNO 46
+DARDO          "Somnifero"      "Dardo que"    "duerme."      ARTILUGIO   ARTILUGIOS NORMAL    30     15    COMBATE       ESTADO   0   0   0   -                   -      0      -     0   242 0    DORMIDO    179 0       0   -     0    -       -       -       no     -              -       NINGUNO 47
+FAROLILLO      "Farolillo"      "Guarda luz"   "de un ser."   FAROLILLO   FAROLILLOS FAROLILLO 15     7     COMBATE       CAPTURA  0   0   0   -                   -      0      -     0   0   0    -          0   0       4   -     0    -       -       -       no     -              -       NINGUNO 48
+FAROLILLO_FINO "Farolillo fino" "Atrapa mejor" ""             FAROLILLO   FAROLILLOS FAROLILLO 40     20    COMBATE       CAPTURA  0   0   0   -                   -      0      -     0   0   0    -          0   0       6   -     0    -       -       -       no     -              -       NINGUNO 49
+FAROL_PLATA    "Farol de plata" "Atrapa mucho" "mejor."       FAROLILLO   FAROLILLOS FAROLILLO 90     45    COMBATE       CAPTURA  0   0   0   -                   -      0      -     0   0   0    -          0   0       8   -     0    -       -       -       no     -              -       NINGUNO 50
+FAROL_BRUMA    "Farol de bruma" "Para la"      "bruma."       FAROLILLO   FAROLILLOS FAROLILLO 120    60    COMBATE       CAPTURA  0   0   0   -                   -      0      -     0   0   0    -          0   0       4   BRUMA 12   -       -       -       no     -              -       NINGUNO 51
+FAROL_MAESTRO  "Farol maestro"  "El de Ines."  "Nunca falla." FAROLILLO   FAROLILLOS UNICO     0      0     COMBATE       CAPTURA  0   0   0   -                   -      0      -     0   0   0    -          0   0       255 -     0    -       -       -       no     -              -       NINGUNO 52
+DIARIO         "Diario de Ines" "Notas de tu"  "abuela."      LLAVE       OBJETOS    UNICO     0      0     -             NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       DIARIO  53
+HONDA          "Honda"          "Piedras que"  "aturden."     LLAVE       ARTILUGIOS UNICO     0      0     CAMPO+COMBATE ATAQUE   0   0   0   -                   -      0      PUNTA 6   242 0    ATURDIDO   64  128     0   -     0    SLING   -       -       no     -              -       NINGUNO 54
+FAROL_MANO     "Farol de mano"  "Alumbra lo"   "oscuro."      LLAVE       ARTILUGIOS UNICO     0      0     CAMPO+COMBATE ILUMINAR 0   0   0   -                   -      0      -     0   0   0    ILUMINADO  255 0       0   -     0    LIGHT   -       -       no     -              -       NINGUNO 55
+GARFIO         "Garfio"         "Para grietas" "y voladores." LLAVE       ARTILUGIOS UNICO     0      0     COMBATE       DERRIBAR 0   0   0   -                   -      0      -     0   0   0    -          0   255     0   -     0    HOOK    -       -       no     -              -       NINGUNO 56
+VARA           "Vara de pesca"  "Para pescar." ""             LLAVE       ARTILUGIOS UNICO     0      0     CAMPO         NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    FISH    -       -       no     -              -       NINGUNO 57
+BICI           "Bicicleta"      "La bici de"   "Ines."        LLAVE       ARTILUGIOS UNICO     0      0     CAMPO         NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    BIKE    -       -       no     -              -       NINGUNO 58
+BOTE           "Bote"           "Para el mar." ""             LLAVE       OBJETOS    UNICO     0      0     -             NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    BOAT    -       -       no     -              -       NINGUNO 59
+SILBATO        "Silbato"        "Llama a una"  "gaviota."     LLAVE       ARTILUGIOS UNICO     0      0     CAMPO         NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    FLY     -       -       no     -              -       NINGUNO 60
+ZURRON         "Zurron"         "Llevas el"    "doble."       LLAVE       OBJETOS    UNICO     0      0     -             NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       ZURRON  61
+CUCHILLO       "Cuchillo"       "Cuchillo de"  "pesca."       ARMA        EQUIPO     UNICO     0      0     -             ARMA     0   0   0   -                   -      0      CORTE 8   242 0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 62
+REMO           "Remo viejo"     "Pesa. Puede"  "aturdir."     ARMA        EQUIPO     UNICO     0      0     -             ARMA     0   0   0   -                   -      0      GOLPE 7   242 0    ATURDIDO   26  0       0   -     0    -       -       -       no     -              -       NINGUNO 63
+MACHETE        "Machete"        "Corta zarzas" ""             ARMA        EQUIPO     UNICO     0      0     -             ARMA     0   0   0   -                   -      0      CORTE 13  242 0    -          0   0       0   -     0    CUT     -       -       no     -              -       NINGUNO 64
+ARPON          "Arpon corto"    "Pincha."      ""             ARMA        EQUIPO     UNICO     240    120   -             ARMA     0   0   0   -                   -      0      PUNTA 12  242 0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 65
+ANTORCHA       "Antorcha"       "Puede"        "quemar."      ARMA        EQUIPO     UNICO     450    225   -             ARMA     0   0   0   -                   -      0      FUEGO 14  242 0    QUEMADO    51  0       0   -     0    -       -       -       no     -              -       NINGUNO 66
+MAZA           "Maza de raiz"   "Puede"        "aturdir."     ARMA        EQUIPO     UNICO     600    300   -             ARMA     0   0   0   -                   -      0      GOLPE 17  242 0    ATURDIDO   38  0       0   -     0    -       -       -       no     -              -       NINGUNO 67
+ARPON_HUESO    "Arpon de hueso" "Pincha"       "hondo."       ARMA        EQUIPO     UNICO     1100   550   -             ARMA     0   0   0   -                   -      0      PUNTA 22  242 0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 68
+FAROL_GUERRA   "Farol guerra"   "Luz que"      "ilumina."     ARMA        EQUIPO     UNICO     1800   900   -             ARMA     0   0   0   -                   -      0      LUZ   24  242 0    ILUMINADO  128 0       0   -     0    -       -       -       no     -              -       NINGUNO 69
+MARTILLO       "Martillo faro"  "Puede"        "aturdir."     ARMA        EQUIPO     UNICO     2400   1200  -             ARMA     0   0   0   -                   -      0      GOLPE 30  242 0    ATURDIDO   51  0       0   -     0    -       -       -       no     -              -       NINGUNO 70
+SABLE          "Sable farero"   "Critico"      "frecuente."   ARMA        EQUIPO     UNICO     0      0     -             ARMA     0   0   0   -                   -      0      CORTE 36  242 32   -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 71
+ROPA_FAENA     "Ropa de faena"  "Ropa de"      "trabajo."     ROPA        EQUIPO     UNICO     0      0     -             ROPA     0   0   0   -                   -      0      -     0   0   0    -          0   0       1   -     0    -       -       -       no     -              -       NINGUNO 72
+CHUBASQUERO    "Chubasquero"    "Para la"      "lluvia."      ROPA        EQUIPO     UNICO     60     30    -             ROPA     0   0   0   -                   -      0      -     0   0   0    -          0   0       3   -     0    -       -       -       no     -              -       NINGUNO 73
+CHALECO        "Chaleco corcho" "Flota y"      "protege."     ROPA        EQUIPO     UNICO     300    150   -             ROPA     0   0   0   -                   -      0      -     0   0   0    -          0   0       6   -     0    -       -       -       no     -              -       NINGUNO 74
+CAPA           "Capa de lona"   "Lona de vela" ""             ROPA        EQUIPO     UNICO     700    350   -             ROPA     0   0   0   -                   -      0      -     0   0   0    -          0   0       9   -     0    -       -       -       no     -              -       NINGUNO 75
+CORAZA_CONCHA  "Coraza concha"  "Muy dura."    ""             ROPA        EQUIPO     UNICO     1500   750   -             ROPA     0   0   0   -                   -      0      -     0   0   0    -          0   0       13  -     0    -       -       -       no     -              -       NINGUNO 76
+ABRIGO         "Abrigo farero"  "El de los"    "fareros."     ROPA        EQUIPO     UNICO     0      0     -             ROPA     0   0   0   -                   -      0      -     0   0   0    -          0   0       18  -     0    -       -       -       no     -              -       NINGUNO 77
+CONCHAS_50     "Conchas"        ""             ""             DINERO      NINGUNA    UNICO     50     0     -             NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 78
+CONCHAS_100    "Conchas"        ""             ""             DINERO      NINGUNA    UNICO     100    0     -             NINGUNO  0   0   0   -                   -      0      -     0   0   0    -          0   0       0   -     0    -       -       -       no     -              -       NINGUNO 79
