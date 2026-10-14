@@ -272,6 +272,12 @@ def build(name):
             sources.append(fpview.to_c(fpview.parse(pcs_file, tileset_labels(gdir, pcs_file), bases), gen))
         except ValueError as e:
             die(str(e))
+    for map_file in sorted((gdir / "res" / "maps").glob("*.map")):      # 4-way world maps (world.py)
+        import world
+        try:
+            sources.append(world.convert(world.load(gdir, map_file), gen))
+        except (KeyError, ValueError) as e:
+            die(str(e))
     for lvl in sorted((gdir / "res").glob("*.lvl")):
         try:
             sources.append(levels.convert(lvl, gen, cfg.get("levels", {})))

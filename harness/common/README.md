@@ -35,6 +35,7 @@ List the files in `"common_src"`; their headers are on the include path.
 | `gbe_text.c` | shared-font text (`txt_tiles`, `txt_u16`) and a 4-line message log typed through gbe_vq | `txt_font`, `txt_blank`, `txt_lower` (0 = lowercase prints as capitals), "font" in common_res | dungeon |
 | `gbe_menu.c` | vertical menu: cursor tile, repeat 16/6 f, wrap, disabled options, A / B | - | dungeon (M1b) |
 | `gbe_rng.c` | xorshift16 `rng_next` / `rng_range`; `gb.rng_next(state)` predicts it in tests | seed `rng_state` | dungeon |
+| `gbe_world.c` `gbe_world.s` | 4-way scrolling world of 16x16 metatiles (top-down RPGs): maps of sectors (16x16 cells) from `res/maps/*.map` (`harness/world.py`, banked), 3x3 sector cache in WRAM (half a sector loaded per frame), BG ring with a 13x12-cell drawn region, edge queue of lines drawn 3 metatiles per VBlank, asm `wmt_at`/`wprep_cell` | `GBE_WORLD_MT`, `world_metatiles()` from `mt_tiles`/`mt_attr` | world_lab: worst ~10k T per frame (C first version 38k), screen == map model every frame of a 7000-frame walk |
 | `gbe_selftest.c` | asm-vs-C equivalence of all the above, run in the ROM | call `gbe_selftest()` when `gbe_eq_request` | test: `gb.selftest()` |
 
 Header: `gbe.h` (documents every function and the rules). The game provides `src/gbe_config.h`:

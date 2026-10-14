@@ -258,6 +258,15 @@ def preview(gdir):
             p = out / f"level_{lvl.stem}.png"
             render_level(lvl, cfg, mt, sets[mt.tileset], p)
             written.append(p)
+    for map_file in sorted((gdir / "res" / "maps").glob("*.map")):   # world maps (world.py)
+        import world
+        m = world.load(gdir, map_file)
+        mt_file = gdir / "res" / f"{m.mt_stem}.mt"
+        import metatiles
+        import screens
+        bases = screens.vram_bases(_config(gdir)["vram_order"], sets) if _config(gdir).get("vram_order") else None
+        mt = metatiles.parse(mt_file, sets[_mt_tileset(mt_file)].labels, bases)
+        written.append(world.render(m, mt, sets, out / f"map_{m.name.lower()}.png"))
     for name, ts in sets.items():
         if (gdir / "res" / f"{name}.tiles").exists() or name in _common_used(gdir):
             p = out / f"tiles_{name}.png"

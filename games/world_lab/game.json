@@ -1,0 +1,23 @@
+{
+  "title": "WORLD LAB",
+  "common_res": [],
+  "common_src": [
+    "gbe_frame.c",
+    "gbe_oam.c",
+    "gbe_video.c",
+    "gbe_bank.c",
+    "gbe_vram.s",
+    "gbe_world.c",
+    "gbe_world.s",
+    "gbe_selftest.c"
+  ],
+  "lcc_flags": [
+    "-autobank",
+    "-Wm-yt0x1B",
+    "-Wm-yo8",
+    "-Wm-ya1"
+  ],
+  "vram_order": [
+    "bg"
+  ]
+}

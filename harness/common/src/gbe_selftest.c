@@ -199,6 +199,40 @@ static void eq_view(void) {
 }
 #endif
 
+#ifdef GBE_SELFTEST_WORLD
+// wmt_at and wprep_cell: every cell of the 256x256 u8 plane (cache, border, outside, loading)
+uint8_t wprep_cell(uint8_t x, uint8_t y);
+uint8_t wprep_cell_c(uint8_t x, uint8_t y);
+extern uint8_t wprep_n, wprep_tiles[][4], *wprep_dst[];
+extern uint8_t wslot[];
+static void eq_world_pass(void) {
+    uint8_t x = 0, y = 0, a, b, ta[4], *da;
+    do {
+        x = 0;
+        do {
+            if (wmt_at(x, y) != wmt_at_c(x, y)) gbe_eq_mismatch++;
+            wprep_n = 0;
+            a = wprep_cell(x, y);
+            memcpy(ta, wprep_tiles[0], 4); da = wprep_dst[0];
+            wprep_n = 0;
+            b = wprep_cell_c(x, y);
+            if (a != b || wprep_n != b || (a && (memcmp(ta, wprep_tiles[0], 4) || da != wprep_dst[0])))
+                gbe_eq_mismatch++;
+            gbe_eq_count++;
+        } while (++x);
+    } while (++y);
+    wprep_n = 0;
+}
+
+static void eq_world(void) {
+    uint8_t keep = wslot[0];
+    eq_world_pass();
+    wslot[0] = 0xFF;                 // a sector "still loading"
+    eq_world_pass();
+    wslot[0] = keep;
+}
+#endif
+
 void gbe_selftest(void) {
     gbe_eq_mismatch = gbe_eq_count = 0;
 #ifdef GBE_SELFTEST_MAP
@@ -216,6 +250,9 @@ void gbe_selftest(void) {
 #endif
 #ifdef GBE_SELFTEST_VMAP
     eq_vrow();
+#endif
+#ifdef GBE_SELFTEST_WORLD
+    eq_world();
 #endif
 #ifdef GBE_SELFTEST_VIEW
     eq_view();

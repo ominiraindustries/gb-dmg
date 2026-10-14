@@ -256,6 +256,38 @@ uint8_t save_load(void *dst, uint16_t len, uint8_t version);   // 1 = newest val
 void save_store(const void *src, uint16_t len, uint8_t version);
 void save_erase(void);
 
+// ---------------------------------------------------------------- gbe_world.c
+// 4-way scrolling world of 16x16 metatiles in sectors of 16x16 cells (top-down RPGs). Maps come from
+// res/maps/*.map (harness/world.py: map_<name> in a bank). WRAM caches the 3x3 sectors around the
+// focus cell; the BG map is a ring (cell x, y at BG metatile x & 15, y & 15; SCX/SCY = camera).
+// Loop: world_draw_vram() in VBlank; after the logic world_update(player cell, camera px).
+// The camera may move at most 16 px per frame (bigger jumps: world_load with the LCD off).
+// Config: GBE_WORLD_MT = metatile slots (default 128). Maps <= 15x15 sectors (u8 cells).
+#ifndef GBE_WORLD_MT
+#define GBE_WORLD_MT 128
+#endif
+typedef struct {
+    uint8_t w, h, border, nsec;          // size in sectors, metatile outside, unique sectors
+    const uint8_t *grid;                 // w*h unique-sector indices
+    const uint8_t *sectors;              // nsec x 256 metatile ids (row-major 16x16)
+} world_map_t;
+extern uint8_t wmt_tiles[GBE_WORLD_MT][4], wmt_attr[GBE_WORLD_MT];
+extern int16_t cam_x, cam_y;            // world px of the screen's top-left
+extern uint8_t reg_x, reg_y;            // top-left cell of the drawn 13x12 region
+extern uint8_t wcache_sector[9], world_loaded_slot, world_edge_budget, edge_pending;
+extern uint16_t world_lost;             // edge-queue overflows (must stay 0)
+void world_metatiles(uint8_t bank, const uint8_t *tiles, const uint8_t *attr, uint8_t n);
+void world_load(uint8_t bank, const world_map_t *map, uint8_t fx, uint8_t fy, int16_t cx, int16_t cy);
+void world_update(uint8_t fx, uint8_t fy, int16_t cx, int16_t cy);   // = focus + camera + prepare
+void world_focus(uint8_t x, uint8_t y);
+void world_camera(int16_t x, int16_t y);
+void world_prepare(void);
+void world_draw_vram(void);                                           // VBlank
+uint8_t wmt_at(uint8_t x, uint8_t y);    // metatile at a cell (cache; border outside the map)
+uint8_t wmt_at_c(uint8_t x, uint8_t y);
+uint8_t wattr_at(uint8_t x, uint8_t y);
+void world_set_cell(uint8_t x, uint8_t y, uint8_t mt);   // temporary patch (until the sector reloads)
+
 // ---------------------------------------------------------------- gbe_selftest.c
 // Equivalence of every asm routine with its C reference (gb-asm procedure). Tests call
 // gb.selftest() (sets gbe_eq_request; the game calls gbe_selftest()). Which modules are checked

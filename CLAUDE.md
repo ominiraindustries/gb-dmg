@@ -30,6 +30,8 @@ el profiling lo justifica y con una prueba de equivalencia contra la versión C.
     con nombres simbólicos que define el C del juego (formato al principio de `harness/levels.py`;
     `levels.parse()` sirve para tests de lint en Python puro). Niveles verticales (shmup):
     `"order": "rows"` + capa de objetos al lado de la rejilla (games/shmup/res/stage1.lvl).
+  - `res/maps/*.map`: mundos con scroll en 4 direcciones (sectores de 16x16 casillas, `harness/world.py`)
+    para `gbe_world`; banco de pruebas `games/world_lab` (pantalla == modelo en cada frame).
   - `res/metatiles.mt`: tabla de metatiles como datos (nombre, 4 tiles, atributos) → `build/gen/metatiles.c/.h`
     (`harness/metatiles.py`); la usan el ROM, la vista previa del nivel y los tests en Python.
 - `tools/gbdk/` — SDK, no versionado (`python harness/gb.py setup`)
