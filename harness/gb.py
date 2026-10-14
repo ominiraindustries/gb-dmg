@@ -286,10 +286,27 @@ def build(name):
             sources += script.convert(gdir / "res" / "scripts", gen, table_syms)
         except ValueError as e:
             die(str(e))
-    for map_file in sorted((gdir / "res" / "maps").glob("*.map")):      # 4-way world maps (world.py)
+    map_files = sorted((gdir / "res" / "maps").glob("*.map"))
+    if map_files:                                                         # 4-way world maps (world.py)
         import world
+        syms = dict(table_syms)
+        ids_h = gen / "script_ids.h"                                      # F_*, V_*, SID_* for objects
+        if ids_h.exists():
+            for line in ids_h.read_text(encoding="utf-8").splitlines():
+                p = line.split()
+                if len(p) == 3 and p[0] == "#define" and p[2].isdigit():
+                    syms[p[1]] = int(p[2])
+        syms.update(world.map_ids(gdir))
+        maps = []
         try:
-            sources.append(world.convert(world.load(gdir, map_file), gen))
+            for map_file in map_files:
+                m = world.load(gdir, map_file)
+                maps.append(m)
+                sources.append(world.convert(m, gen, cfg.get("world_objects", {}), syms))
+            sources.append(world.write_index(maps, gen))
+            problems = world.lint_warps(maps)
+            if problems:
+                die("world lint:\n  " + "\n  ".join(problems))
         except (KeyError, ValueError) as e:
             die(str(e))
     for lvl in sorted((gdir / "res").glob("*.lvl")):

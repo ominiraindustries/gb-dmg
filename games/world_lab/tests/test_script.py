@@ -159,3 +159,16 @@ def test_list_scrolls_and_chooses(gb):
     gb.tap("a")
     gb.frames(2)
     assert gb.u8("list_mode") == 0 and gb.u8("list_chosen") == gb.u8("list_sel")
+
+
+def test_sign_object_runs_its_script(gb):
+    gb.write_bytes("gact", [0] * 24 * 13)
+    gb.frames(2)
+    gb.hold("right", 16 * 3 + 4)                          # (34,34) -> (37,34): the sign is at (37,33)
+    gb.frames(4)
+    gb.tap("up")                                          # the sign is solid: just turn to face it
+    gb.frames(20)
+    assert (gb.u8("px"), gb.u8("py")) == (37, 34) and gb.u8("pdir") == 1
+    gb.tap("a")
+    assert wait_state(gb, TB_PAGE) or gb.u8("tbox_state") == TB_END
+    assert win_line(gb, 2) == "Bienvenido a World"

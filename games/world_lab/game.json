@@ -50,5 +50,19 @@
     "font",
     "font_lower",
     "font_es"
-  ]
+  ],
+  "world_objects": {
+    "npc": [
+      "script script",
+      "face enum DOWN UP LEFT RIGHT"
+    ],
+    "sign": [
+      "script script"
+    ],
+    "warp": [
+      "map map",
+      "x u8",
+      "y u8"
+    ]
+  }
 }

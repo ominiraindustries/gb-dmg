@@ -44,6 +44,17 @@ void script_run(uint8_t bank, const uint8_t *code) {
     script_state = SS_RUN;
 }
 
+// Run a script by its global id (SID_<NAME>, harness/script.py): the generated script_index is
+// a banked table of { bank, address }
+BANKREF_EXTERN(script_index)
+extern const gbe_ref_t script_index[];
+
+void script_run_id(uint16_t id) {
+    gbe_ref_t r;
+    bank_memcpy(BANK(script_index), &r, &script_index[id], sizeof(r));
+    script_run((uint8_t)(uint16_t)r.bank, (const uint8_t *)r.ptr);
+}
+
 void script_resume(void) {
     if (script_state == SS_GAME) script_state = SS_RUN;
 }

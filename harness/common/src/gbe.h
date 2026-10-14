@@ -246,6 +246,10 @@ void bank_set_bkg_data(uint8_t bank, uint8_t first, uint8_t n, const uint8_t *da
 void bank_set_sprite_data(uint8_t bank, uint8_t first, uint8_t n, const uint8_t *data) NONBANKED;
 void bank_memcpy(uint8_t bank, void *dst, const void *src, uint16_t n) NONBANKED;
 uint8_t bank_read8(uint8_t bank, const uint8_t *p) NONBANKED;
+// Index tables of generated data (script_index, world_maps): { &__bank_<sym>, address } - the
+// bank is a link-time address constant, so it fits a static initializer; read it with
+// (uint8_t)(uint16_t)ref.bank.
+typedef struct { const void *bank; const void *ptr; } gbe_ref_t;
 
 // ---------------------------------------------------------------- gbe_save.c
 // Save in cartridge SRAM (needs an MBC with RAM + battery: -Wm-yt0x1B -Wm-ya1): two alternating
@@ -270,7 +274,16 @@ typedef struct {
     uint8_t w, h, border, nsec;          // size in sectors, metatile outside, unique sectors
     const uint8_t *grid;                 // w*h unique-sector indices
     const uint8_t *sectors;              // nsec x 256 metatile ids (row-major 16x16)
+    const uint8_t *events;               // 8-byte object records sorted by sector (world.py)
+    const uint16_t *evidx;               // first record of each sector, w*h + 1 entries
 } world_map_t;
+#ifndef GBE_WORLD_EV_MAX
+#define GBE_WORLD_EV_MAX 16              // objects per sector (world.py checks it)
+#endif
+typedef struct { uint8_t x, y, type, d[5]; } world_ev_t;   // d: fields in game.json world_objects order
+extern world_ev_t wev[GBE_WORLD_EV_MAX];
+extern uint8_t wev_n, wmap_id;
+extern world_map_t wmap;                 // header of the current map (w, h in sectors...)
 extern uint8_t wmt_tiles[GBE_WORLD_MT][4], wmt_attr[GBE_WORLD_MT];
 extern int16_t cam_x, cam_y;            // world px of the screen's top-left
 extern uint8_t reg_x, reg_y;            // top-left cell of the drawn 13x12 region
@@ -287,6 +300,9 @@ uint8_t wmt_at(uint8_t x, uint8_t y);    // metatile at a cell (cache; border ou
 uint8_t wmt_at_c(uint8_t x, uint8_t y);      // C reference (gbe_selftest.c, GBE_SELFTEST_WORLD)
 uint8_t wattr_at(uint8_t x, uint8_t y);
 void world_set_cell(uint8_t x, uint8_t y, uint8_t mt);   // temporary patch (until the sector reloads)
+void world_load_id(uint8_t map_id, uint8_t fx, uint8_t fy, int16_t cx, int16_t cy);   // MAP_<NAME>
+uint8_t world_events(uint8_t sx, uint8_t sy);   // copy a sector's objects to wev[] -> wev_n
+world_ev_t *world_event_at(uint8_t x, uint8_t y);   // object on a cell (0 = none); fills wev[]
 
 // ---------------------------------------------------------------- gbe_gact.c
 // Grid actors on gbe_world (NPCs, creatures): cell-by-cell walking at N frames per cell, generic
@@ -359,6 +375,7 @@ extern const uint8_t *script_pc;
 extern const uint8_t script_game_argn[];
 uint8_t script_game_op(uint8_t op);     // provided by the game
 void script_run(uint8_t bank, const uint8_t *code);
+void script_run_id(uint16_t sid);        // SID_<NAME> (script_ids.h)
 void script_resume(void);
 void script_update(void);
 

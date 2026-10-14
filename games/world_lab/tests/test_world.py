@@ -42,14 +42,15 @@ def visible_errors(gb, cam):
     return errs
 
 
-def region_errors(gb):
+def region_errors(gb, m=None):
+    m = m or MAP
     rx, ry = gb.u8("reg_x"), gb.u8("reg_y")
     bg = gb.bg_map(map=0)
     errs = []
     for r in range(12):
         for c in range(13):
             x, y = (rx + c) & 0xFF, (ry + r) & 0xFF
-            for k, t in enumerate(MT.vram_tiles(MAP.at(x, y))):
+            for k, t in enumerate(MT.vram_tiles(m.at(x, y))):
                 if bg[((y & 15) * 2 + (k >> 1))][((x & 15) * 2 + (k & 1))] != t:
                     errs.append((x, y))
                     break
@@ -151,3 +152,37 @@ def test_cache_follows_focus(gb):
             if 0 <= sx + dx < MAP.w and 0 <= sy + dy < MAP.h}
     have = set(gb.bytes("wcache_sector", 9)) - {0xFF}
     assert want <= have
+
+
+CASA = world.load(GAME, GAME / "res" / "maps" / "casa.map")
+MAP_IDS = world.map_ids(GAME)
+
+
+def walk_until(gb, button, cond, limit=200):
+    gb.pyboy.button_press(button)
+    for _ in range(limit):
+        gb.frames(1)
+        if cond():
+            break
+    gb.pyboy.button_release(button)
+    gb.frames(20)
+    assert cond()
+
+
+def test_warp_into_the_house_and_back(gb):
+    gb.write_bytes("gact", [0] * 24 * 13)               # nothing in the way
+    gb.frames(2)
+    walk_until(gb, "down", lambda: gb.u8("warps") == 1)   # (34,34) -> (34,35) -> door (34,36)
+    assert gb.u8("wmap_id") == MAP_IDS["MAP_CASA"]
+    assert (gb.u8("px"), gb.u8("py")) == (7, 13)
+    assert region_errors(gb, CASA) == []
+    gb.screenshot("casa")
+    walk_until(gb, "down", lambda: gb.u8("warps") == 2)   # (7,13) -> (7,14) -> door (7,15) -> TEST
+    assert gb.u8("wmap_id") == MAP_IDS["MAP_TEST"]
+    assert (gb.u8("px"), gb.u8("py")) == (34, 37)          # below the door: walking on leaves it
+    assert region_errors(gb) == []
+    assert gb.u8("vram_late") == 0
+
+
+def test_map_objects_compiled(gb):
+    assert [(x, y, t) for x, y, _, t, _ in MAP.objects] == [(34, 32, "npc"), (37, 33, "sign"), (34, 36, "warp")]

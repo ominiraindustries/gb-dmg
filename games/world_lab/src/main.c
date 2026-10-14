@@ -7,7 +7,7 @@
 #include "spr.h"
 #include "vram.h"
 #include "metatiles.h"
-#include "map_test.h"
+#include "world_index.h"
 #include "ui.h"
 #include "font.h"
 #include "font_lower.h"
@@ -23,7 +23,9 @@ static const int8_t dir_dy[4] = { 1, -1, 0, 0 };
 uint8_t px, py, pdir, pstep_px, moving, pspeed;
 uint16_t steps;
 uint8_t actors_on = 1;
-uint8_t given_item, given_count, spin_left, npc, tq_test, list_mode, list_chosen = 0xFF;
+uint8_t given_item, given_count, spin_left, npc, tq_test, list_mode, list_chosen = 0xFF, warps;
+uint16_t npc_script[GBE_GACT_MAX];      // script of each NPC slot (0xFFFF = none)
+enum { OBJ_NPC, OBJ_SIGN, OBJ_WARP };   // order of game.json world_objects
 static void ui_init(void);
 
 const sfx_t sfx_table[1] = { { 0, 0, 0, { 0, 0, 0, 0, 0 } } };                 // tests may clear it before the first frame
@@ -59,7 +61,7 @@ void init(void) {
     px = 34; py = 34; pdir = 0;
     camera();
     world_metatiles(0, mt_tiles[0], mt_attr, MT_COUNT);
-    world_load(BANK(map_test), &map_test, px, py, want_cam_x, want_cam_y);
+    world_load_id(MAP_TEST, px, py, want_cam_x, want_cam_y);
     SHOW_BKG;
     SHOW_SPRITES;
     SHOW_WIN;
@@ -134,6 +136,42 @@ static void list_start(void) {
     list_mode = 1;
 }
 
+// NPC objects of every sector of the (small) current map become actors
+static void spawn_objects(void) {
+    uint8_t sx, sy, k, i;
+    world_ev_t *e;
+    npc = 0xFF;
+    for (sy = 0; sy < wmap.h; sy++)
+        for (sx = 0; sx < wmap.w; sx++) {
+            world_events(sx, sy);
+            for (k = 0, e = wev; k < wev_n; k++, e++) {
+                if (e->type != OBJ_NPC) continue;
+                i = gact_spawn(2, e->x, e->y, SPR_PLAYER, GACT_STILL);
+                if (i == 0xFF) continue;
+                gact[i].dir = e->d[2];
+                npc_script[i] = e->d[0] | ((uint16_t)e->d[1] << 8);
+                if (npc == 0xFF) npc = i;
+            }
+        }
+}
+
+// Arrived on a warp object: change map with the LCD off (one blank frame)
+static void warp(world_ev_t *e) {
+    uint8_t i;
+    DISPLAY_OFF;
+    for (i = 0; i < GBE_GACT_MAX; i++) gact_free(i);
+    px = e->d[1];
+    py = e->d[2];
+    i = e->d[0];
+    camera();
+    world_load_id(i, px, py, want_cam_x, want_cam_y);
+    if (i == MAP_TEST && actors_on) spawn_actors();
+    spawn_objects();
+    warps++;
+    skip_measure = 1;
+    DISPLAY_ON;
+}
+
 static uint8_t held_dir(void) {
     if (keys & J_DOWN) return 0;
     if (keys & J_UP) return 1;
@@ -162,13 +200,17 @@ void update(void) {
         return;
     }
     if (!moving && (pressed & J_SELECT)) { list_start(); camera(); return; }
-    if (!moving && (pressed & J_A)) {                 // talk to the actor in front
-        a = gact_at(px + dir_dx[pdir], py + dir_dy[pdir]);
-        if (a == npc && gact[a].type) {
+    if (!moving && (pressed & J_A)) {                 // talk to the actor or the object in front
+        uint8_t fx = px + dir_dx[pdir], fy = py + dir_dy[pdir];
+        world_ev_t *e;
+        a = gact_at(fx, fy);
+        if (a != 0xFF && npc_script[a] != 0xFFFF) {
             gact[a].dir = pdir ^ 1;                   // face the player
-            script_run(SCRIPT_NPC_HOLA);
+            script_run_id(npc_script[a]);
             return;
         }
+        e = world_event_at(fx, fy);
+        if (e && e->type == OBJ_SIGN) { script_run_id(e->d[0] | ((uint16_t)e->d[1] << 8)); return; }
     }
     pspeed = (keys & J_B) ? 2 : 1;
     if (!moving) try_start();
@@ -180,6 +222,10 @@ void update(void) {
             pstep_px = 0;
             moving = 0;
             steps++;
+            {
+                world_ev_t *e = world_event_at(px, py);
+                if (e && e->type == OBJ_WARP) { warp(e); camera(); return; }
+            }
             try_start();                 // chained steps: no dead frame
         }
     }
@@ -194,7 +240,8 @@ void main(void) {
     vsync();
     vram_late = 0;
     if (actors_on) spawn_actors();
-    npc = gact_spawn(2, 34, 32, SPR_PLAYER, GACT_STILL);   // NPC two cells above the start
+    memset(npc_script, 0xFF, sizeof(npc_script));
+    spawn_objects();
     while (1) {
         vsync();
         world_draw_vram();

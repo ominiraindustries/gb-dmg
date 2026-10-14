@@ -17,3 +17,8 @@ fin:
   set F_DADO
 ya:
   end
+
+script cartel
+  speaker ""
+  say "Bienvenido a World Lab. Al sur, una casa."
+  end

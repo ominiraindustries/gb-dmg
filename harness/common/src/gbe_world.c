@@ -26,6 +26,7 @@ uint8_t wslot[9];                    // slot of each 3x3 position around the foc
 uint8_t wgrid[256];                  // the map's sector grid (unique sector index per sector)
 world_map_t wmap;
 uint8_t wmap_bank;
+uint8_t wev_sx = 0xFF, wev_sy = 0xFF;    // sector whose objects are in wev[] (gbe_world objects)
 uint8_t wosx, wosy;                  // sector of 3x3 position 0 (focus sector - 1; may be 0xFF)
 uint8_t wfocus_sx, wfocus_sy;
 uint8_t world_loaded_slot;           // slot loaded this frame (0xFF = none): scan its events
@@ -213,6 +214,7 @@ void world_draw_vram(void) {
 void world_load(uint8_t bank, const world_map_t *map, uint8_t fx, uint8_t fy, int16_t cx, int16_t cy) {
     uint8_t r, c, x, y;
     wmap_bank = bank;
+    wev_sx = 0xFF;                   // objects of the old map are stale
     bank_memcpy(bank, &wmap, map, sizeof(world_map_t));
     bank_memcpy(bank, wgrid, wmap.grid, wmap.w * wmap.h);
     memset(wcache_sector, 0xFF, 9);
@@ -240,6 +242,46 @@ void world_load(uint8_t bank, const world_map_t *map, uint8_t fx, uint8_t fy, in
         }
     }
     edge_pending = 0;
+}
+
+// ---------------------------------------------------------------- objects (world.py events)
+world_ev_t wev[GBE_WORLD_EV_MAX];
+uint8_t wev_n, wmap_id;
+
+// Copy the objects of sector (sx, sy) of the current map to wev[] (outside the map: none)
+uint8_t world_events(uint8_t sx, uint8_t sy) {
+    uint16_t idx[2];
+    uint8_t g;
+    wev_sx = sx;
+    wev_sy = sy;
+    wev_n = 0;
+    if (sx >= wmap.w || sy >= wmap.h || !wmap.evidx) return 0;
+    g = sy * wmap.w + sx;
+    bank_memcpy(wmap_bank, idx, wmap.evidx + g, 4);
+    wev_n = (uint8_t)(idx[1] - idx[0]);
+    if (wev_n > GBE_WORLD_EV_MAX) wev_n = GBE_WORLD_EV_MAX;
+    if (wev_n) bank_memcpy(wmap_bank, wev, wmap.events + (idx[0] << 3), (uint16_t)wev_n << 3);
+    return wev_n;
+}
+
+world_ev_t *world_event_at(uint8_t x, uint8_t y) {
+    uint8_t k;
+    if ((x >> 4) != wev_sx || (y >> 4) != wev_sy) world_events(x >> 4, y >> 4);
+    for (k = 0; k < wev_n; k++)
+        if (wev[k].x == x && wev[k].y == y) return &wev[k];
+    return 0;
+}
+
+BANKREF_EXTERN(world_maps)
+extern const gbe_ref_t world_maps[];
+
+// LCD off: load map MAP_<NAME> (world.py world_index)
+void world_load_id(uint8_t id, uint8_t fx, uint8_t fy, int16_t cx, int16_t cy) {
+    gbe_ref_t r;
+    bank_memcpy(BANK(world_maps), &r, &world_maps[id], sizeof(r));
+    wmap_id = id;
+    wev_sx = 0xFF;
+    world_load((uint8_t)(uint16_t)r.bank, (const world_map_t *)r.ptr, fx, fy, cx, cy);
 }
 
 // Change a cell in the cache (a temporary patch: lost when its sector is reloaded) and redraw it
