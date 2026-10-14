@@ -73,10 +73,10 @@ def test_selftest_asm_equals_c(gb):
 
 def actor_errors(gb):
     """Cells taken by actors (x,y and target) never shared, never solid, never the player's."""
-    raw = gb.bytes("gact", 24 * 12)
+    raw = gb.bytes("gact", 24 * 13)
     taken, errs = {}, []
     player = {(gb.u8("px"), gb.u8("py"))}
-    for i in range(12):
+    for i in range(13):
         r = raw[i * 24:(i + 1) * 24]
         if not r[0]:
             continue
@@ -128,7 +128,7 @@ def test_random_walk_visible_equals_map(gb):
 
 
 def test_solid_cells_block(gb):
-    gb.write_bytes("gact", [0] * 24 * 12)          # no actors in the way
+    gb.write_bytes("gact", [0] * 24 * 13)          # no actors in the way
     # walk left until the sand/water border stops the player: water is solid
     gb.pyboy.button_press("left")
     gb.frames(16 * 40)

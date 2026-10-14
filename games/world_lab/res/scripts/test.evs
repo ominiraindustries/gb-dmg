@@ -1,0 +1,19 @@
+; world_lab test scripts
+script npc_hola
+  speaker "Tomasa"
+  say "¡Hola {N}! Esta es una prueba larga del cuadro de texto, que ocupa varias paginas."
+  ask "Te gusta?" no=no
+  set F_LE_GUSTA
+  say "Me alegro."
+  goto fin
+no:
+  say "Vaya."
+fin:
+  choice "Uno" "Dos" "Tres" "Cuatro"
+  vans V_ELEGIDO
+  if flag F_DADO goto ya
+  give 7 2
+  spin 30
+  set F_DADO
+ya:
+  end

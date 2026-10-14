@@ -323,6 +323,45 @@ void gact_draw_c(uint8_t first_oam);
 int16_t gact_wx(uint8_t i);
 int16_t gact_wy(uint8_t i);
 
+// ---------------------------------------------------------------- gbe_flags.c
+// Story flags (bitset) and 16 byte variables; ids F_* / V_* from res/scripts (script_ids.h).
+#ifndef GBE_FLAG_BYTES
+#define GBE_FLAG_BYTES 128               // 1024 flags
+#endif
+extern uint8_t flags[GBE_FLAG_BYTES], vars[16];
+uint8_t flag_get(uint16_t f);
+void flag_set(uint16_t f);
+void flag_clr(uint16_t f);
+
+// ---------------------------------------------------------------- gbe_tbox.c
+// Dialogue box in the window (typewriter, pages, speaker tab, yes/no, 2x2 choice) through gbe_vq.
+// The game sets tbox_frame[9], tbox_arrow, tbox_cursor, tbox_row (and tbox_win) and shows the window
+// while tbox_visible. tbox_update() once per frame before script_update().
+enum { TB_CLOSED, TB_OPEN, TB_SAY, TB_ASK, TB_PAGE, TB_END, TB_YESNO, TB_CHOOSE, TB_CHOICE };
+extern uint8_t *tbox_win;
+extern uint8_t tbox_row, tbox_frame[9], tbox_arrow, tbox_cursor, tbox_speed, tbox_yes_col, tbox_no_col;
+extern char tbox_name[8], tbox_text[256], tbox_speaker[13];
+extern uint8_t tbox_state, tbox_visible, tbox_answer, tbox_nchoices;
+void tbox_start(uint8_t kind);          // shows tbox_text: TB_SAY, TB_ASK (one line), TB_CHOICE
+void tbox_speaker_set(const char *s);   // "" = no tab
+void tbox_close(void);
+void tbox_draw_choices(void);
+uint8_t tbox_update(void);              // 1 while it needs the player
+
+// ---------------------------------------------------------------- gbe_script.c
+// Event script VM for harness/script.py bytecode (res/scripts/*.evs): script_run(SCRIPT_NAME).
+// Game ops: the game implements script_game_op(op) (operands in script_args; return 1 = busy until
+// script_resume()). script_lock = the script asked to freeze the player.
+enum { SS_RUN, SS_WAIT, SS_TBOX, SS_GAME };
+extern uint8_t script_bank, script_active, script_state, script_answer, script_lock, script_args[8];
+extern uint8_t script_trace[16], script_trace_n;
+extern const uint8_t *script_pc;
+extern const uint8_t script_game_argn[];
+uint8_t script_game_op(uint8_t op);     // provided by the game
+void script_run(uint8_t bank, const uint8_t *code);
+void script_resume(void);
+void script_update(void);
+
 // ---------------------------------------------------------------- gbe_selftest.c
 // Equivalence of every asm routine with its C reference (gb-asm procedure). Tests call
 // gb.selftest() (sets gbe_eq_request; the game calls gbe_selftest()). Which modules are checked

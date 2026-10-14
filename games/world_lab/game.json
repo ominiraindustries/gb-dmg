@@ -1,6 +1,9 @@
 {
   "title": "WORLD LAB",
-  "common_res": [],
+  "common_res": [
+    "font",
+    "font_lower"
+  ],
   "common_src": [
     "gbe_frame.c",
     "gbe_oam.c",
@@ -11,7 +14,16 @@
     "gbe_gact.c",
     "gbe_gact.s",
     "gbe_world.s",
-    "gbe_selftest.c"
+    "gbe_selftest.c",
+    "gbe_vq.c",
+    "gbe_vq.s",
+    "gbe_text.c",
+    "gbe_rng.c",
+    "gbe_sfx.c",
+    "gbe_sfx_asm.s",
+    "gbe_flags.c",
+    "gbe_tbox.c",
+    "gbe_script.c"
   ],
   "lcc_flags": [
     "-autobank",
@@ -20,6 +32,9 @@
     "-Wm-ya1"
   ],
   "vram_order": [
-    "bg"
+    "bg",
+    "ui",
+    "font",
+    "font_lower"
   ]
 }
