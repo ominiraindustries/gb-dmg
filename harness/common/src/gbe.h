@@ -110,14 +110,16 @@ void vram_row20(uint8_t *dst, const uint8_t *src);     // 20 consecutive BG map 
 
 // ---------------------------------------------------------------- gbe_aim.c
 // Directions: 32 (11.25 deg), dir 0 = down, clockwise on screen: 8 = left, 16 = up, 24 = right.
-// dir_vx/dir_vy: 8.8 velocity at 1 px/f. Speeds: 0 = 1.0, 1 = 1.25, 2 = 1.5, 3 = 2.0 px/f.
-extern const int16_t dir_vx[32], dir_vy[32];
+// aim_vx/aim_vy[spd * 32 + dir]: 8.8 velocity. Speeds: 0 = 1.0, 1 = 1.25, 2 = 1.5, 3 = 2.0 px/f.
+extern const int16_t aim_vx[128], aim_vy[128];
+#define dir_vx aim_vx                   // speed 0 = the first 32 entries
+#define dir_vy aim_vy
 uint8_t aim_dir(int8_t dx, int8_t dy);  // direction of (dx, dy) (target - origin); error <= 1
-int16_t dir_speed(int16_t v, uint8_t spd);
 // Bullets go to the pool range fire_first..+fire_n with type fire_t, tile fire_tile, prop fire_prop.
 // x, y = OAM position of the new bullet. Return the slot (0xFF if the range is full).
 extern uint8_t fire_first, fire_n, fire_t, fire_tile, fire_prop;
-uint8_t fire(uint8_t x, uint8_t y, uint8_t dir, uint8_t spd);
+uint8_t fire(uint8_t x, uint8_t y, uint8_t dir, uint8_t spd);     // asm (gbe_aim.s)
+uint8_t fire_c(uint8_t x, uint8_t y, uint8_t dir, uint8_t spd);   // C reference
 // n bullets at dir + step * (k - (n - 1) / 2), k = 0..n-1; returns how many went out
 uint8_t fire_fan(uint8_t x, uint8_t y, uint8_t dir, uint8_t n, uint8_t step, uint8_t spd);
 
@@ -140,7 +142,8 @@ void pool_clear(uint8_t first, uint8_t n);
 void pool_move(uint8_t first, uint8_t n);          // asm (gbe_pool.s), n >= 1
 void pool_move_c(uint8_t first, uint8_t n);
 // Collisions: set the query box and the pool object box, then hit_first(first, n) returns the
-// first live object of the range that overlaps, or 0xFF.
+// first live object of the range that overlaps, or 0xFF. 8-bit circular overlap (one compare per
+// axis): fine for OAM coordinates; qw + ow and qh + oh must be <= 256.
 extern uint8_t hit_qx, hit_qy, hit_qw, hit_qh, hit_ox, hit_oy, hit_ow, hit_oh;
 uint8_t hit_first(uint8_t first, uint8_t n);       // asm, n >= 1
 uint8_t hit_first_c(uint8_t first, uint8_t n);
@@ -174,7 +177,7 @@ void vram_col16(uint8_t *dst, const uint8_t *src);  // 16 tiles down a BG map co
 // gb.selftest() (sets gbe_eq_request; the game calls gbe_selftest()). Which modules are checked
 // comes from gbe_config.h: GBE_SELFTEST_MAP (needs a loaded map), GBE_SELFTEST_ACTORS,
 // GBE_SELFTEST_POOL (uses the last 8 pool slots as scratch and the last 10 OAM entries),
-// GBE_SELFTEST_VMAP <metatile count of mt_tiles>.
+// GBE_SELFTEST_VMAP <metatile count of mt_tiles>, GBE_SELFTEST_AIM (needs _POOL's scratch).
 extern uint8_t gbe_eq_request, gbe_eq_done;
 extern uint16_t gbe_eq_mismatch, gbe_eq_count;
 void gbe_selftest(void);

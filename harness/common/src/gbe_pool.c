@@ -54,16 +54,13 @@ void pool_move_c(uint8_t first, uint8_t n) {
 uint8_t hit_qx, hit_qy, hit_qw, hit_qh, hit_ox, hit_oy, hit_ow, hit_oh;
 
 uint8_t hit_first_c(uint8_t first, uint8_t n) {
+    // [y + oy, +oh) overlaps [qy, +qh)  <=>  y - (qy - oy - oh + 1) in [0, qh + oh - 1)  (8-bit)
+    uint8_t ky = hit_qy - hit_oy - hit_oh + 1, ry = hit_qh + hit_oh - 1;
+    uint8_t kx = hit_qx - hit_ox - hit_ow + 1, rx = hit_qw + hit_ow - 1;
     pool_obj_t *o = &pool[first];
-    uint8_t i = first, ol, ot;
+    uint8_t i = first;
     do {
-        if (o->t) {
-            ot = o->y + hit_oy;
-            if (ot < (uint8_t)(hit_qy + hit_qh) && hit_qy < (uint8_t)(ot + hit_oh)) {
-                ol = o->x + hit_ox;
-                if (ol < (uint8_t)(hit_qx + hit_qw) && hit_qx < (uint8_t)(ol + hit_ow)) return i;
-            }
-        }
+        if (o->t && (uint8_t)(o->y - ky) < ry && (uint8_t)(o->x - kx) < rx) return i;
         o++; i++;
     } while (--n);
     return 0xFF;

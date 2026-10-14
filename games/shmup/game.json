@@ -16,6 +16,7 @@
     "gbe_vmap.c",
     "gbe_vmap.s",
     "gbe_aim.c",
+    "gbe_aim.s",
     "gbe_selftest.c"
   ],
   "lcc_flags": [

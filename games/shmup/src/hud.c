@@ -35,10 +35,13 @@ void hud_init(void) {
     hud_dirty = HUD_ROW;
 }
 
+// Extra lives at 20 000 and 50 000 (GDD 2.4): score[2] holds the two top BCD digits
 void add_score(const uint8_t *bcd) {
     bcd_add3(score, bcd);
     score_tiles();
     hud_dirty |= HUD_SCORE;
+    if (score[2] >= 0x02 && !(extends & 1)) { extends |= 1; if (lives < 9) lives++; sfx(SFX_EXTEND); }
+    if (score[2] >= 0x05 && !(extends & 2)) { extends |= 2; if (lives < 9) lives++; sfx(SFX_EXTEND); }
 }
 
 void hud_update(void) {

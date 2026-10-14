@@ -59,7 +59,7 @@ def test_autofire_rate(gb):
     gb.pyboy.button_press("a")
     for _ in range(64):
         gb.frames(1)
-        raw = gb.bytes("pool", 37 * 16)
+        raw = gb.bytes("pool", 41 * 16)
         shots.append(sum(1 for i in range(19, 27) if raw[i * 16]))
     gb.pyboy.button_release("a")
     # 1 every 8 f; a shot lives ~25 f (Y 124 -> past 0 at 5 px/f) -> 3-4 alive
@@ -103,7 +103,7 @@ def test_stress_budget(gb):
     p.stop()
     gb.pyboy.button_release("a")
     print(p.report())
-    raw = gb.bytes("pool", 37 * 16)
+    raw = gb.bytes("pool", 41 * 16)
     print("live", sum(1 for i in range(29) if raw[i * 16]), "max_frame_lines", gb.u8("max_frame_lines"))
     assert lost_player == 0
     assert gb.u8("vram_late") == 0

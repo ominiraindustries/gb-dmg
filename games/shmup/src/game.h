@@ -21,6 +21,11 @@ enum {
     OBJ_NONE, OBJ_DART, OBJ_WAVE, OBJ_WAVE_F, OBJ_SWOOP, OBJ_SWOOP_G,
     OBJ_CARRIER_P, OBJ_CARRIER_B, OBJ_TURRET
 };
+// runtime record types (after the level object types)
+#define OBJ_EXPLO        20     // explosion in screen space
+#define OBJ_EXPLO_SCROLL 21     // explosion on the ground (follows the scroll; pad = map row)
+#define OBJ_ITEM_P       30
+#define OBJ_ITEM_B       31
 
 // ---------------------------------------------------------------- pools (gbe_pool records)
 // OAM groups follow the GDD 7.3 priority order; pool ranges are independent of OAM order.
@@ -34,6 +39,9 @@ enum {
 #define N_SHOT     8
 #define P_EXPLO    27           // extra explosions (turrets, boss)
 #define N_EXPLO    2
+#define P_TURRET   29           // ground turrets: logical records, never drawn (BG metatiles)
+#define N_TURRET   4
+#define P_GAME_END 33
 // GBE_POOL_MAX (gbe_config.h) adds 8 scratch records for the engine selftest
 
 #define OAM_PLAYER 0
@@ -56,9 +64,12 @@ enum { PS_NORMAL, PS_DYING, PS_RESPAWN, PS_BOSS_INTRO, PS_BOSS, PS_BOSS_DEAD, PS
 
 #define SCROLL_SPEED 0x0080     // 0.5 px/f (GDD 2.9)
 
+enum { SFX_SHOT, SFX_HIT, SFX_BOOM, SFX_BIG_BOOM, SFX_ITEM, SFX_POWER, SFX_BOMB, SFX_DEATH,
+       SFX_EXTEND, SFX_WARN, SFX_BOSS_HIT, SFX_PAUSE, SFX_START, SFX_TICK, SFX_COUNT };
+
 extern uint8_t state, play_sub, frame, cheat_flags;
 extern uint16_t scroll_speed, cheat_scroll;
-extern uint8_t player_x, player_y, player_inv, power, bombs, lives, continues;
+extern uint8_t player_x, player_y, player_inv, power, bombs, lives, continues, extends;
 extern uint8_t score[3], hiscore[3];
 
 // hud.c
@@ -72,6 +83,26 @@ void hud_init(void);
 void hud_update(void);          // counters -> hud_buf (outside VBlank)
 void hud_draw_vram(void);       // VBlank: copy the dirty fields to the window row 0
 void add_score(const uint8_t *bcd);
+
+// enemies.c
+extern uint8_t obj_ptr, no_fire;
+extern const uint8_t score_1000[3];
+uint8_t aim_at(uint8_t x, uint8_t y);
+void bullets_setup(uint8_t tile);
+void enemies_reset(void);
+void objects_update(void);
+void enemies_update(void);
+void turrets_update(void);
+void effects_update(void);
+void enemy_damage(uint8_t i, uint8_t dmg);
+void turret_damage(uint8_t i, uint8_t dmg);
+
+// player.c
+extern uint8_t player_xs, player_ys, bomb_timer, dead_timer;
+void player_reset(void);
+void player_update(void);
+void player_collide(void);
+void player_sprites(void);
 
 // play.c
 void play_build(void);          // LCD off: stage, HUD, registers

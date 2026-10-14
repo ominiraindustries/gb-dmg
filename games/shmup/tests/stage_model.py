@@ -32,6 +32,11 @@ def _cell_id(row, col):
 
 MAP = [[_cell_id(r, c) for c in range(WIDTH)] for r in range(HEIGHT)]   # MAP[row][col], row 0 bottom
 
+# Cells the game changes at run time: a turret turns (L/D/R) and becomes a crater
+TURRET_MTS = [MT_ID[n] for n in ("MT_TURRET_L", "MT_TURRET_D", "MT_TURRET_R", "MT_CRATER")]
+VARIANTS = {(c, r): TURRET_MTS for r in range(HEIGHT) for c in range(WIDTH)
+            if MAP[r][c] == MT_ID["MT_TURRET_D"]}
+
 
 def tile_row(tr, overrides=None):
     """The 20 tiles of world tile row tr (counted up from the bottom). overrides: {(col, row): mt}."""
@@ -65,7 +70,19 @@ def check_screen(gb, first_line=8, last_line=143, overrides=None):
             continue
         seen.add(bg_row)
         tr = (scroll + 143 - line) >> 3
-        want = tile_row(tr, overrides)
-        if rows[bg_row][:20] != want:
+        got = rows[bg_row][:20]
+        if got != tile_row(tr, overrides) and not _variant_ok(tr, got):
             bad.append((line, tr, bg_row))
     return bad
+
+
+def _variant_ok(tr, got):
+    """Every mismatching 16 px cell is a run-time variant of the map cell (turret / crater)."""
+    r, top = tr >> 1, tr & 1
+    for c in range(WIDTH):
+        cell = got[2 * c:2 * c + 2]
+        mt = MAP[r][c] if r < HEIGHT else 0
+        options = [mt] + VARIANTS.get((c, r), [])
+        if not any(cell == (MT_TILES[m][0:2] if top else MT_TILES[m][2:4]) for m in options):
+            return False
+    return True

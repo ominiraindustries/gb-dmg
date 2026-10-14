@@ -9,19 +9,23 @@
     .module gbe_pool
 
     .area _DATA
-pm_n:       .ds 1
 hf_n:       .ds 1
-hq_y2:      .ds 1                   ; hit_qy + hit_qh
-hq_x2:      .ds 1                   ; hit_qx + hit_qw
+hq_kx:      .ds 1                   ; hit_qx - hit_ox - hit_ow + 1
+hq_rx:      .ds 1                   ; hit_qw + hit_ow - 1 (right after hq_kx)
 sg_begin:   .ds 1                   ; low bytes of OAM pointers (shadow_OAM is page-aligned)
 sg_end:     .ds 1
 sg_left:    .ds 1
 sg_k:       .ds 1
+sg_n:       .ds 1
+sg_pfirst:  .ds 1
+sg_size:    .ds 1
+sg_x:       .ds 1
+sg_y:       .ds 1
 
     .area _CODE
 
 ; HL = &pool[A] (A * 16 + _pool). Clobbers A, DE.
-pool_addr:
+pool_addr::                     ; global: also used by gbe_aim.s
     ld  l, a
     ld  h, #0
     add hl, hl
@@ -35,301 +39,350 @@ pool_addr:
 ; void pool_move(uint8_t first, uint8_t n)     first in A, n in E (n >= 1).
 ;   For each live object: {x : xs} += vx and, if x < 168, {y : ys} += vy; free it when
 ;   x >= 168 or y >= 176. Same order and arithmetic as pool_move_c.
+;   HL walks the record, DE points at the velocity, B counts: no push/pop and no WRAM counter
+;   (~370 T per live object before, games/shmup profile).
 _pool_move::
-    push de
-    call pool_addr
-    pop de
-    ld  a, e
-    ld  (pm_n), a
+    ld  b, e                    ; b = count
+    call pool_addr              ; hl = &pool[first] (clobbers A, DE)
 1$:
     ld  a, (hl)                 ; t
     or  a, a
-    jr  z, 9$
-    push hl
-    ld  bc, #5
-    add hl, bc                  ; -> vx lo
-    ld  a, (hl+)
+    jr  z, 8$
+    ld  a, l
+    add a, #5
     ld  e, a
-    ld  a, (hl+)
-    ld  d, a                    ; de = vx
-    ld  a, (hl+)
-    ld  c, a
-    ld  b, (hl)                 ; bc = vy
-    pop hl
-    push hl
+    ld  a, h
+    adc a, #0
+    ld  d, a                    ; de = &vx (+5)
     inc hl
-    inc hl                      ; -> xs
-    ld  a, (hl)
-    add a, e
-    ld  (hl-), a                ; xs (carry kept: ld does not touch flags)
-    ld  a, (hl)
-    adc a, d
-    ld  (hl+), a                ; x
+    inc hl                      ; +2 xs
+    ld  a, (de)
+    add a, (hl)
+    ld  (hl-), a                ; xs (ld keeps the carry)
+    inc de
+    ld  a, (de)
+    adc a, (hl)
+    ld  (hl), a                 ; x (+1)
     cp  a, #168
-    jr  nc, 7$
+    jr  nc, 5$
+    inc de                      ; vy (+7)
     inc hl
-    inc hl                      ; -> ys
-    ld  a, (hl)
-    add a, c
+    inc hl
+    inc hl                      ; +4 ys
+    ld  a, (de)
+    add a, (hl)
     ld  (hl-), a                ; ys
-    ld  a, (hl)
-    adc a, b
-    ld  (hl), a                 ; y
+    inc de
+    ld  a, (de)
+    adc a, (hl)
+    ld  (hl), a                 ; y (+3)
     cp  a, #176
-    jr  c, 8$
-7$:
-    pop hl
+    jr  c, 7$
+    dec hl
+    dec hl                      ; +1
+5$:
+    dec hl                      ; +0
     ld  (hl), #0                ; left the screen: free
-    jr  9$
 8$:
-    pop hl
-9$:
-    ld  de, #16
-    add hl, de
-    ld  a, (pm_n)
-    dec a
-    ld  (pm_n), a
+    ld  a, l                    ; +0 -> next record
+    add a, #16
+    ld  l, a
+    jr  nc, 6$
+    inc h
+    jr  6$
+7$:
+    ld  a, l                    ; +3 -> next record
+    add a, #13
+    ld  l, a
+    jr  nc, 6$
+    inc h
+6$:
+    dec b
     jr  nz, 1$
     ret
 
 ; uint8_t hit_first(uint8_t first, uint8_t n)  first in A, n in E (n >= 1); returns A.
 ;   First live object of the range whose box (x + hit_ox, y + hit_oy, hit_ow, hit_oh) overlaps
-;   the query box (hit_qx, hit_qy, hit_qw, hit_qh); 0xFF if none. Y first (early out).
+;   the query box (hit_qx, hit_qy, hit_qw, hit_qh); 0xFF if none. One compare per axis:
+;   (uint8)(y - ky) < ry with ky = qy - oy - oh + 1, ry = qh + oh - 1 (same for x), Y first.
+;   ky/ry live in D/E, the record pointer in HL: ~100 T per live object rejected on Y (the
+;   two-compare version reloaded hit_* from WRAM per object: ~300 T, games/shmup profile).
 _hit_first::
     ld  c, a                    ; c = index
-    ld  a, e
-    ld  (hf_n), a
+    ld  b, e                    ; b = count
     ld  a, (_hit_qy)
-    ld  hl, #_hit_qh
+    ld  hl, #_hit_oy
+    sub a, (hl)
+    ld  hl, #_hit_oh
+    sub a, (hl)
+    inc a
+    ld  d, a                    ; d = ky
+    ld  a, (_hit_qh)
     add a, (hl)
-    ld  (hq_y2), a
+    dec a
+    ld  e, a                    ; e = ry
     ld  a, (_hit_qx)
-    ld  hl, #_hit_qw
+    ld  hl, #_hit_ox
+    sub a, (hl)
+    ld  hl, #_hit_ow
+    sub a, (hl)
+    inc a
+    ld  (hq_kx), a
+    ld  a, (_hit_qw)
     add a, (hl)
-    ld  (hq_x2), a
+    dec a
+    ld  (hq_rx), a
     ld  a, c
-    call pool_addr
+    push de
+    call pool_addr              ; clobbers A, DE
+    pop de
 1$:
-    ld  a, (hl)
+    ld  a, (hl)                 ; t
     or  a, a
     jr  z, 8$
-    push hl
-    inc hl
-    ld  b, (hl)                 ; b = x
     inc hl
     inc hl
-    ld  a, (hl)                 ; y
-    ld  hl, #_hit_oy
-    add a, (hl)
-    ld  d, a                    ; d = ot
-    ld  a, (hq_y2)
-    cp  a, d
-    jr  c, 7$                   ; need ot < qy + qh
-    jr  z, 7$
-    ld  a, d
-    ld  hl, #_hit_oh
-    add a, (hl)
-    ld  e, a
-    ld  a, (_hit_qy)
-    cp  a, e
-    jr  nc, 7$                  ; need qy < ot + oh
-    ld  a, b
-    ld  hl, #_hit_ox
-    add a, (hl)
-    ld  d, a                    ; d = ol
-    ld  a, (hq_x2)
-    cp  a, d
-    jr  c, 7$
-    jr  z, 7$
-    ld  a, d
-    ld  hl, #_hit_ow
-    add a, (hl)
-    ld  e, a
-    ld  a, (_hit_qx)
+    inc hl
+    ld  a, (hl)                 ; y (+3)
+    sub a, d
     cp  a, e
     jr  nc, 7$
+    dec hl
+    dec hl
+    ld  a, (hl)                 ; x (+1)
+    push hl
+    ld  hl, #hq_kx
+    sub a, (hl)
+    inc hl                      ; hq_rx
+    cp  a, (hl)
     pop hl
-    ld  a, c                    ; hit
-    ret
+    jr  c, 9$
+    inc hl
+    inc hl                      ; back to +3
 7$:
-    pop hl
+    ld  a, l                    ; +3 -> next record
+    add a, #13
+    ld  l, a
+    jr  nc, 6$
+    inc h
+    jr  6$
 8$:
-    ld  de, #16
-    add hl, de
+    ld  a, l                    ; +0 -> next record
+    add a, #16
+    ld  l, a
+    jr  nc, 6$
+    inc h
+6$:
     inc c
-    ld  a, (hf_n)
-    dec a
-    ld  (hf_n), a
+    dec b
     jr  nz, 1$
     ld  a, #0xFF
     ret
+9$:
+    ld  a, c
+    ret
 
-; void spr_group_core(void)   parameters in spr_p_* (set by spr_group() in gbe_spr.c).
-;   Hides OAM slots [oam, oam + n) (Y = 0), then writes live objects of the pool range in order
-;   starting at slot oam + start, wrapping inside the used part of the range (n & ~1 for size 2),
-;   until the slots run out. size 2 = tiles t / t + 2 at x / x + 8, swapped with S_FLIPX.
-;   Fields are copied straight from the record to the OAM (no temporaries): x, y kept in E, D;
-;   tile and prop re-read from the record for the second half. Same bytes as spr_group_c.
-_spr_group_core::
-    ld  a, (_spr_p_oam)
+; void spr_group(uint8_t oam_first, uint8_t oam_n, uint8_t pool_first, uint8_t pool_n, uint8_t size)
+;   A = oam_first, E = oam_n, stack: pool_first, pool_n, size (1 byte each, removed here).
+;   Writes the live objects of the pool range into OAM slots [oam_first, oam_first + used) starting
+;   at the rotated slot (spr_rot), wrapping inside the used part (used = oam_n, or oam_n & ~1 for
+;   size 2), then hides (Y = 0) the slots left over; an odd last slot of a size-2 group is hidden
+;   too. size 2 = tiles t / t + 2 at x / x + 8, swapped with S_FLIPX. Same bytes as spr_group_c.
+;   Measured (games/shmup): C wrapper + full hide + WRAM counter cost ~2400 T per group with few
+;   objects; only leftovers are hidden now and the record counter lives in D.
+_spr_group::
     add a, a
     add a, a
-    ld  l, a
     ld  (sg_begin), a
-    ld  h, #>_shadow_OAM
-    ld  a, (_spr_p_n)
-    ld  c, a
-    xor a, a
-1$:
-    ld  (hl+), a                ; Y = 0 hides the slot
-    inc l
-    inc l
-    inc l
-    dec c
-    jr  nz, 1$
-    ld  a, (_spr_p_n)
-    ld  c, a
-    ld  a, (_spr_p_size)
+    ld  a, e
+    ld  (sg_n), a
+    ldhl sp, #2
+    ld  a, (hl+)
+    ld  (sg_pfirst), a
+    ld  a, (hl+)
+    ld  (sg_k), a               ; pool_n
+    ld  a, (hl)
+    ld  (sg_size), a
+    pop hl                      ; return address
+    inc sp
+    inc sp
+    inc sp                      ; callee removes the 3 stack bytes
+    push hl
+    ; used slots, slots per object, end of the used part
+    ld  a, (sg_n)
+    ld  b, a                    ; b = slots (objects that fit)
+    ld  c, a                    ; c = used OAM entries
+    ld  a, (sg_size)
     cp  a, #2
-    jr  nz, 2$
-    res 0, c                    ; size 2 uses an even number of slots
-2$:
+    jr  nz, 1$
+    srl b
+    res 0, c
+    ld  a, (sg_n)
+    bit 0, a
+    jr  z, 1$                   ; odd range: hide its last slot (never used by size 2)
+    dec a
+    add a, a
+    add a, a
+    ld  e, a
+    ld  a, (sg_begin)
+    add a, e
+    ld  l, a
+    ld  h, #>_shadow_OAM
+    ld  (hl), #0
+1$:
     ld  a, c
     ld  (sg_left), a
     add a, a
     add a, a
-    ld  b, a
+    ld  e, a
     ld  a, (sg_begin)
-    add a, b
-    ld  (sg_end), a             ; end of the used slots
-    ld  a, (_spr_p_start)
+    add a, e
+    ld  (sg_end), a
+    ; first slot this frame: (spr_rot & 31) mod slots (0 when slots <= 1), x2 for size 2
+    ; s < 32 and slots >= 2 -> quotient < 16: subtract slots * 8, 4, 2, 1 (a loop of single
+    ; subtractions took up to 15 rounds for a 2-slot group)
+    ld  a, (_spr_rot)
+    and a, #31
+    ld  e, a
+    ld  a, b
+    cp  a, #2
+    jr  nc, 2$
+    ld  e, #0                   ; slots <= 1
+    jr  4$
+2$:
+    cp  a, #32
+    jr  nc, 4$                  ; slots >= 32: s < slots already
     add a, a
     add a, a
-    ld  b, a
+    add a, a
+    ld  d, a                    ; d = slots * 8 (<= 248)
+    ld  a, e
+    .rept 4
+    cp  a, d
+    jr  c, .+3
+    sub a, d
+    srl d
+    .endm
+    ld  e, a
+4$:
+    ld  a, (sg_size)
+    cp  a, #2
+    jr  nz, 5$
+    sla e
+5$:
+    ld  a, e
+    add a, a
+    add a, a
+    ld  e, a
     ld  a, (sg_begin)
-    add a, b
-    ld  l, a                    ; hl = first slot this frame
-    push hl
-    ld  a, (_spr_p_first)
+    add a, e
+    push af                     ; first slot (low byte)
+    ld  a, (sg_pfirst)
     call pool_addr
     ld  b, h
-    ld  c, l                    ; bc = &pool[first]
-    pop hl
-    ld  a, (_spr_p_count)
-    ld  (sg_k), a
+    ld  c, l                    ; bc = &pool[pool_first]
+    pop af
+    ld  l, a
+    ld  h, #>_shadow_OAM
     ld  a, (sg_left)
-    ld  e, a                    ; e = slots left (register, not WRAM: measured ~470 T/object before)
-    ld  a, (_spr_p_size)
+    or  a, a
+    ret z                       ; size 2 with a 1-slot range: nothing fits
+    ld  e, a                    ; e = OAM entries left
+    ld  a, (sg_k)
+    ld  d, a                    ; d = records to visit
+    ld  a, (sg_size)
     cp  a, #2
     jr  z, 20$
-; ---- size 1: one sprite per object
+; ---- size 1
 10$:
     ld  a, (bc)                 ; t
     or  a, a
     jr  z, 18$
     inc bc
-    ld  a, (bc)
-    ld  d, a                    ; d = x (+1)
     inc bc
     inc bc
     ld  a, (bc)                 ; y (+3)
     ld  (hl+), a
-    ld  a, d
+    dec bc
+    dec bc
+    ld  a, (bc)                 ; x (+1)
     ld  (hl+), a
     ld  a, c
-    add a, #9
+    add a, #11
     ld  c, a
-    ld  a, b
-    adc a, #0
-    ld  b, a                    ; -> tile (+12)
-    ld  a, (bc)
+    jr  nc, 11$
+    inc b
+11$:
+    ld  a, (bc)                 ; tile (+12)
     ld  (hl+), a
     inc bc
     ld  a, (bc)                 ; prop (+13)
     ld  (hl+), a
     dec e
-    ret z                       ; range full
+    ret z                       ; every slot written
     inc bc
     inc bc
     inc bc                      ; next record
-    ld  a, (sg_end)             ; wrap
+    ld  a, (sg_end)
     cp  a, l
     jr  nz, 17$
     ld  a, (sg_begin)
     ld  l, a
 17$:
-    ld  a, (sg_k)
-    dec a
-    ld  (sg_k), a
+    dec d
     jr  nz, 10$
-    ret
+    jr  40$
 18$:
     ld  a, c                    ; free record: bc += 16
     add a, #16
     ld  c, a
-    ld  a, b
-    adc a, #0
-    ld  b, a
+    jr  nc, 17$
+    inc b
     jr  17$
-; ---- size 2: two sprites (tile, tile + 2; S_FLIPX swaps them), second at x + 8
+; ---- size 2 (x, y kept in WRAM: D and E are busy)
 20$:
     ld  a, (bc)
     or  a, a
     jr  z, 28$
     inc bc
     ld  a, (bc)
-    ld  d, a                    ; d = x
+    ld  (sg_x), a               ; x (+1)
     inc bc
     inc bc
-    ld  a, (bc)                 ; y
+    ld  a, (bc)                 ; y (+3)
     ld  (hl+), a
-    ld  a, d
+    ld  (sg_y), a
+    ld  a, (sg_x)
     ld  (hl+), a
     ld  a, c
     add a, #10
     ld  c, a
-    ld  a, b
-    adc a, #0
-    ld  b, a                    ; -> prop (+13)
-    ld  a, (bc)
-    dec bc
-    bit 5, a
-    ld  a, (bc)                 ; tile (+12)
-    jr  z, 21$
-    add a, #2
+    jr  nc, 21$
+    inc b
 21$:
+    ld  a, (bc)                 ; prop (+13)
+    dec bc
+    bit 5, a                    ; S_FLIPX
+    ld  a, (bc)                 ; tile (+12)
+    jr  z, 22$
+    add a, #2
+22$:
     ld  (hl+), a                ; left tile
     inc bc
     ld  a, (bc)
     ld  (hl+), a                ; prop
-    dec bc
-    dec bc
-    dec bc
-    dec bc
-    dec bc
-    dec bc
-    dec bc
-    dec bc
-    dec bc
-    dec bc                      ; back to y (+3)
-    ld  a, (bc)
+    ld  a, (sg_y)
     ld  (hl+), a
-    ld  a, d
+    ld  a, (sg_x)
     add a, #8
     ld  (hl+), a
-    ld  a, c
-    add a, #10
-    ld  c, a
-    ld  a, b
-    adc a, #0
-    ld  b, a                    ; -> prop (+13)
-    ld  a, (bc)
+    ld  a, (bc)                 ; prop
     dec bc
     bit 5, a
-    ld  a, (bc)
-    jr  nz, 22$
+    ld  a, (bc)                 ; tile
+    jr  nz, 23$
     add a, #2
-22$:
+23$:
     ld  (hl+), a                ; right tile
     inc bc
     ld  a, (bc)
@@ -346,16 +399,31 @@ _spr_group_core::
     ld  a, (sg_begin)
     ld  l, a
 27$:
-    ld  a, (sg_k)
-    dec a
-    ld  (sg_k), a
+    dec d
     jr  nz, 20$
-    ret
+    jr  40$
 28$:
     ld  a, c
     add a, #16
     ld  c, a
-    ld  a, b
-    adc a, #0
-    ld  b, a
+    jr  nc, 27$
+    inc b
     jr  27$
+; ---- hide the e entries left, continuing from hl and wrapping
+40$:
+    ld  a, (sg_end)
+    ld  d, a
+41$:
+    xor a, a
+    ld  (hl), a
+    ld  a, l
+    add a, #4
+    ld  l, a
+    cp  a, d
+    jr  nz, 42$
+    ld  a, (sg_begin)
+    ld  l, a
+42$:
+    dec e
+    jr  nz, 41$
+    ret

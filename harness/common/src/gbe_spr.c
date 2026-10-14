@@ -3,13 +3,11 @@
 // smaller OAM indices have priority. Inside a group the first OAM slot rotates every frame
 // (spr_rot): objects on a crowded line take turns being dropped (flicker) instead of always
 // losing the same ones. Size the group's OAM range >= live objects x size.
-// Work done by spr_group_core (asm, gbe_pool.s); spr_group_c is the selftest reference.
+// spr_group is asm (gbe_pool.s); spr_group_c is the selftest reference.
 // Requires shadow_OAM page-aligned (GBDK places it at 0xC000).
 #include "gbe.h"
 
 uint8_t spr_rot;                              // advance once per frame
-uint8_t spr_p_oam, spr_p_n, spr_p_first, spr_p_count, spr_p_size, spr_p_start;
-void spr_group_core(void);
 
 // First OAM slot (relative to the group) this frame: a multiple of size below oam_n, rotating
 static uint8_t group_start(uint8_t oam_n, uint8_t size) {
@@ -19,17 +17,7 @@ static uint8_t group_start(uint8_t oam_n, uint8_t size) {
     return size == 2 ? s << 1 : s;
 }
 
-void spr_group(uint8_t oam_first, uint8_t oam_n, uint8_t pool_first, uint8_t pool_n, uint8_t size) {
-    spr_p_oam = oam_first;
-    spr_p_n = oam_n;
-    spr_p_first = pool_first;
-    spr_p_count = pool_n;
-    spr_p_size = size;
-    spr_p_start = group_start(oam_n, size);
-    spr_group_core();
-}
-
-// Reference (same output as spr_group_core): hide the range (Y = 0), then write live objects
+// Reference (same output as spr_group in gbe_pool.s): hide the range (Y = 0), then write live objects
 // in pool order starting at the rotated slot, wrapping inside the range; stop when full.
 void spr_group_c(uint8_t oam_first, uint8_t oam_n, uint8_t pool_first, uint8_t pool_n, uint8_t size) {
     OAM_item_t *begin = &shadow_OAM[oam_first], *end = begin + oam_n, *o;

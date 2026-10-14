@@ -123,6 +123,29 @@ static void eq_pool(void) {
 }
 #endif
 
+#if defined(GBE_SELFTEST_AIM) && defined(GBE_SELFTEST_POOL)
+// fire vs fire_c on the scratch records (some taken, sometimes all taken)
+static void eq_fire(void) {
+    uint16_t r;
+    uint8_t a, b, k, x, y, d, sp, ff = fire_first, fn = fire_n, ft = fire_t, fti = fire_tile, fp = fire_prop;
+    for (r = 0; r < 300; r++) {
+        random_pool();
+        for (k = 0; k < EQ_N; k++) if ((r & 7) == 0) pool[EQ_P + k].t = 1;   // full range
+        fire_first = EQ_P; fire_n = EQ_N; fire_t = rnd8() | 1; fire_tile = rnd8(); fire_prop = rnd8();
+        x = rnd8(); y = rnd8(); d = rnd8(); sp = rnd8();
+        memcpy(eq_save, &pool[EQ_P], sizeof(eq_save));
+        a = fire(x, y, d, sp);
+        memcpy(eq_asm, &pool[EQ_P], sizeof(eq_asm));
+        memcpy(&pool[EQ_P], eq_save, sizeof(eq_save));
+        b = fire_c(x, y, d, sp);
+        if (a != b || memcmp(eq_asm, &pool[EQ_P], sizeof(eq_asm))) gbe_eq_mismatch++;
+        gbe_eq_count++;
+    }
+    pool_clear(EQ_P, EQ_N);
+    fire_first = ff; fire_n = fn; fire_t = ft; fire_tile = fti; fire_prop = fp;
+}
+#endif
+
 #ifdef GBE_SELFTEST_VMAP
 // GBE_SELFTEST_VMAP = number of metatiles in the game's mt_tiles (random rows stay inside it)
 static void eq_vrow(void) {
@@ -156,6 +179,9 @@ void gbe_selftest(void) {
 #endif
 #ifdef GBE_SELFTEST_POOL
     eq_pool();
+#endif
+#if defined(GBE_SELFTEST_AIM) && defined(GBE_SELFTEST_POOL)
+    eq_fire();
 #endif
 #ifdef GBE_SELFTEST_VMAP
     eq_vrow();
