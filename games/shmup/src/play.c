@@ -3,25 +3,32 @@
 #include <string.h>
 #include "game.h"
 #include "stage1.h"
+#include "screen_continuar.h"
 
 #define STOP_SCROLL    ((uint16_t)STAGE1_STOP_ROW * 16 - 112)   // top of the boss at line 16
 
 uint16_t scroll_speed, cheat_scroll;
 uint8_t aim_req, aim_dx, aim_dy, aim_out;     // test hook: aim_out = aim_dir(aim_dx, aim_dy)
+static uint8_t peligro_done;
 
 // ---------------------------------------------------------------- build (LCD off)
 void play_build(void) {
     lcd_off_redraw_begin();
+    set_bkg_data(BG_BASE, BG_COUNT, bg_tiles);              // the screens load theirs over it
     init_bkg(T_BLANK);                                      // columns 20-31 = fog for the boss
     memset((uint8_t *)0x9C00, T_BLANK, 32 * 18);            // window
+    set_win_tiles(0, 1, 20, 17, screen_continuar_map + 20); // CONTINUAR panel, hidden by the cut
     vmap_load(stage1_map, STAGE1_HEIGHT, 0, STOP_SCROLL);
     scx_shadow = 0;
     shake_x = shake_y = 0;
     pool_clear(0, P_GAME_END);
     player_reset();
     enemies_reset();
+    boss_reset();
+    peligro_done = 0;
     scroll_speed = SCROLL_SPEED;
     hud_init();
+    hud_message(MSG_FASE, 120);
     WX_REG = 7;
     WY_REG = 0;
     hud_cut = 1;
@@ -55,7 +62,21 @@ void play_update(void) {
     vmap_scroll(speed);
     if (aim_req) { aim_out = aim_dir((int8_t)aim_dx, (int8_t)aim_dy); aim_req = 0; }
     if (no_fire) no_fire--;
+    fire_busy = 0;
+    if ((pressed & J_START) && play_sub != PS_DYING && play_sub != PS_OUTRO &&
+        boss_state < BOSS_DEAD) {
+        pause_toggle();
+        return;
+    }
     player_update();
+    if (state != ST_PLAY) return;                           // death -> CONTINUAR / GAMEOVER
+    if (!peligro_done && ((uint16_t)180 << 4) <= scroll_y + 144) {     // GDD 2.10: row 180
+        peligro_done = 1;
+        hud_message(MSG_PELIGRO, 180);
+    }
+    if (hud_msg == MSG_PELIGRO && (frame & 31) == 0) sfx(SFX_WARN);
+    hud_message_update();
+    boss_update();
     if (cheat_flags & CHEAT_STRESS) stress_spawn();
     else if (!(cheat_flags & (CHEAT_NO_LEVEL | CHEAT_FREEZE))) objects_update();
     if (!(cheat_flags & CHEAT_FREEZE)) {

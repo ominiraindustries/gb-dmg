@@ -29,6 +29,15 @@ void player_reset(void) {
     bomb_timer = 0; dead_timer = 0; shake_timer = 0;
 }
 
+// Enter from below without control, invulnerable 120 f, enemies hold fire 60 f
+void play_respawn(void) {
+    play_sub = PS_RESPAWN;
+    dead_timer = 0;
+    player_x = PLAYER_X0; player_y = 176;
+    player_inv = INV_RESPAWN;
+    no_fire = 60;
+}
+
 // ---------------------------------------------------------------- movement and fire
 static void move_axis(uint8_t *p, uint8_t *sub, uint16_t v, uint8_t neg, uint8_t lo, uint8_t hi) {
     uint16_t t = (uint16_t)*sub + (uint8_t)v;
@@ -72,6 +81,7 @@ static void bomb(void) {
         o = &pool[P_TURRET + i];
         if (o->t && o->y >= 16 && o->y < 160) turret_damage(P_TURRET + i, 8);
     }
+    boss_damage(8);
     if (!(cheat_flags & CHEAT_BOMBS)) bombs--;
     bomb_timer = BOMB_FRAMES;
     player_inv = BOMB_FRAMES;
@@ -95,16 +105,14 @@ void player_update(void) {
     }
     if (play_sub == PS_DYING) {
         if (++dead_timer == DYING_FRAMES) {
-            play_sub = PS_RESPAWN;
-            dead_timer = 0;
-            player_x = PLAYER_X0; player_y = 176;
             if (power > 1) power--;
             if (bombs < 2) bombs = 2;
-            player_inv = INV_RESPAWN;
-            no_fire = 60;
+            if (!lives) { continue_start(); return; }   // CONTINUAR screen (GDD 2.4)
+            play_respawn();
         }
         return;
     }
+    if (play_sub == PS_OUTRO) return;               // the boss outro flies the player away
     if (play_sub == PS_RESPAWN) {                   // enter from below, no control
         player_y -= 2;
         if (player_y <= PLAYER_Y0) { player_y = PLAYER_Y0; play_sub = PS_NORMAL; }
@@ -135,6 +143,7 @@ static void kill_player(void) {
     dead_timer = 0;
     shake_timer = 12;
     lives--;
+    died_in_stage = 1;
     sfx(SFX_DEATH);
 }
 
@@ -186,6 +195,7 @@ void player_collide(void) {
             else { hit_qx = o->x + 2; hit_qw = 4; dmg = power == 1 || o->s == 2 ? 1 : 2; }
             hit_qy = o->y + 2; hit_qh = o->s == 2 ? 8 : 12;
             if ((e = hit_enemy(P_ENEMY)) != 0xFF) { o->t = 0; enemy_damage(e, dmg); continue; }
+            if (boss_overlaps(hit_qx, hit_qy, hit_qw, hit_qh)) { o->t = 0; boss_damage(dmg); continue; }
             if (turrets && (e = hit_first(P_TURRET, N_TURRET)) != 0xFF) { o->t = 0; turret_damage(e, dmg); }
         }
     }
@@ -195,7 +205,7 @@ void player_collide(void) {
     hit_ox = 2; hit_oy = 2; hit_ow = 4; hit_oh = 4;                          // bullet 4x4
     if (hit_first(P_BULLET, N_BULLET) != 0xFF) { kill_player(); return; }
     hit_ox = 2; hit_oy = 2; hit_ow = 12; hit_oh = 12;
-    if (hit_enemy(P_ENEMY) != 0xFF) kill_player();
+    if (hit_enemy(P_ENEMY) != 0xFF || boss_overlaps(player_x + 6, player_y + 6, 4, 4)) kill_player();
 }
 
 void player_sprites(void) {

@@ -34,6 +34,9 @@ static void load_tiles(void) {
 
 void screen_build(uint8_t which) {
     if (which == ST_PLAY) play_build();
+    else if (which == ST_TITLE) title_build();
+    else if (which == ST_GAMEOVER) gameover_build();
+    else if (which == ST_CLEAR) clear_build();
 }
 
 void main(void) {
@@ -42,8 +45,8 @@ void main(void) {
     load_tiles();
     video_init(7, 0xE4, 0xE4, 0xD8);
     sound_init();
-    lives = 3; bombs = 2; power = 1; continues = 3;
-    show_screen_now(ST_PLAY);                 // TITLE comes in M1b
+    game_start();
+    show_screen_now(ST_TITLE);
     while (1) {
         vsync();
         frame_begin();
@@ -51,9 +54,16 @@ void main(void) {
         frame_vram_check();
         if (gbe_eq_request) { gbe_eq_request = 0; gbe_selftest(); skip_measure = 1; }
         if (!transition_update()) {
-            if (state == ST_PLAY) play_update();
+            switch (state) {
+            case ST_TITLE:    title_update(); break;
+            case ST_PLAY:     play_update(); break;
+            case ST_PAUSE:    pause_update(); break;
+            case ST_CONTINUE: continue_update(); break;
+            case ST_GAMEOVER: gameover_update(); break;
+            case ST_CLEAR:    clear_update(); break;
+            }
         }
-        play_sprites();
+        if (state == ST_PLAY || state == ST_CONTINUE) play_sprites();
         sound_update();
         frame++;
         frame_end();

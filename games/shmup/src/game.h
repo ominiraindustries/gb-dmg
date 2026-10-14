@@ -78,15 +78,50 @@ extern uint8_t score[3], hiscore[3];
 #define HUD_LIVES 0x02
 #define HUD_BOMBS 0x04
 #define HUD_POWER 0x08
+#define HUD_BAR   0x10
 #define HUD_ROW   0x80          // whole row (after a message)
-extern uint8_t hud_buf[20], hud_dirty;
+enum { MSG_NONE, MSG_FASE, MSG_PELIGRO, MSG_PAUSA };
+extern uint8_t hud_buf[20], hud_dirty, hud_msg, hud_bar_px, boss_bar_on, new_record;
 void hud_init(void);
 void hud_update(void);          // counters -> hud_buf (outside VBlank)
-void hud_draw_vram(void);       // VBlank: copy the dirty fields to the window row 0
+void hud_draw_vram(void);       // VBlank: text queue, message or dirty counters
 void add_score(const uint8_t *bcd);
+void hiscore_update(void);
+void hud_message(uint8_t msg, uint8_t frames);
+void hud_message_end(void);
+void hud_message_update(void);
+void text_tiles(uint8_t *d, const char *s);
+void bcd_tiles(uint8_t *d, const uint8_t *bcd);
+void text_put(uint8_t *dst, const uint8_t *tiles, uint8_t n);
+void text_put_str(uint8_t *dst, const char *s);
+
+// boss.c
+enum { BOSS_NONE, BOSS_INTRO, BOSS_FIGHT, BOSS_DEAD, BOSS_OUTRO, BOSS_DONE };
+extern uint8_t boss_hp, boss_phase, boss_state;
+extern int8_t boss_dx, boss_dy;
+void boss_reset(void);
+void boss_update(void);
+void boss_damage(uint8_t dmg);
+uint8_t boss_overlaps(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
+
+// screens.c
+extern uint8_t died_in_stage;
+void game_start(void);
+void title_build(void);
+void title_update(void);
+void pause_toggle(void);
+void pause_update(void);
+void continue_start(void);
+void continue_update(void);
+void gameover_build(void);
+void gameover_update(void);
+void stage_clear(void);
+void clear_build(void);
+void clear_update(void);
 
 // enemies.c
-extern uint8_t obj_ptr, no_fire;
+extern uint8_t obj_ptr, no_fire, fire_busy;
+extern const int8_t wave_ofs[128];
 extern const uint8_t score_1000[3];
 uint8_t aim_at(uint8_t x, uint8_t y);
 void bullets_setup(uint8_t tile);
@@ -101,6 +136,7 @@ void turret_damage(uint8_t i, uint8_t dmg);
 // player.c
 extern uint8_t player_xs, player_ys, bomb_timer, dead_timer;
 void player_reset(void);
+void play_respawn(void);
 void player_update(void);
 void player_collide(void);
 void player_sprites(void);

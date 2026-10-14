@@ -9,7 +9,7 @@
 #define FORMATIONS   4
 
 // amplitude 24 px, period 128 f (GDD 2.6 WAVE); CARRIER and items scale it
-static const int8_t wave_ofs[128] = {
+const int8_t wave_ofs[128] = {
     0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 19, 20, 21, 21, 22, 22, 23,
     23, 23, 24, 24, 24, 24, 24, 24, 24, 24, 24, 23, 23, 23, 22, 22, 21, 21, 20, 19, 19, 18, 17, 16,
     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 2, 1, 0, -1, -2, -4, -5, -6, -7, -8, -9, -10, -11, -12,
@@ -30,6 +30,9 @@ static const uint8_t score_turret[3] = { 0x00, 0x05, 0 };
 const uint8_t score_1000[3] = { 0x00, 0x10, 0 };
 
 uint8_t obj_ptr, no_fire;
+// One shooter per frame (a fan of up to 7 bullets is one shot, GDD 2.5): others retry on their next
+// think frame. Two fans + a turret in one frame made the worst frames (~128 lines, towers zone).
+uint8_t fire_busy;
 uint8_t fm_type[FORMATIONS], fm_x[FORMATIONS], fm_left[FORMATIONS], fm_timer[FORMATIONS];
 static uint8_t swoop_row, swoop_delay;
 
@@ -158,15 +161,17 @@ static void swoop(pool_obj_t *o) {
         o->vy = -0x0100;
     }
     t = o->tm - (s & 0x0F);
-    if (t < 0x80 && t >= 20 && !(s & 0x20)) {
+    if (!fire_busy && t < 0x80 && t >= 20 && !(s & 0x20)) {
         s |= 0x20;
         if (may_fire(o->y)) {
+            fire_busy = 1;
             bullets_setup(SPR_EBULLET);
             fire_fan(o->x + 4, o->y + 4, aim_at(o->x, o->y), 3, 2, 1);
         }
-    } else if (o->t == OBJ_SWOOP_G && t < 0x80 && t >= 36 && !(s & 0x10)) {
+    } else if (!fire_busy && o->t == OBJ_SWOOP_G && t < 0x80 && t >= 36 && !(s & 0x10)) {
         s |= 0x10;
         if (may_fire(o->y)) {
+            fire_busy = 1;
             bullets_setup(SPR_EBULLET);
             fire_fan(o->x + 4, o->y + 4, aim_at(o->x, o->y), 3, 2, 2);
         }
@@ -189,9 +194,10 @@ void enemy_think(pool_obj_t *o) {
         }
     } else if (t == OBJ_SWOOP || t == OBJ_SWOOP_G) {
         swoop(o);
-    } else if (t == OBJ_WAVE_F && o->tm >= 48 && !(o->s & 0x40)) {
+    } else if (t == OBJ_WAVE_F && !fire_busy && o->tm >= 48 && !(o->s & 0x40)) {
         o->s |= 0x40;
         if (may_fire(o->y)) {
+            fire_busy = 1;
             bullets_setup(SPR_EBULLET);
             fire(o->x + 4, o->y + 4, aim_at(o->x, o->y), 0);
         }
@@ -243,8 +249,10 @@ void turrets_update(void) {
             if (mt != o->s) { o->s = mt; vmap_set(o->aux, o->pad, mt); }
         }
         if (--o->tm) continue;
+        if (fire_busy) { o->tm = 1; continue; }             // retry next frame
         o->tm = 96;
         if (may_fire(y)) {
+            fire_busy = 1;
             bullets_setup(SPR_EBULLET);
             fire(o->x + 4, y + 4, aim_at(o->x, y), o->pad < 81 ? 0 : 1);
         }

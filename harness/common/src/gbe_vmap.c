@@ -120,16 +120,12 @@ void vmap_set(uint8_t col, uint16_t row, uint8_t mt) {
     vq_count++;
 }
 
+void vmap_flush_queue(void);          // asm (gbe_vmap.s)
+
 void vmap_draw_vram(void) {
-    uint8_t i, *d, *q;
     if (row_pending) {
         vram_row20(row_dst, row_buf);
         row_pending = 0;
     }
-    for (i = 0; i < vq_count; i++) {
-        d = vq_dst[i];
-        q = vq_tiles[i];
-        d[0] = q[0]; d[1] = q[1]; d[32] = q[2]; d[33] = q[3];
-    }
-    vq_count = 0;
+    vmap_flush_queue();
 }
