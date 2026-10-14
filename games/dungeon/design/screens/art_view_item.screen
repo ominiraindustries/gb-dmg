@@ -23,90 +23,93 @@ $ ICON_AMULET
 Θ walls:7
 Ι walls:8
 Κ walls:9
-Λ walls:47
-Μ walls:48
-Ν walls:49
-Ξ walls:50
-Ο walls:51
-Π walls:52
-Ρ walls:53
-Σ walls:54
-Τ walls:55
-Υ walls:56
-Φ walls:57
-Χ walls:58
-Ψ walls:59
-Ω walls:60
-α walls:61
-β walls:62
-γ walls:63
-δ walls:64
-ε walls:65
-ζ walls:66
-η walls:67
-θ walls:68
-ι walls:69
-κ walls:70
-λ walls:71
-μ walls:72
-ν walls:73
-ξ walls:74
-ο walls:75
-π walls:76
-ρ walls:77
-σ walls:78
-τ walls:79
-υ walls:80
-φ walls:81
-χ walls:82
-ψ walls:83
-ω walls:84
-Б walls:85
-Г walls:86
-Д walls:87
-Ж walls:88
-З walls:89
-И walls:90
-Й walls:91
-Л walls:92
-П walls:93
-Ф walls:94
-Ц walls:95
-Ч walls:96
-Ш walls:97
-Щ walls:98
-Ъ walls:99
-Ы walls:100
-Ь walls:101
-Э walls:102
-Ю walls:103
-Я walls:104
-б walls:105
-в walls:106
-г walls:107
-д walls:108
-ж walls:109
-з walls:110
-и walls:111
-й walls:112
-к walls:113
-л walls:114
-м walls:115
-н walls:116
-п walls:117
+Λ walls:12
+Μ walls:14
+Ν walls:15
+Ξ walls:17
+Ο walls:24
+Π walls:25
+Ρ walls:51
+Σ walls:55
+Τ walls:58
+Υ walls:59
+Φ walls:60
+Χ walls:61
+Ψ walls:62
+Ω walls:63
+α walls:64
+β walls:65
+γ walls:66
+δ walls:67
+ε walls:68
+ζ walls:69
+η walls:70
+θ walls:71
+ι walls:72
+κ walls:73
+λ walls:74
+μ walls:75
+ν walls:76
+ξ walls:77
+ο walls:78
+π walls:79
+ρ walls:80
+σ walls:81
+τ walls:82
+υ walls:83
+φ walls:84
+χ walls:85
+ψ walls:86
+ω walls:87
+Б walls:88
+Г walls:89
+Д walls:90
+Ж walls:91
+З walls:92
+И walls:93
+Й walls:94
+Л walls:95
+П walls:96
+Ф walls:97
+Ц walls:98
+Ч walls:99
+Ш walls:100
+Щ walls:101
+Ъ walls:102
+Ы walls:103
+Ь walls:104
+Э walls:105
+Ю walls:106
+Я walls:107
+б walls:108
+в walls:109
+г walls:110
+д walls:111
+ж walls:112
+з walls:113
+и walls:114
+й walls:115
+к walls:116
+л walls:117
+м walls:118
+н walls:119
+п walls:120
+ф walls:121
+ц walls:122
+ч walls:123
 grid:
-ΛΜΒΓΒΓΒΓΒΓΒΓΒΓΒΓΒΓλμ
-ΝΞΛΟΔΕΔΕΔΕΔΕΔΕΔΕνμξΝ
-ΝΠΝΡЙЛΔΕΔΕΔΕΔΕЫЬοΝπΝ
-ΣΤΥΦΝПдΖΖΖΖΖΖкЭΝρσετ
-ΝΝΧΡФЦжΑΑΑΑΑΑлЮЯουΝΝ
-ΨΨΩαЧШзΑΑΑΑΑΑмбЧφχΨΨ
-ΝβΝΡΝΡзΑΑΑΑΑΑмοΝοΝψΝ
-ΝβΝΡЩЪиΑΑΑΑΑΑнвгοΝψΝ
-γδεζΝΡйΖΖΖΖΖΖпοΝωΤБГ
-ΝΝΝΡικΗΘΗΘΗΘΗΘЗИοΝΝΝ
-ΝΝηθΙΚΙΚΙΚΙΚΙΚΙΚДЖΝΝ
-ικΗΘΗΘΗΘΗΘΗΘΗΘΗΘΗΘЗИ
+ΤΥΒΒΒΒΒΒΒΒΒΒΒΒΒΒΒΒνξ
+ΛΦΤΧΒΒΒΒΒΒΒΒΒΒΒΒοξπΛ
+ΛΨΛΜЙЛΓΓΓΓΓΓΓΓЬЭΟΛρΛ
+ΩαβγΛПиΔΔΔΔΔΔнЮΛστυφ
+ΛΛδΜФЦйΑΑΑΑΑΑпЯбΟχΛΛ
+ΛΛδΜΜΜкΑΑΑΑΑΑфΟΟΟχΛΛ
+ΝΠΝΞΝЧΡΑΑΑΑΑΑΣвΝΠΝΞΝ
+ΛΟΛΜШЩлΑΑΑΑΑΑцгдΟΛΜΛ
+εζηθΜΜмΕΕΕΕΕΕчΟΟψωБГ
+ΛΛδΜЪЫΖΖΖΖΖΖΖΖжзΟχΛΛ
+ΛΛικΗΘΗΘΗΘΗΘΗΘΗΘДЖΛΛ
+λμΙΚΙΚΙΚΙΚΙΚΙΚΙΚΙΚЗИ
 .&18/20.^$.[1.]3.@N.
 ....................
 ....................

@@ -166,241 +166,239 @@ _ 85
 Ć 159
 ć 160
 Ĉ 161
-ĉ 162
-Ċ 163
 
 piece BG
-12121212121212121212
-34343434343434343434
-34343434343434343434
-55555555555555555555
+11111111111111111111
+11111111111111111111
+22222222222222222222
+33333333333333333333
 00000000000000000000
 00000000000000000000
 00000000000000000000
 00000000000000000000
+44444444444444444444
 55555555555555555555
 67676767676767676767
 89898989898989898989
-67676767676767676767
 
 piece F3L2
-i
-i
-i
-i
+p
+p
+p
+q
 
 piece F3L1
-jjjjji
-jjjjji
-jjjjji
-jjjjji
+rprprp
+prprpp
+rprprp
+qsqsqq
 
 piece F3C
-jjjjjj
-jjjjjj
-jjjjjj
-jjjjjj
+rprprp
+prprpr
+rprprp
+qsqsqs
 
 piece D3
-jjõöjj
-jjîîjj
-jjîîjj
-jjîîjj
+rpóôrp
+prììpr
+rpììrp
+qsììqs
 
 piece E3
-jjõöjj
-jj00jj
-jją0jj
-jj0ąjj
+rpóôrp
+pr00pr
+rpă0rp
+qs0ăqs
 
 piece F3R1
-kjjjjj
-kjjjjj
-kjjjjj
-kjjjjj
+tprprp
+urprpr
+tprprp
+vsqsqs
 
 piece F3R2
-k
-k
-k
-k
+t
+u
+t
+v
 
 piece S2L2
-Ü
-Ý
-Ó
-Ó
-Þ
-ß
+.
+p
+p
+p
+q
+.
 
 piece S2L1
-Ñ
-Ò
-Ó
-Ó
-Ô
-Õ
-
-piece S2R1
-Ö
 Ø
 Ù
-Ù
 Ú
+p
 Û
+Ü
 
-piece S2R2
+piece S2R1
+Ý
+Þ
+ß
+t
 à
 á
-Ù
-Ù
-â
-ã
+
+piece S2R2
+.
+t
+u
+t
+v
+.
 
 piece F2L1
-UVUVUW
-VUXUVY
-UVZVUW
-VUVUVY
-UVUVUW
-ababac
+UVUVUU
+WXYXWZ
+abcbab
+UVUVUU
+dededf
+ghghgh
 
 piece F2C
 UVUVUVUV
-VUVUVUVU
-UVUVUVUV
-VUVUVUVU
-UVUVUVUV
+WXWXWXWX
 abababab
+UVUVUVUV
+dededede
+ghghghgh
 
 piece D2
 UVUVUVUV
-VUVðñUVU
-UVUÙòVUV
-VUVóôUVU
-UVUÙòVUV
-abaÙòbab
+WXWîïXWX
+abaßðbab
+UVUñòVUV
+dedßðede
+ghgßðhgh
 
 piece E2
 UVUVUVUV
-VUVðñUVU
-UVUćĈVUV
-VUVĉĈUVU
-UVUćĊVUV
-abaćĈbab
+WXWîïXWX
+abaąĆbab
+UVUćĆVUV
+dedąĈede
+ghgąĆhgh
 
 piece F2R1
-dVUVUV
-eUVfVU
-dVUgUV
-eUVUVU
-dVUVUV
-hbabab
+iVUVUV
+jXWkWX
+lbamab
+iVUVUV
+nedede
+ohghgh
 
 piece S1L1
-ÀÁ
-nÂ
 ÃÄ
-ÅÆ
-nr
-ÇÈ
-nr
-()
+CÅ
+ÆÇ
+EE
+FÈ
+ÉÊ
+EE
+ËÌ
 
 piece S1R1
-ÉÊ
-Ën
-ÌÍ
-ÎÅ
-/n
-ÏÐ
-/n
-}~
+ÍÎ
+ÏC
+ÐÑ
+OO
+ÒF
+ÓÔ
+OO
+ÕÖ
 
 piece F1L1
-ABAC
-DEDF
-GHGI
-DJDF
-GDGI
-DGDF
-GDGI
-KLKM
+AAAB
+CDCE
+FGFH
+CICE
+FFFH
+JJJK
+CECE
+LMLM
 
 piece F1C
-ABABABABABAB
-DGDGDGDGDGDG
-GDGDGDGDGDGD
-DGDGDGDGDGDG
-GDGDGDGDGDGD
-DGDGDGDGDGDG
-GDGDGDGDGDGD
-KLKLKLKLKLKL
+AAABAAABAAAB
+CCCECCCECCCE
+FHFFFHFFFHFF
+CECCCECCCECC
+FFFHFFFHFFFH
+JJJKJJJKJJJK
+CECCCECCCECC
+LMLLLMLLLMLL
 
 piece D1
-ABABABABABAB
-DGDGäåæçDGDG
-GDGDè00éGDGD
-DGDGêëëìDGDG
-GDGDíîîïGDGD
-DGDGíîîïDGDG
-GDGDêëëìGDGD
-KLKLíîîïKLKL
+AAABAAABAAAB
+CCCEâãäåCCCE
+FHFFæ00çFHFF
+CECCèééêCECC
+FFFHëììíFFFH
+JJJKëììíJJJK
+CECCèééêCECC
+LMLLëììíLMLL
 
 piece E1
-ABABABABABAB
-DGDGäåæçDGDG
-GDGDè00éGDGD
-DGDGÿ00ĀDGDG
-GDGDā00ĀGDGD
-DGDGĂă0ĀDGDG
-GDGDĂĄąĀGDGD
-KLKLĂĄ0ĆKLKL
+AAABAAABAAAB
+CCCEâãäåCCCE
+FHFFæ00çFHFF
+CECCý00þCECC
+FFFHÿ00þFFFH
+JJJKĀā0þJJJK
+CECCĀĂăþCECC
+LMLLĀĂ0ĄLMLL
 
 piece F1R1
-NBAB
-OGPG
-QDRD
-OGSG
-QDGD
-OGDG
-QDGD
-TLKL
+NAAB
+OCDE
+PHQF
+OERC
+PFFH
+SJJK
+OECC
+TMLL
 
 piece S0L
-lm..
-nolp
-nqnr
-stuv
-nnwr
-xxyz
-n!nr
-n!nr
+wx..
+Cywz
+C!CE
 "#$%
-nnnr
-nn&'
-()..
+CC&E
+CC&E
+FPFH
+COCE
+'()*
+CC&E
+CC+,
+-/..
 
 piece S0R
-..*+
-,+-n
-/n:n
-<=$>
-/?nn
-[\xx
-/n]n
-/n]n
-^t_`
-/nnn
-{|nn
-..}~
+..:<
+=<>C
+OC?C
+[\]^
+O_CC
+O_CC
+PFHF
+OCEC
+`{|}
+O_CC
+~ÀCC
+..ÁÂ
 
 piece LK1
+õö
 øù
-úû
 
 piece LK2
-üý
+úû
 
 piece LK3
-þ
+ü
