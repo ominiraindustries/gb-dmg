@@ -1,0 +1,6 @@
+{
+  "title": "TEMPLATE",
+  "common_res": ["font"],
+  "common_src": ["gbe_frame.c", "gbe_oam.c", "gbe_video.c", "gbe_sfx.c"],
+  "lcc_flags": []
+}

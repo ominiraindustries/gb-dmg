@@ -7,7 +7,7 @@ el profiling lo justifica y con una prueba de equivalencia contra la versión C.
 - `harness/` — herramientas comunes a todos los juegos (no meter código de un juego aquí)
   - `gb.py` — CLI: `setup`, `new`, `build`, `run`, `test`
   - `gbtest.py` — driver headless (PyBoy) para tests: botones, frames, leer variables, capturas
-  - `template/` — plantilla que copia `gb.py new`
+  - `templates/<tipo>/` — plantillas de `gb.py new <juego> [tipo]` (hoy: `basic`, sobre gbe)
 - `games/<juego>/` — `src/` (.c/.s), `res/` (assets), `tests/` (pytest), `game.json` (título, flags de lcc)
   - `res/*.tiles`: tiles en arte ASCII 8x8 (`.` `-` `+` `#` = colores 0-3, `@ NOMBRE` etiqueta el
     siguiente tile). Se convierten al compilar a `build/gen/<nombre>.c/.h` (`#include "bg.h"`).

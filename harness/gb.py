@@ -5,7 +5,7 @@ Usage:
     python harness/gb.py build <game>       Compile games/<game> -> games/<game>/build/<game>.gb
     python harness/gb.py run <game>         Build and open the ROM in a PyBoy window
     python harness/gb.py test <game> [...]  Build and run games/<game>/tests with pytest
-    python harness/gb.py new <game>         Create a new game from the template
+    python harness/gb.py new <game> [type]  Create a new game from harness/templates/<type> (default basic)
     python harness/gb.py preview <game>     Render tilesets and design/screens/*.screen to PNG
 """
 import json
@@ -201,11 +201,15 @@ def test(name, extra):
     sys.exit(subprocess.call([sys.executable, "-m", "pytest", str(tests), "-q", *extra], cwd=ROOT))
 
 
-def new(name):
+def new(name, kind="basic"):
     dst = ROOT / "games" / name
+    src = ROOT / "harness" / "templates" / kind
     if dst.exists():
         die(f"{dst} already exists")
-    shutil.copytree(ROOT / "harness" / "template", dst)
+    if not src.is_dir():
+        kinds = ", ".join(p.name for p in (ROOT / "harness" / "templates").iterdir() if p.is_dir())
+        die(f"no template '{kind}' (available: {kinds})")
+    shutil.copytree(src, dst)
     cfg = dst / "game.json"
     cfg.write_text(cfg.read_text(encoding="utf-8").replace("TEMPLATE", name.upper()[:15]), encoding="utf-8")
     print(f"Created {dst.relative_to(ROOT)}")
@@ -232,7 +236,7 @@ def main():
         {"build": lambda: build(rest[0]),
          "run": lambda: run(rest[0]),
          "test": lambda: test(rest[0], rest[1:]),
-         "new": lambda: new(rest[0]),
+         "new": lambda: new(rest[0], *rest[1:2]),
          "preview": lambda: preview_cmd(rest[0])}[cmd]()
     else:
         print(__doc__)
