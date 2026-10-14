@@ -201,6 +201,35 @@ void bgbuf_start(const uint8_t *src, uint8_t rows, uint8_t dst_row);
 void bgbuf_draw_vram(void);                     // VBlank
 void bgbuf_fill_both(const uint8_t *src, uint8_t rows, uint8_t dst_row);   // LCD off
 
+// ---------------------------------------------------------------- gbe_vq.c
+// VRAM write queue with a tile budget per VBlank (bytes are copied in: callers may reuse buffers)
+extern uint8_t vq_budget, vq_lost;
+uint8_t vq_push(uint8_t *dst, const uint8_t *src, uint8_t len);   // 0 = no room (vq_lost++)
+uint8_t vq_push_fill(uint8_t *dst, uint8_t tile, uint8_t len);
+uint8_t vq_pending(void);
+void vq_draw_vram(void);                        // VBlank (asm, ~20 T per tile)
+
+// ---------------------------------------------------------------- gbe_text.c
+// Shared font text (0-9 A-Z - ! . : ? /) + a 4-line message log typed through gbe_vq.
+// The game sets txt_font = VRAM_FONT, txt_blank = its blank tile; needs "font" in common_res.
+extern uint8_t txt_font, txt_blank;
+uint8_t txt_char(char c);
+uint8_t txt_tiles(uint8_t *dst, const char *s, uint8_t n);       // pads with blanks
+void txt_u16(uint8_t *dst, uint16_t v, uint8_t width, uint8_t zero_pad);
+extern uint8_t log_lines[4][20], log_pending, log_typing, log_speed;
+void log_init(uint8_t *dst);                    // 4 lines of 20 at dst (rows 32 apart)
+void log_push(const char *s);                   // <= 20 chars, up to 4 waiting
+void log_update(void);                          // per frame (outside VBlank)
+
+// ---------------------------------------------------------------- gbe_menu.c
+// Vertical menu: cursor tile through gbe_vq, repeat 16/6 f, wrap, disabled options skipped.
+#define MENU_NONE 0xFF
+#define MENU_BACK 0xFE
+extern uint8_t menu_n, menu_sel, menu_disabled;
+void menu_open(uint8_t n, uint8_t sel, uint8_t disabled, uint8_t *cursor0, uint8_t stride,
+               uint8_t cursor_tile, uint8_t blank_tile);
+uint8_t menu_update(void);                      // MENU_NONE / index chosen with A / MENU_BACK (B)
+
 // ---------------------------------------------------------------- gbe_rng.c
 // 16-bit xorshift; tests predict it (gbtest.rng_next). Seed rng_state from DIV + frames on a key press.
 extern uint16_t rng_state;
@@ -217,9 +246,11 @@ void bank_memcpy(uint8_t bank, void *dst, const void *src, uint16_t n) NONBANKED
 uint8_t bank_read8(uint8_t bank, const uint8_t *p) NONBANKED;
 
 // ---------------------------------------------------------------- gbe_save.c
-// One save block in cartridge SRAM (needs an MBC with RAM + battery: -Wm-yt0x1B -Wm-ya1), with
-// signature, version, length and checksum; a torn write reads as "no save". len <= 8000.
-uint8_t save_load(void *dst, uint16_t len, uint8_t version);   // 1 = valid save copied to dst
+// Save in cartridge SRAM (needs an MBC with RAM + battery: -Wm-yt0x1B -Wm-ya1): two alternating
+// slots with signature, version, sequence, length and checksum; a torn write keeps the previous
+// save. len <= 4000.
+extern uint8_t save_slot, save_seq;
+uint8_t save_load(void *dst, uint16_t len, uint8_t version);   // 1 = newest valid save copied
 void save_store(const void *src, uint16_t len, uint8_t version);
 void save_erase(void);
 

@@ -133,6 +133,16 @@ def check_sources(gdir, cfg):
     """Source rules that compile fine but break at run time."""
     import re
     problems = []
+    # Banked code must never switch banks: SWITCH_ROM would unmap the code that is running
+    # (GBDK docs; gbe_bank.c helpers live in bank 0 and restore the bank)
+    for f in sorted((gdir / "src").rglob("*.c")):
+        text = f.read_text(encoding="utf-8")
+        m = re.search(r"^\s*#pragma\s+bank\s+(\d+)", text, re.M)
+        if m and m.group(1) != "0":
+            for n, line in enumerate(text.splitlines(), 1):
+                if re.search(r"\bSWITCH_ROM", line.split("//", 1)[0]):
+                    problems.append(f"{f.name}:{n}: SWITCH_ROM in banked code (#pragma bank {m.group(1)}) "
+                                    "unmaps itself: use the gbe_bank.c helpers (bank 0)")
     if "gbe_video.c" in cfg.get("common_src", []):
         # gbe_video rewrites these registers every VBlank from its shadows: a raw write lasts one
         # frame (platformer intro card lost its SCY when the shmup made SCY shadowed).

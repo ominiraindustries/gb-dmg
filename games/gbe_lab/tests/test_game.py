@@ -66,8 +66,30 @@ def test_save_survives_power_off_and_detects_corruption(gb):
         bad = bytearray(g2.power_off())
     finally:
         pass
-    bad[5 + 7] ^= 0x10                                   # flip one data bit
+    bad[6 + 7] ^= 0x10                                   # flip one data bit (6-byte header)
     g3 = GB(rom, ram=bytes(bad))
     _req(g3, 2)
     assert g3.u8("save_ok") == 0
     g3.close()
+
+
+def test_save_two_slots_torn_write_keeps_previous(gb):
+    """gbe_save.c alternates slots: store A, store B (other slot, seq + 1), then B is torn (as if
+    the power went off mid-store): the load returns A."""
+    from pathlib import Path
+    from gbtest import GB
+    a, b = list(range(1, 17)), list(range(50, 66))
+    gb.write_bytes("save_buf", a)
+    _req(gb, 1)
+    gb.write_bytes("save_buf", b)
+    _req(gb, 1)
+    _req(gb, 2)
+    assert gb.bytes("load_buf", 16) == b                 # newest wins
+    ram = bytearray(gb.power_off())
+    assert ram[0x0000:0x0002] == b"GB" and ram[0x1000:0x1002] == b"GB"   # both slots used
+    ram[0x1000 + 6 + 3] ^= 0xFF                          # B's data corrupted
+    rom = Path(__file__).resolve().parents[1] / "build" / "gbe_lab.gb"
+    g2 = GB(rom, ram=bytes(ram))
+    _req(g2, 2)
+    assert g2.u8("save_ok") == 1 and g2.bytes("load_buf", 16) == a
+    g2.close()

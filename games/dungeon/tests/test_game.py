@@ -66,3 +66,61 @@ def test_costs(gb):
     print("max_frame_lines", gb.u8("max_frame_lines"), "vram_late", gb.u8("vram_late"))
     assert gb.u8("vram_late") == 0
     assert gb.u8("max_frame_lines") < 120
+
+
+T_A = 24 + 10                                              # VRAM_FONT + LETTER_A
+
+
+def win_text(gb, row):
+    """Window row as text (letters, digits, space) from VRAM."""
+    out = ""
+    for t in gb.bg_map(window=True)[row][:20]:
+        if T_A <= t < T_A + 26:
+            out += chr(65 + t - T_A)
+        elif 24 <= t < 34:
+            out += chr(48 + t - 24)
+        else:
+            out += " "
+    return out.rstrip()
+
+
+def test_log_types_messages(gb):
+    gb.frames(30)
+    assert win_text(gb, 5) == "PISO 1"
+    gb.write_u8("pf", 0)                                    # face north: (5,1) is the sealed UP
+    gb.tap("up")
+    gb.frames(30)
+    assert win_text(gb, 5) == "PARED" and win_text(gb, 4) == "PISO 1"
+    assert gb.u8("vq_lost") == 0
+
+
+def test_rng_is_predictable(gb):
+    s = gb.u16("rng_state")
+    gb.tap("right")
+    gb.frames(20)
+    s2, b = gb.rng_next(s)
+    assert gb.u16("rng_state") == s2 and gb.u8("last_roll") == b
+
+
+def test_save_continue_after_power_off(gb):
+    from pathlib import Path
+    from gbtest import GB
+    for b in ("left", "up", "up"):                         # move somewhere
+        gb.tap(b)
+        gb.frames(20)
+    pos = (gb.u8("px"), gb.u8("py"), gb.u8("pf"))
+    gb.tap("start")
+    gb.frames(30)
+    assert win_text(gb, 5) == "PARTIDA GUARDADA"
+    ram = gb.power_off()
+    g2 = GB(Path(__file__).resolve().parents[1] / "build" / "dungeon.gb", ram=ram)
+    try:
+        assert (g2.u8("px"), g2.u8("py"), g2.u8("pf")) != pos
+        g2.tap("select")
+        g2.frames(30)
+        assert (g2.u8("px"), g2.u8("py"), g2.u8("pf")) == pos
+        assert win_text(g2, 5) == "PARTIDA CARGADA"
+        from view_model import expected, shown
+        assert shown(g2) == expected(g2.bytes("dmap", 256), *pos)
+    finally:
+        g2.close()

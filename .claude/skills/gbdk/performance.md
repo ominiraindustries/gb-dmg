@@ -175,3 +175,12 @@ Lesson: the frame peak was 4 medium costs at once (sprites 13k, enemy logic 9-15
 movement 7k), not one hot spot. Use `gb.worst_frames(...)` to see inside the worst frame, not
 per-call averages. A synthetic "all pools full" cheat under-reported the peak (112 vs 128 lines):
 always also run a bot through the real level.
+
+## GBDK library speed (measured in games/dungeon, GBDK 4.5.0)
+| Function | Cost | Note |
+|---|---|---|
+| `memcpy`, `memset` | ~8-12 T per byte | asm: use them |
+| `memmove` | ~190 T per byte (60 bytes = 11.3k T) | C. A forward copy to a lower address is safe with memcpy |
+| `strncpy` | ~290 T per byte | C. Write a 3-line loop |
+| `set_bkg_tiles` | ~520 T per tile, waits for STAT | VBlank / LCD off only; prefer direct writes or gbe_vq |
+

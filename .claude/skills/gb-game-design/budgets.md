@@ -26,6 +26,9 @@ Measured in this repo:
 | Per-enemy logic in C (route, animation, firing) | ~600-900 T per enemy per frame even when simple |
 | Shots x enemies collisions (4 shots/frame vs 6 enemies + 4 turrets, asm hit_first) | ~10k T |
 | Move 27 pooled objects (asm) | ~7k T |
+| First-person view (games/dungeon, 20x12 tiles, 3 cells deep): compose with culling (asm) | ~35k T per step (C version 100k) |
+| Double-buffer copy, 4 rows of 20 tiles per VBlank (asm, 20 T/tile) | ~2.6k T; with GBDK's ISR that fills VBlank: nothing else that frame |
+| Message log: start a message (scroll 4 lines + queue) | ~14k T (with memmove/strncpy from GBDK: 23k) |
 Rule of thumb from games/shmup: estimate C per object at ~800 T and asm per drawn sprite at ~300 T;
 GDD estimates of 40-120 T per object were 3-5x too low.
 VBlank work after `vsync()`: ~3600 T total -> plan <= 4 rows of 10 tiles or 1 row of 20 + HUD per frame.

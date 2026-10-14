@@ -93,6 +93,8 @@ Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `
   `gb.worst_frames(funcs, frames, step)` desglosa los peores frames: en games/shmup el pico eran 4
   costes medianos a la vez, no una función caliente. Regla propia < 120 líneas; el límite real es
   154 (por encima se pierde un frame).
+- Librería de GBDK: `memcpy`/`memset` son asm (~10 T/byte); `memmove` (~190 T/byte) y `strncpy`
+  (~290 T/byte) son C: evitarlos en el juego (games/dungeon: 11k T por un scroll de 60 bytes).
 - Trampas medidas de SDCC: indexar con `int8_t` (`board[row_off[r] + i]`) ~466 T por acceso → usar
   punteros/`memcpy`; recalcular datos de una forma en cada llamada → cachear; `memcpy`/`memset` de
   GBDK son asm y rápidos.
@@ -124,7 +126,8 @@ Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `
   conmutables (`#pragma bank 255` + `BANKREF(<stem>)`); con flags MBC5 + `-autobank`
   (`["-autobank", "-Wm-yt0x1B", "-Wm-yo8", "-Wm-ya1"]`). Se leen con `gbe_bank.c`
   (`bank_set_bkg_data(BANK(walls), ...)`, `bank_memcpy`), que vive en el banco 0. Probado en games/gbe_lab.
-- El build **para** si con bancos algo del banco 0 (código, `_HOME`, `_GSINIT`...) pasa de 0x4000
+- El build **para** si un fichero con `#pragma bank N` llama a `SWITCH_ROM` (se desmapearía a sí mismo),
+  y si con bancos algo del banco 0 (código, `_HOME`, `_GSINIT`...) pasa de 0x4000
   (SWITCH_ROM lo desmapearía), y **avisa** de las builds planas que lo pasan sin bancos
   (platformer y shmup hoy: funcionan mientras no se conmute). Código grande: funciones `BANKED`.
   Detalle: skill `gbdk` `banking.md`.

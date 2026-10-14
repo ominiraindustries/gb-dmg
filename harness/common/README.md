@@ -27,7 +27,13 @@ List the files in `"common_src"`; their headers are on the include path.
 | `gbe_pool.c` `gbe_pool.s` | many-object pools (bullets, shots, enemies) in 8-bit OAM coords: `pool_alloc`, asm `pool_move` (free on exit), asm `hit_first` (box vs range, one compare per axis) | `GBE_POOL_MAX` | shmup: move ~250 T, hit ~100 T per object |
 | `gbe_spr.c` (+ asm `spr_group` in `gbe_pool.s`) | OAM groups with fixed ranges (lower range = priority); each group starts half a group further on odd frames, so a sprite dropped on a >10 line is drawn the next frame | `spr_rot` cycling through 2 x a common multiple of the slot counts (< 64) | shmup: ~300 T per drawn object |
 | `gbe_bank.c` | read banked const data from any code (bank 0, restores the bank): `bank_set_bkg_data`, `bank_set_sprite_data`, `bank_memcpy`, `bank_read8` | game.json `"banked_res"` + MBC flags | gbe_lab: 3 banked tilesets loaded and checked byte by byte |
-| `gbe_save.c` | one SRAM save block with signature, version, length and Fletcher-16 checksum; signature written last (torn write = no save) | MBC with RAM+battery (`-Wm-yt0x1B -Wm-ya1`) | gbe_lab: survives a power cycle, a flipped bit is rejected (test: `GB(rom, ram=g.power_off())`) |
+| `gbe_save.c` | SRAM save with two alternating slots (signature, version, sequence, length, Fletcher-16; signature written last): a torn store keeps the previous save | MBC with RAM+battery (`-Wm-yt0x1B -Wm-ya1`) | gbe_lab: power cycle, flipped bit, torn newest slot (`GB(rom, ram=g.power_off())`) |
+| `gbe_view.c` `gbe_view.s` | first-person grid view (crawlers): pieces of `res/view.pcs` (harness/fpview.py) composed far to near, exact culling precomputed by fpview, classify + paint in asm | `view_map` (16x16), `view_class`, `view_cell()`, `view_bank`; generated `view.c` | dungeon: ~35k T per view (C: 100k), selftest asm == C at random cells |
+| `gbe_bgbuf.c` | double buffer on the two BG maps: copy a 20-wide canvas into the hidden map N rows per VBlank, flip LCDC bit 3 | - | dungeon: 4 rows = 2.6k T per VBlank, flip after 3 |
+| `gbe_vq.c` `gbe_vq.s` | VRAM write queue (byte stream) with a tile budget per VBlank | `vq_budget` (0 while another big copy runs) | dungeon: ~20 T per tile (an array-of-entries version: ~150) |
+| `gbe_text.c` | shared-font text (`txt_tiles`, `txt_u16`) and a 4-line message log typed through gbe_vq | `txt_font`, `txt_blank`, "font" in common_res | dungeon |
+| `gbe_menu.c` | vertical menu: cursor tile, repeat 16/6 f, wrap, disabled options, A / B | - | dungeon (M1b) |
+| `gbe_rng.c` | xorshift16 `rng_next` / `rng_range`; `gb.rng_next(state)` predicts it in tests | seed `rng_state` | dungeon |
 | `gbe_selftest.c` | asm-vs-C equivalence of all the above, run in the ROM | call `gbe_selftest()` when `gbe_eq_request` | test: `gb.selftest()` |
 
 Header: `gbe.h` (documents every function and the rules). The game provides `src/gbe_config.h`:
@@ -69,6 +75,9 @@ while (1) {
   frame was a 12k T peak); player vs bullets every frame. 5 px/f shots vs 14 px boxes cannot tunnel.
 - What a frame costs with pools (games/shmup peak): OAM groups ~13k T, per-enemy C logic 600-900 T
   each, collisions ~10k, movement ~7k. `gb.worst_frames()` shows the mix of the worst frame.
+- VBlank order with GBDK: `vsync()` returns after GBDK's ISR (~1100 T of the 4560 T of VBlank).
+  Do the VRAM copies FIRST, read the joypad (`frame_begin`) after them; decide copy budgets before
+  the copies start (dungeon: the text budget was decided after the view copy ended and ran late).
 - Next step if a game needs more: a draw-friendly record layout (`t y x tile prop` first) so
   `spr_group` copies 4 consecutive bytes instead of jumping inside the record.
 

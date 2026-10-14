@@ -16,6 +16,10 @@
     "gbe_view.s",
     "gbe_bgbuf.c",
     "gbe_vram.s",
+    "gbe_vq.c",
+    "gbe_vq.s",
+    "gbe_text.c",
+    "gbe_menu.c",
     "gbe_selftest.c"
   ],
   "lcc_flags": [
