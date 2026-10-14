@@ -1,0 +1,16 @@
+{
+  "title": "GBE LAB",
+  "common_res": [
+    "font"
+  ],
+  "common_src": [
+    "gbe_frame.c",
+    "gbe_oam.c",
+    "gbe_video.c",
+    "gbe_pool.c",
+    "gbe_pool.s",
+    "gbe_spr.c",
+    "gbe_selftest.c"
+  ],
+  "lcc_flags": []
+}

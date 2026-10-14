@@ -83,6 +83,37 @@ uint8_t solid_at_c(uint16_t x, uint8_t y);
 void map_column(uint16_t tc);            // fill col_buf with tile column tc (asm inside)
 void map_column_c(uint16_t tc);
 
+// ---------------------------------------------------------------- gbe_pool.c / .s
+// Object pools in 8-bit OAM space (X = screen x + 8, Y = screen y + 16). GBE_POOL_MAX records of
+// 16 bytes (the asm walks records with ld a,(hl+); field offsets are fixed, see gbe_pool.s).
+// Moving frees objects that leave the screen (X >= 168 or Y >= 176, any side).
+typedef struct {
+    uint8_t t;              // +0  type, 0 = free
+    uint8_t x, xs;          // +1  OAM x, sub-pixel
+    uint8_t y, ys;          // +3  OAM y, sub-pixel
+    int16_t vx, vy;         // +5  8.8 px/frame
+    uint8_t s, tm, aux;     // +9  game use (state, timer, anything)
+    uint8_t tile, prop;     // +12 what gbe_spr draws
+    uint8_t aux2, pad;      // +14
+} pool_obj_t;
+extern pool_obj_t pool[];
+uint8_t pool_alloc(uint8_t first, uint8_t n);      // first free slot of the range, 0xFF if full
+void pool_clear(uint8_t first, uint8_t n);
+void pool_move(uint8_t first, uint8_t n);          // asm (gbe_pool.s), n >= 1
+void pool_move_c(uint8_t first, uint8_t n);
+// Collisions: set the query box and the pool object box, then hit_first(first, n) returns the
+// first live object of the range that overlaps, or 0xFF.
+extern uint8_t hit_qx, hit_qy, hit_qw, hit_qh, hit_ox, hit_oy, hit_ow, hit_oh;
+uint8_t hit_first(uint8_t first, uint8_t n);       // asm, n >= 1
+uint8_t hit_first_c(uint8_t first, uint8_t n);
+
+// ---------------------------------------------------------------- gbe_spr.c
+// OAM manager: one call per priority group (lower OAM slots = higher priority on the DMG).
+extern uint8_t spr_rot;                            // increment once per frame
+// size 1: one sprite per object; size 2: 16x16 (tile, tile + 2). pool_n >= 1.
+void spr_group(uint8_t oam_first, uint8_t oam_n, uint8_t pool_first, uint8_t pool_n, uint8_t size);
+void spr_group_c(uint8_t oam_first, uint8_t oam_n, uint8_t pool_first, uint8_t pool_n, uint8_t size);
+
 // ---------------------------------------------------------------- gbe_sfx.c
 // Sound effects by registers with per-channel priority. The game defines the table:
 //   const sfx_t sfx_table[] = { [SFX_JUMP] = { 1, 1, 12, { NR10, NR11, NR12, NR13, NR14 } }, ... };
@@ -101,8 +132,10 @@ void sound_update(void);      // once per frame
 void vram_col16(uint8_t *dst, const uint8_t *src);  // 16 tiles down a BG map column (stride 32)
 
 // ---------------------------------------------------------------- gbe_selftest.c
-// Equivalence of every asm routine with its C reference (gb-asm procedure). Tests set
-// gbe_eq_request = 1 and read gbe_eq_done / gbe_eq_mismatch. Needs a loaded map.
+// Equivalence of every asm routine with its C reference (gb-asm procedure). Tests call
+// gb.selftest() (sets gbe_eq_request; the game calls gbe_selftest()). Which modules are checked
+// comes from gbe_config.h: GBE_SELFTEST_MAP (needs a loaded map), GBE_SELFTEST_ACTORS,
+// GBE_SELFTEST_POOL (uses the last 8 pool slots as scratch and the last 8 OAM entries).
 extern uint8_t gbe_eq_request, gbe_eq_done;
 extern uint16_t gbe_eq_mismatch, gbe_eq_count;
 void gbe_selftest(void);

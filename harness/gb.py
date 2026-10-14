@@ -104,6 +104,12 @@ KNOWN_HEADERS = {
 }
 
 
+def cart_title(title):
+    """Cartridge header title: lcc rebuilds the command line, so a space split the argument and
+    broke the build ("GBE LAB"). Uppercase, spaces -> '_', at most 15 chars."""
+    return "".join(c if c.isalnum() else "_" for c in title.upper())[:15]
+
+
 def check_warnings(output):
     """SDCC warnings that compile but are always bugs in our code: turn them into errors."""
     import re
@@ -164,7 +170,7 @@ def build(name):
         "-Wl-j",  # .noi file (symbols, used by tests)
         "-Wm-yS",  # .sym file (symbols for Emulicious/BGB)
         "-Wf--max-allocs-per-node50000",  # better register allocation, smaller/faster code
-        f"-Wm-yn{cfg['title']}",
+        f"-Wm-yn{cart_title(cfg['title'])}",
         *cfg["lcc_flags"],
         "-o", str(out),
         *map(str, sources),

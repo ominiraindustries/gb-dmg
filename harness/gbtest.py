@@ -108,6 +108,28 @@ class GB:
         a = self.addr(name)
         return [self._read(a + i) for i in range(n)]
 
+    # --- sprites (OAM) ---
+    def oam(self):
+        """The 40 OAM entries as (y, x, tile, prop) from the shadow OAM (what GBDK DMAs next VBlank)."""
+        raw = self.bytes("shadow_OAM", 160)
+        return [tuple(raw[i * 4:i * 4 + 4]) for i in range(40)]
+
+    def line_sprites(self, first=0, last=143, tall=None):
+        """Per screen line: (requested, drawn) lists of OAM indices, emulating the DMG rule: the first
+        10 sprites in OAM order that cover the line are drawn, the rest are not. tall=None reads the
+        sprite size from LCDC bit 2 (8x8 or 8x16). Returns {line: (requested, drawn)}."""
+        if tall is None:
+            tall = 16 if self.pyboy.memory[0xFF40] & 0x04 else 8
+        oam = self.oam()
+        out = {}
+        for line in range(first, last + 1):
+            req = [i for i, (y, x, t, p) in enumerate(oam) if y - 16 <= line < y - 16 + tall]
+            out[line] = (req, req[:10])
+        return out
+
+    def max_line_sprites(self, first=0, last=143):
+        return max(len(r) for r, _ in self.line_sprites(first, last).values())
+
     # --- bots ---
     def run_bot(self, step, progress, frames, stuck_limit=240, on_stuck=None, done=None):
         """Play up to `frames` frames. Each frame: step(gb, f) presses/releases buttons, then one
