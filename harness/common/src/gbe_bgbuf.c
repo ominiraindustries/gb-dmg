@@ -22,6 +22,7 @@ void bgbuf_start(const uint8_t *src, uint8_t rows, uint8_t dst_row) {
 void bgbuf_draw_vram(void) {
     uint8_t n = bgbuf_rows_per;
     if (!bgbuf_rows_left) return;
+    if ((LCDC_REG & LCDCF_ON) && LY_REG < 144) return;   // VBlank already over: next frame
     if (n > bgbuf_rows_left) n = bgbuf_rows_left;
     bgbuf_copy_rows(bb_dst, bb_src, n);
     bb_dst += (uint16_t)n << 5;

@@ -47,6 +47,12 @@ and tests run with GBDK 4.5.0 (marked *tested*).
 - **One shot per frame for spawns that cost**: several emitters firing in the same frame (fans,
   turrets) stack into a peak; a per-frame token (`fire_busy`) with "retry next frame" is invisible.
 
+- **First `vsync()` after `DISPLAY_ON` can return at once** (a stale VBlank flag from before the LCD
+  was off): the first frame's VRAM copies then run outside VBlank. Call `vsync()` once at the end of
+  the LCD-off build (games/dungeon counted 1 `vram_late` at every boot).
+- **VRAM queues must check LY themselves**: after a long frame `vsync()` returns late; gbe_vq and
+  gbe_bgbuf now skip (and retry next frame) when LY < 144 or fewer than 2 lines of VBlank are left.
+
 ## Graphics
 - **With gbe_video, SCX/SCY/BGP/OBP0/OBP1 are written from shadows every VBlank**: a direct
   `SCY_REG = x` lasts one frame. The build stops on it (`gb.py check_sources`); set the shadow.

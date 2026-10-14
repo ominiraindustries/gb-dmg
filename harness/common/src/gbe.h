@@ -190,6 +190,7 @@ uint8_t view_cell(uint8_t x, uint8_t y);        // provided by the game (off the
 void view_compose(uint8_t x, uint8_t y, uint8_t f);      // asm core (gbe_view.s)
 void view_compose_c(uint8_t x, uint8_t y, uint8_t f);    // C reference
 void view_compose_bg(void);                     // background piece only (map margins)
+void view_mark_seen(uint8_t *seen);             // after view_compose: 16x16 bit map of seen cells
 void view_blit(const uint8_t *piece);           // asm
 void view_blit_c(const uint8_t *piece);         // C reference
 
@@ -216,8 +217,8 @@ extern uint8_t txt_font, txt_blank;
 uint8_t txt_char(char c);
 uint8_t txt_tiles(uint8_t *dst, const char *s, uint8_t n);       // pads with blanks
 void txt_u16(uint8_t *dst, uint16_t v, uint8_t width, uint8_t zero_pad);
-extern uint8_t log_lines[4][20], log_pending, log_typing, log_speed;
-void log_init(uint8_t *dst);                    // 4 lines of 20 at dst (rows 32 apart)
+extern uint8_t log_lines[4][20], log_pending, log_typing, log_speed, log_w;
+void log_init(uint8_t *dst, uint8_t width);     // 4 lines of width (<= 20) at dst (rows 32 apart)
 void log_push(const char *s);                   // <= 20 chars, up to 4 waiting
 void log_update(void);                          // per frame (outside VBlank)
 

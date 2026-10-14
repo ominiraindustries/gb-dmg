@@ -184,3 +184,12 @@ always also run a bot through the real level.
 | `strncpy` | ~290 T per byte | C. Write a 3-line loop |
 | `set_bkg_tiles` | ~520 T per tile, waits for STAT | VBlank / LCD off only; prefer direct writes or gbe_vq |
 
+## Measured in games/dungeon (grid crawler, M1b)
+| Pattern | Cost | Better |
+|---|---|---|
+| "Is there a monster / item at (x, y)?" scanning lists of 12 / 24 | ~1.2k T per lookup, ~9k T per frame in sprites + AI | occupancy maps `mon_map[256]`, `item_map[256]` (index + 1), updated on move / death / pickup |
+| Seen-cell marking with `d * dx` multiplies + C walkable calls | ~60k T | reuse the classes the view already computed + offset tables (gbe `view_mark_seen`, ~8k) |
+| HUD digits with `/ 10` and `% 10` | ~14k T for one row | subtract-10 loop, tiles written directly (~3.7k) |
+| A step frame doing everything (compose + AI + sprites + seen + HUD) | > 1 frame | compose alone on that frame; seen cells next frame; sprites not rebuilt (the old view is still shown); AI on alternate halves with timers -2 |
+| `uint8_t` timer compared with 300 | never fires | SDCC warning 94 is now a build error (gb.py) |
+

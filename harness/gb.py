@@ -119,6 +119,9 @@ def check_warnings(output):
         f = m.group(3)
         hint = f" -> #include <{KNOWN_HEADERS[f]}>" if f in KNOWN_HEADERS else " (missing prototype/#include)"
         problems.append(f"{Path(m.group(1)).name}:{m.group(2)}: {f}() not declared{hint}")
+    for m in re.finditer(r"(\S+):(\d+): warning 94: comparison is always (true|false)", output):
+        problems.append(f"{Path(m.group(1)).name}:{m.group(2)}: comparison always {m.group(3)} - a variable "
+                        "too small for the constant (dungeon: uint8_t timer compared with 300 never fired)")
     for m in re.finditer(r"(\S+):(\d+): warning 84: 'auto' variable '(\w+)' may be used before", output):
         problems.append(f"{Path(m.group(1)).name}:{m.group(2)}: '{m.group(3)}' - if it is a function, "
                         "move its prototype to file scope (SDCC treats block-scope prototypes as variables)")

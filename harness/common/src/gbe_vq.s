@@ -16,6 +16,15 @@ _vq_draw_vram::
     ret z
     ld  (vq_left), a
 1$:
+    ldh a, (0x40)               ; LCD on and VBlank over (LY < 144): stop, the rest goes next
+    bit 7, a                    ; frame (after a long frame vsync() can return late: a write in
+    jr  z, 11$                  ; mode 3 is lost silently, games/dungeon)
+    ldh a, (0x44)
+    cp  a, #144
+    ret c
+    cp  a, #152                 ; < 2 lines (~900 T) of VBlank left: an entry (<= ~500 T) could
+    ret nc                      ; spill into line 0
+11$:
     ld  a, (_vq_rd)
     ld  b, a
     ld  a, (_vq_wr)

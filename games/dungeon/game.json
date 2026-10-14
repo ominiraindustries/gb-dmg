@@ -40,7 +40,15 @@
     "spr",
     "ui",
     "uiscreens",
-    "floor1"
+    "floor1",
+    "screen_title",
+    "screen_play",
+    "screen_pause",
+    "screen_objetos",
+    "screen_estado",
+    "screen_mapa",
+    "screen_gameover",
+    "screen_clear"
   ],
   "levels": {
     "order": "grid",
@@ -65,5 +73,15 @@
       "h": "OBJ_AMULET",
       "l": "OBJ_KEY"
     }
-  }
+  },
+  "screens": [
+    "title",
+    "play",
+    "pause",
+    "objetos",
+    "estado",
+    "mapa",
+    "gameover",
+    "clear"
+  ]
 }

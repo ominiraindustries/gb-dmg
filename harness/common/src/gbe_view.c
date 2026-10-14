@@ -128,3 +128,35 @@ void view_compose_bg(void) {
     if (view_bank) SWITCH_ROM(saved);
     view_copy240(view_bg, view_buf);
 }
+
+// ---------------------------------------------------------------- seen cells (automap)
+// After view_compose(x, y, f): mark the cells the player can see in a 16x16 bit map (2 bytes per
+// row, bit 7 = x 0). (d, l) is seen if every center (k, 0), 1 <= k < d, is free and, for |l| = 2,
+// (d, +-1) is free; the hero's cell and (0, +-1) always. Uses the classes view_compose already
+// computed (view_cls) and the offset tables: the C version with multiplies cost ~60k T.
+// Slots (view_lay_* order): d3 l=-2..2 = 0..4; d2: (-2) 5, (-1) 9, (0) 10, (1) 11, (2) 8;
+// d1: (-1) 14, (0) 15, (1) 16; d0: (-1) 17, (1) 18.
+static const uint8_t bit_of[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+
+static void seen_bit(uint8_t *seen, uint8_t x, uint8_t y) {
+    if ((x | y) & 0xF0) return;
+    seen[(y << 1) | (x >> 3)] |= bit_of[x & 7];       // a variable shift is a loop in SDCC
+}
+
+#define SEE(slot) seen_bit(seen, vc_x + ox[slot], vc_y + oy[slot])
+
+void view_mark_seen(uint8_t *seen) {
+    const int8_t *ox = view_lay_ox[vc_f], *oy = view_lay_oy[vc_f];
+    seen_bit(seen, vc_x, vc_y);
+    SEE(17); SEE(18);                                    // (0, -1), (0, 1)
+    SEE(14); SEE(15); SEE(16);                           // d1
+    if (view_cls[15]) return;                            // (1, 0) solid: nothing further
+    SEE(9); SEE(10); SEE(11);                            // d2 l -1..1
+    if (!view_cls[9]) SEE(5);                            // (2, -2) through a free (2, -1)
+    if (!view_cls[11]) SEE(8);
+    if (view_cls[10]) return;
+    SEE(1); SEE(2); SEE(3);                              // d3
+    if (!view_cls[1]) SEE(0);
+    if (!view_cls[3]) SEE(4);
+}
+
