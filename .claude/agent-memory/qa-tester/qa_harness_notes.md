@@ -15,6 +15,10 @@ metadata:
   until the next `frames()`. Use `gb._write(addr, v)` (wrapped as `poke()` in test_qa.py).
 - `load_state()` leaves the snapshot stale too: always `frames()` before reading.
 - Savestates (`gb.pyboy.save_state(io.BytesIO())`) make brute-force searches cheap (~40 trials/s).
+- Per-frame breakdown of the worst frame: diff `Profiler.stats[f]["total"]` after every
+  `frames(1)` and keep the frame with the highest `frame_lines` (report() only gives per-call max).
+- A blank HUD row in a shmup screenshot can be a blinking message in its hidden phase (PELIGRO
+  30/30 f), not a bug: check `hud_msg` before reporting.
 - The profiler `_bank()` assumes no banking; fine while code is flat in 0x0000-0x7FFF.
 
 Related: [[platformer-bug-patterns]]

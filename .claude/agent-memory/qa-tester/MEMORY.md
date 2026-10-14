@@ -13,6 +13,9 @@
 - [Platformer patterns](platformer_bug_patterns.md) - u8 y wrap above top = pit death, GDD jump
   height vs level, stuck bots, 5-actor CPU budget, contact re-trigger, cutscenes without physics.
 
+- [Shmup patterns](shmup_bug_patterns.md) - u8 timers on >255 f screens, pause eats HUD message,
+  `t&7` gates vs parity-split work, rotate-by-1 flicker, one-frame bomb bursts, lint lifetimes.
+
 ## Harness notes
 - PyBoy tick returns at LY 0, possibly mid-update(); allow ±1 frame or require a condition for
   2 consecutive frames.
