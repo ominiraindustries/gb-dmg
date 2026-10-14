@@ -12,7 +12,7 @@ fin:
   choice "Uno" "Dos" "Tres" "Cuatro"
   vans V_ELEGIDO
   if flag F_DADO goto ya
-  give 7 2
+  give ITEM_FAROL 2
   spin 30
   set F_DADO
 ya:

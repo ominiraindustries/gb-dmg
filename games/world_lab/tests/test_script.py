@@ -77,7 +77,7 @@ def test_conversation_no_branch_and_game_ops(gb):
     gb.frames(40)
     assert gb.u8("script_active") == 0 and gb.u8("tbox_visible") == 0
     assert gb.bytes("vars", 1)[0] == 3
-    assert gb.u8("given_item") == 7 and gb.u8("given_count") == 2
+    assert gb.u8("given_item") == 3 and gb.u8("given_count") == 2
     f = gb.bytes("flags", 1)[0]
     assert f & (1 << F_DADO) and not f & (1 << F_LE_GUSTA)
     assert gb.u8("vram_late") == 0 and gb.u8("vq_lost") == 0
@@ -108,3 +108,17 @@ def test_a_mid_page_finishes_it_quickly(gb):
     gb.tap("a")
     gb.frames(6)
     assert gb.u8("tbox_state") == TB_PAGE
+
+
+def test_table_ids_and_rom_rows(gb):
+    import tables
+    t = tables.load_all(GAME / "res" / "data")["items"]
+    assert t.ids["FAROL"] == 3 and t["FAROL"]["better"] == t.ids["MACHETE"]
+    assert t["FAROL"]["ability"] == 0b110 and t["CARNE"]["perece"] == 1
+    # the ROM table: tbl_items rows of 15 + 1 + 2 + 1 + 1 + 1 = 21 bytes
+    bank, addr = gb.syms["tbl_items"] >> 16, gb.syms["tbl_items"] & 0xFFFF      # .noi: bank << 16 | address
+    for i, r in enumerate(t.rows):
+        row = [gb.pyboy.memory[bank, addr + i * 21 + k] for k in range(21)]
+        assert bytes(row[:15]).rstrip(b"\0").decode("latin-1") == r["name"]
+        assert row[15] == r["cat"] and row[16] | (row[17] << 8) == r["price"]
+        assert row[18:21] == [r["ability"], r["perece"], 0xFF if r["better"] is None else r["better"]]

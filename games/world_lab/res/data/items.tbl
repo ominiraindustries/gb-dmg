@@ -1,0 +1,14 @@
+; world_lab test table
+@ table items
+@ prefix ITEM
+@ col name    text 14
+@ col cat     enum FOOD TOOL KEY
+@ col price   u16
+@ col ability flags CUT LIGHT FISH
+@ col perece  bool
+@ col better  ref items
+PAN      "Pan"           FOOD   10  -          no   -
+POCION   "Pocion"        FOOD   40  -          no   PAN
+MACHETE  "Machete"       KEY     0  CUT        no   -
+FAROL    "Farol de mano" KEY   300  LIGHT+FISH no   MACHETE
+CARNE    "Carne"         FOOD    6  -          yes  -

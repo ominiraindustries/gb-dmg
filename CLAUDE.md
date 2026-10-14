@@ -32,6 +32,9 @@ el profiling lo justifica y con una prueba de equivalencia contra la versión C.
     `"order": "rows"` + capa de objetos al lado de la rejilla (games/shmup/res/stage1.lvl).
   - `res/maps/*.map`: mundos con scroll en 4 direcciones (sectores de 16x16 casillas, `harness/world.py`)
     para `gbe_world`; banco de pruebas `games/world_lab` (pantalla == modelo en cada frame).
+  - `res/data/*.tbl`: tablas de datos (columnas con tipo: texto, enum, flags, ref a otra tabla) →
+    `tbl_<nombre>[]` en un banco + ids `<PREFIJO>_<ID>` para guiones y mapas (`harness/tables.py`, con
+    cargador Python para tests y bots). Los números de equilibrio van ahí, no en C.
   - `res/scripts/*.evs`: guiones y diálogos (`harness/script.py`: texto partido en líneas/páginas al compilar,
     lint de banderas/etiquetas/longitudes) para `gbe_script` + `gbe_tbox`.
   - `res/metatiles.mt`: tabla de metatiles como datos (nombre, 4 tiles, atributos) → `build/gen/metatiles.c/.h`

@@ -272,10 +272,19 @@ def build(name):
             sources.append(fpview.to_c(fpview.parse(pcs_file, tileset_labels(gdir, pcs_file), bases), gen))
         except ValueError as e:
             die(str(e))
+    table_syms = {}
+    if (gdir / "res" / "data").is_dir():                                 # data tables (tables.py)
+        import tables
+        try:
+            outs, tbls = tables.convert(gdir / "res" / "data", gen)
+        except ValueError as e:
+            die(str(e))
+        sources += outs
+        table_syms = tables.symbols(tbls)
     if (gdir / "res" / "scripts").is_dir():                              # event scripts (script.py)
         import script
         try:
-            sources += script.convert(gdir / "res" / "scripts", gen)
+            sources += script.convert(gdir / "res" / "scripts", gen, table_syms)
         except ValueError as e:
             die(str(e))
     for map_file in sorted((gdir / "res" / "maps").glob("*.map")):      # 4-way world maps (world.py)

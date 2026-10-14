@@ -1,3 +1,3 @@
 ; world_lab game ops
-give u8 u8      ; item count
+give sym u8     ; item count
 spin u8         ; turn the NPC for n frames (takes time)
