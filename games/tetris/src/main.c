@@ -83,8 +83,7 @@ const uint8_t clear_points[4][3] = {
     {0x40, 0x00, 0x00}, {0x00, 0x01, 0x00}, {0x00, 0x03, 0x00}, {0x00, 0x12, 0x00}
 };
 
-// Asm packed BCD add with daa (src/bcd.s): dst += src, saturates at 999999
-void bcd_add3(uint8_t *dst, const uint8_t *src);
+#include "bcd.h"                    // bcd_add3: shared asm packed BCD add (harness/common/src)
 
 const uint8_t blank_row[WELL_W] = { 0 };   // BG_BLANK
 

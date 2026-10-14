@@ -1,4 +1,4 @@
-; Packed BCD score arithmetic (2 digits per byte, little-endian: byte 0 = lowest digits).
+; Shared (harness/common/src). Packed BCD score arithmetic (2 digits per byte, little-endian: byte 0 = lowest digits).
 ;
 ; void bcd_add3(uint8_t *dst, const uint8_t *src)
 ;   dst in DE, src in BC (__sdcccall(1)). dst += src, saturating at 999999. Clobbers AF HL DE.

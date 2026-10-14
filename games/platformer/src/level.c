@@ -15,6 +15,8 @@ uint8_t col_buf[16];
 uint8_t *col_dst;
 uint8_t col_pending;
 
+extern uint8_t blk_count;                     // metatile redraw queue (below)
+
 #define CAMERA_LEAD   64                      // player stays <= 64 px from the left edge
 #define STREAM_AHEAD  21                      // visible tile columns are cam_tile .. cam_tile + 20
 
@@ -65,6 +67,7 @@ void level_load(void) {
     }
     cols_written = STREAM_AHEAD + 1;
     col_pending = 0;
+    blk_count = 0;
     // BG rows 30-31 show behind the window HUD (SCY = 0xF0): keep them blank
     memset((uint8_t *)(0x9800u + 30 * 32), BG_BLANK, 64);
 }
@@ -83,9 +86,38 @@ void level_update_camera(void) {
     }
 }
 
+// Metatile redraw queue: changed blocks already on screen (GDD §2.5). Addresses and tiles are
+// prepared here; the VBlank only copies 4 tiles per entry.
+#define BLK_QUEUE 4
+uint8_t *blk_dst[BLK_QUEUE];
+uint8_t blk_tiles[BLK_QUEUE][4];
+uint8_t blk_count;
+
+void block_set(uint8_t col, uint8_t row, uint8_t mt) {
+    uint16_t tc = (uint16_t)col << 1;
+    const uint8_t *t = mt_tiles[mt];
+    uint8_t *q;
+    level[(tc << 2) | row] = mt;
+    // In VRAM only if both tile columns were streamed and are still in the 32-column ring;
+    // otherwise streaming will read the new value from level[] later.
+    if (tc + 1 >= cols_written || tc + 32 < cols_written) return;
+    if (blk_count == BLK_QUEUE) return;              // at most 4 blocks change per frame
+    blk_dst[blk_count] = (uint8_t *)(0x9800u + ((uint16_t)row << 6) + (tc & 31));
+    q = blk_tiles[blk_count];
+    q[0] = t[0]; q[1] = t[1]; q[2] = t[2]; q[3] = t[3];
+    blk_count++;
+}
+
 void level_draw_vram(void) {
+    uint8_t i, *d, *q;
     if (col_pending) {
         vram_col16(col_dst, col_buf);
         col_pending = 0;
     }
+    for (i = 0; i < blk_count; i++) {
+        d = blk_dst[i];
+        q = blk_tiles[i];
+        d[0] = q[0]; d[1] = q[1]; d[32] = q[2]; d[33] = q[3];
+    }
+    blk_count = 0;
 }

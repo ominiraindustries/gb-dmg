@@ -124,6 +124,11 @@ def build(name):
     gdir = game_dir(name)
     cfg = load_config(gdir)
     sources = sorted((gdir / "src").rglob("*.c")) + sorted((gdir / "src").rglob("*.s"))
+    common_src = ROOT / "harness" / "common" / "src"
+    for name in cfg.get("common_src", []):
+        if not (common_src / name).exists():
+            die(f"common_src '{name}' not found in {common_src}")
+        sources.append(common_src / name)
     if not sources:
         die(f"no sources in {gdir / 'src'}")
     out = rom_path(gdir)
@@ -144,6 +149,7 @@ def build(name):
         str(LCC),
         f"-I{gen}",  # generated asset headers
         f"-I{gdir / 'src'}",  # game headers, also for generated level files
+        f"-I{common_src}",  # shared code headers (harness/common/src)
         "-Wl-m",  # .map file (memory usage)
         "-Wl-j",  # .noi file (symbols, used by tests)
         "-Wm-yS",  # .sym file (symbols for Emulicious/BGB)

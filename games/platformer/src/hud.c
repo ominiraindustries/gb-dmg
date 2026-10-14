@@ -61,6 +61,33 @@ void hud_set_time(uint16_t units) {
     hud_dirty |= HUD_TIME;
 }
 
+// Points as packed BCD, little-endian (GDD §2.10)
+const uint8_t PTS_50[3]   = { 0x50, 0x00, 0x00 };
+const uint8_t PTS_100[3]  = { 0x00, 0x01, 0x00 };
+const uint8_t PTS_200[3]  = { 0x00, 0x02, 0x00 };
+const uint8_t PTS_400[3]  = { 0x00, 0x04, 0x00 };
+const uint8_t PTS_1000[3] = { 0x00, 0x10, 0x00 };
+
+void add_score(const uint8_t *bcd) {
+    bcd_add3(score, bcd);
+    hud_set_score();
+}
+
+void add_life(void) {
+    if (lives < 99) lives++;
+    hud_set_lives();
+    sfx(SFX_ONEUP);
+}
+
+void add_coin(void) {
+    sfx(SFX_COIN);
+    if (++coins == 100) {               // 100 coins = extra life
+        coins = 0;
+        add_life();
+    }
+    hud_set_coins();
+}
+
 static void copy(uint8_t *dst, const uint8_t *src, uint8_t n) {
     do *dst++ = *src++; while (--n);
 }

@@ -1,4 +1,4 @@
-// Teo: movement, jump and map collision (GDD §2.1, §2.2, §2.3, §2.6)
+// Teo: movement, jump, forms and map collision (GDD §2.1, §2.2, §2.3, §2.4, §2.6)
 #include "game.h"
 
 // GDD §2.1 / §2.2 - all "ajustar en playtest"
@@ -6,6 +6,7 @@
 #define RUN_MAX         0x0200
 #define ACCEL           0x0020
 #define DECEL           0x0030
+#define CROUCH_DECEL    0x0020
 #define SKID_DECEL      0x0060
 #define AIR_ACCEL       0x0018
 #define JUMP_V          (-0x0380)
@@ -17,29 +18,40 @@
 #define COYOTE_FRAMES   5
 #define BUFFER_FRAMES   5
 #define CORNER_PUSH     4
+// GDD §2.3 / §2.4
+#define GROW_FRAMES     48
+#define SHOT_FRAMES     32
+#define INV_FRAMES      90
+#define SHOT_COOLDOWN   8
+#define THROW_FRAMES    8
 
-#define HB_X 3                  // hitbox x offset and width (all forms)
-#define HB_W 10
+enum { FREEZE_NONE, FREEZE_GROW, FREEZE_SHOT, FREEZE_SHRINK, FREEZE_UNSHOT };
 
-enum { FORM_SMALL, FORM_BIG, FORM_SHOT };
-
-uint16_t player_x;              // box top-left, world px
+uint16_t player_x;              // box top-left, world px (box is 16x16 small, 16x32 big)
 uint8_t player_xs;              // x sub-pixel
 uint8_t player_y, player_ys;    // y with Y_BIAS, sub-pixel
 int16_t player_vx, player_vy;   // 8.8 px/frame
 int16_t player_air_max;
 uint8_t player_form, player_on_ground, player_facing;   // facing: 0 right, 1 left
-uint8_t player_coyote, player_jump_buf, player_jump_hold, player_skid;
-uint8_t player_anim, player_frame;
-uint8_t player_dead;            // set when falling into a pit (main.c handles it)
-uint8_t hb_y, hb_h;             // hitbox y offset and height for the current form
+uint8_t player_coyote, player_jump_buf, player_jump_hold, player_skid, player_crouch;
+uint8_t player_anim, player_frame, player_frame_bot;
+uint8_t player_freeze, player_freeze_kind, player_inv;
+uint8_t player_shot_cd, player_throw;
+uint8_t player_dead;            // 1 = fell in a pit, 2 = killed (main.c handles it)
+uint8_t hb_y, hb_h;             // hitbox y offset and height for the current form/pose
 
 static int16_t abs16(int16_t v) { return v < 0 ? -v : v; }
 
-void player_set_form(uint8_t f) {
-    player_form = f;
-    if (f == FORM_SMALL) { hb_y = 2; hb_h = 14; }
+static void set_hitbox(void) {
+    if (player_form == FORM_SMALL) { hb_y = 2; hb_h = 14; }
+    else if (player_crouch) { hb_y = 18; hb_h = 14; }
     else { hb_y = 4; hb_h = 28; }
+}
+
+static void set_form(uint8_t f) {
+    player_form = f;
+    player_crouch = 0;
+    set_hitbox();
 }
 
 void player_spawn(uint16_t x, uint8_t y) {
@@ -50,9 +62,56 @@ void player_spawn(uint16_t x, uint8_t y) {
     player_facing = 0;
     player_on_ground = 0;
     player_coyote = player_jump_buf = player_jump_hold = 0;
+    player_freeze = player_inv = player_shot_cd = player_throw = 0;
     player_dead = 0;
-    player_set_form(FORM_SMALL);
+    set_form(FORM_SMALL);
 }
+
+// ---------------------------------------------------------------- power-ups and damage
+
+static void grow(void) {
+    set_form(FORM_BIG);
+    player_y -= 16;                                 // same feet, taller box
+    player_freeze = GROW_FRAMES;
+    player_freeze_kind = FREEZE_GROW;
+}
+
+void player_power_up(uint8_t item) {
+    sfx(SFX_POWER_GET);
+    if (item == T_ITEM_1UP) {
+        add_life();
+        return;
+    }
+    add_score(PTS_1000);
+    if (player_form == FORM_SMALL) {
+        grow();                                     // GROW or SHOT item: small -> big
+    } else if (item == T_ITEM_SHOT && player_form == FORM_BIG) {
+        set_form(FORM_SHOT);
+        player_freeze = SHOT_FRAMES;
+        player_freeze_kind = FREEZE_SHOT;
+    }
+}
+
+void player_hurt(void) {
+    if (player_inv || player_freeze || (cheat_flags & CHEAT_INVINCIBLE)) return;
+    sfx(SFX_HURT);
+    if (player_form == FORM_SHOT) {                 // decided: SHOT -> BIG (GDD §12)
+        set_form(FORM_BIG);
+        player_freeze = SHOT_FRAMES;
+        player_freeze_kind = FREEZE_UNSHOT;
+    } else if (player_form == FORM_BIG) {
+        set_form(FORM_SMALL);
+        player_y += 16;
+        player_freeze = GROW_FRAMES;
+        player_freeze_kind = FREEZE_SHRINK;
+    } else {
+        player_dead = 2;
+        return;
+    }
+    player_inv = INV_FRAMES;
+}
+
+// ---------------------------------------------------------------- movement
 
 // Speed above the limit decays by DECEL (e.g. releasing B while running) instead of snapping
 static int16_t limit(int16_t v, int16_t max) {
@@ -65,11 +124,14 @@ static void horizontal_input(void) {
     uint8_t dir = keys & (J_LEFT | J_RIGHT);
     int16_t vx = player_vx, max = (keys & J_B) ? RUN_MAX : WALK_MAX;
     player_skid = 0;
-    if (player_on_ground) {
+    if (player_on_ground && player_crouch) {        // slides to a stop, cannot accelerate
+        if (vx > 0) vx = (vx > CROUCH_DECEL) ? vx - CROUCH_DECEL : 0;
+        else if (vx < 0) vx = (vx < -CROUCH_DECEL) ? vx + CROUCH_DECEL : 0;
+    } else if (player_on_ground) {
         if (dir == J_RIGHT) {
             player_facing = 0;
             if (vx < 0) { vx += SKID_DECEL; player_skid = 1; if (vx > 0) vx = 0; }
-            else if (vx < max) vx += ACCEL;      // above max (B released): only decay, below
+            else if (vx < max) vx += ACCEL;          // above max (B released): only decay, below
         } else if (dir == J_LEFT) {
             player_facing = 1;
             if (vx > 0) { vx -= SKID_DECEL; player_skid = 1; if (vx < 0) vx = 0; }
@@ -101,8 +163,26 @@ static void jump_input(void) {
         player_jump_buf = player_coyote = 0;
         player_on_ground = 0;
         set_air_max();
+        sfx(player_form == FORM_SMALL ? SFX_JUMP_SMALL : SFX_JUMP_BIG);
     }
     if (!(keys & J_A)) player_jump_hold = 0;
+}
+
+static void crouch_and_shoot(void) {
+    uint8_t c = player_form != FORM_SMALL && player_on_ground && (keys & J_DOWN);
+    if (c != player_crouch) {
+        player_crouch = c;
+        set_hitbox();
+    }
+    if (player_shot_cd) player_shot_cd--;
+    if (player_throw) player_throw--;
+    if (player_form == FORM_SHOT && (pressed & J_B) && !player_shot_cd && !player_crouch) {
+        if (spawn_shot(player_facing ? player_x - 4 : player_x + 12, player_y + 8, player_facing)) {
+            player_shot_cd = SHOT_COOLDOWN;
+            player_throw = THROW_FRAMES;
+            sfx(SFX_SHOOT);
+        }
+    }
 }
 
 static void move_x(void) {
@@ -140,9 +220,15 @@ static void move_x(void) {
     }
 }
 
+// Solid for the head: normal solids plus the hidden 1UP block (only solid from below)
+static uint8_t head_solid(uint16_t x, uint8_t y) {
+    uint8_t a = mt_attr[mt_at(x, y)];
+    return (a & ATTR_SOLID) || (a & CLS_MASK) == CLS_HIDDEN_1UP;
+}
+
 static void move_y(void) {
     uint16_t t = (uint16_t)player_ys + (uint8_t)player_vy;
-    uint16_t l = player_x + HB_X + 1, r = player_x + HB_X + HB_W - 2;
+    uint16_t l = player_x + HB_X + 1, r = player_x + HB_X + HB_W - 2, cx;
     uint8_t top, bottom, ls, rs, edge;
     player_ys = (uint8_t)t;
     player_y += (int8_t)(player_vy >> 8) + (t >> 8);
@@ -150,8 +236,8 @@ static void move_y(void) {
     bottom = top + hb_h - 1;
 
     if (player_vy < 0) {
-        ls = solid_at(l, top);
-        rs = solid_at(r, top);
+        ls = head_solid(l, top);
+        rs = head_solid(r, top);
         if (ls && !rs) {                         // corner correction: slide right past the block
             edge = 16 - (uint8_t)((player_x + HB_X) & 15);
             if (edge <= CORNER_PUSH) { player_x += edge; ls = 0; }
@@ -159,7 +245,10 @@ static void move_y(void) {
             edge = (uint8_t)((player_x + HB_X + HB_W) & 15);
             if (edge <= CORNER_PUSH) { player_x -= edge; rs = 0; }
         }
-        if (ls || rs) {                          // head bump
+        if (ls || rs) {                          // head bump: hit the block above the centre
+            cx = player_x + 8;
+            if (!head_solid(cx, top)) cx = ls ? l : r;
+            if (top >= Y_BIAS) block_hit(cx >> 4, (uint8_t)(top - Y_BIAS) >> 4);
             player_y = (((top - Y_BIAS) & 0xF0) + 16 + Y_BIAS) - hb_y;
             player_ys = 0;
             player_vy = 0;
@@ -183,21 +272,51 @@ static void move_y(void) {
     }
 }
 
-static void animate(void) {
-    static const uint8_t walk_cycle[4] = {
-        SPR_TEO_SMALL_WALK1, SPR_TEO_SMALL_IDLE, SPR_TEO_SMALL_WALK2, SPR_TEO_SMALL_IDLE };
-    if (!player_on_ground) player_frame = SPR_TEO_SMALL_JUMP;
-    else if (player_skid) player_frame = SPR_TEO_SMALL_SKID;
-    else if (player_vx) {
-        player_anim += abs16(player_vx) > WALK_MAX ? 2 : 1;
-        player_frame = walk_cycle[(player_anim >> 3) & 3];
-    } else {
-        player_anim = 0;
-        player_frame = SPR_TEO_SMALL_IDLE;
+// Stuck inside blocks after growing / standing up under a low ceiling: push 1 px/f (GDD §2.3)
+static void unstick(void) {
+    uint16_t l = player_x + HB_X, r = l + HB_W - 1;
+    uint8_t t = player_y + hb_y + 1;
+    if (player_form == FORM_SMALL) return;
+    if (solid_at(l, t) || solid_at(r, t) || solid_at(l, t + 14) || solid_at(r, t + 14)) {
+        if (player_facing) player_x--; else player_x++;
     }
 }
 
+static void animate(void) {
+    static const uint8_t walk_small[4] = {
+        SPR_TEO_SMALL_WALK1, SPR_TEO_SMALL_IDLE, SPR_TEO_SMALL_WALK2, SPR_TEO_SMALL_IDLE };
+    static const uint8_t walk_big[4] = {
+        SPR_TEO_BIG_BOT_WALK1, SPR_TEO_BIG_BOT_IDLE, SPR_TEO_BIG_BOT_WALK2, SPR_TEO_BIG_BOT_IDLE };
+    uint8_t k = 0;
+    if (player_on_ground && !player_skid && player_vx) {
+        player_anim += abs16(player_vx) > WALK_MAX ? 2 : 1;
+        k = (player_anim >> 3) & 3;
+    } else if (player_on_ground && !player_vx) {
+        player_anim = 0;
+    }
+    if (player_form == FORM_SMALL) {
+        if (!player_on_ground) player_frame = SPR_TEO_SMALL_JUMP;
+        else if (player_skid) player_frame = SPR_TEO_SMALL_SKID;
+        else player_frame = player_vx ? walk_small[k] : SPR_TEO_SMALL_IDLE;
+        return;
+    }
+    if (!player_on_ground) {
+        player_frame = SPR_TEO_BIG_TOP_JUMP; player_frame_bot = SPR_TEO_BIG_BOT_JUMP;
+    } else if (player_skid) {
+        player_frame = SPR_TEO_BIG_TOP_SKID; player_frame_bot = SPR_TEO_BIG_BOT_SKID;
+    } else {
+        player_frame = SPR_TEO_BIG_TOP;
+        player_frame_bot = player_vx ? walk_big[k] : SPR_TEO_BIG_BOT_IDLE;
+    }
+    if (player_throw) player_frame = SPR_TEO_BIG_TOP_THROW;
+}
+
 void player_update(void) {
+    if (player_freeze) {                         // power-up / damage animation: logic frozen
+        player_freeze--;
+        return;
+    }
+    if (player_inv) player_inv--;
     horizontal_input();
     jump_input();
     // gravity: low while rising with A held (variable jump height)
@@ -205,23 +324,53 @@ void player_update(void) {
     if (player_vy > FALL_MAX) player_vy = FALL_MAX;
     move_x();
     move_y();
+    crouch_and_shoot();
+    unstick();
+    collect_coins();
     if (player_on_ground) player_coyote = COYOTE_FRAMES;
     else if (player_coyote) player_coyote--;
-    if ((uint8_t)(player_y + hb_y) >= PIT_Y) player_dead = 1;
+    if ((uint8_t)(player_y + hb_y) >= PIT_Y && player_y < 0xF0) player_dead = 1;
     animate();
 }
 
-// Sprites 0-1 (SMALL). OAM y == world y; OAM x = screen x + 8.
+// ---------------------------------------------------------------- drawing (sprites 0-3)
+
+static void draw16(uint8_t s, uint8_t tile, uint8_t ox, uint8_t y, uint8_t prop) {
+    if (player_facing) {
+        set_sprite_tile(s, tile + 2); set_sprite_tile(s + 1, tile);
+        prop |= S_FLIPX;
+    } else {
+        set_sprite_tile(s, tile); set_sprite_tile(s + 1, tile + 2);
+    }
+    set_sprite_prop(s, prop); set_sprite_prop(s + 1, prop);
+    move_sprite(s, ox, y);
+    move_sprite(s + 1, ox + 8, y);
+}
+
 void player_draw(void) {
     uint8_t ox = (uint8_t)(player_x - camera_x) + 8;
-    uint8_t t = player_frame;
-    if (player_facing) {
-        set_sprite_tile(0, t + 2); set_sprite_prop(0, S_FLIPX);
-        set_sprite_tile(1, t);     set_sprite_prop(1, S_FLIPX);
-    } else {
-        set_sprite_tile(0, t);     set_sprite_prop(0, 0);
-        set_sprite_tile(1, t + 2); set_sprite_prop(1, 0);
+    uint8_t pal = player_form == FORM_SHOT ? S_PALETTE : 0;
+    uint8_t big = player_form != FORM_SMALL, f = player_freeze;
+
+    // Freeze animations alternate looks every 4 frames; invulnerability blinks 2 on / 2 off
+    if (f && (f & 4)) {
+        if (player_freeze_kind == FREEZE_GROW || player_freeze_kind == FREEZE_SHRINK) big = !big;
+        else pal ^= S_PALETTE;
     }
-    move_sprite(0, ox, player_y);
-    move_sprite(1, ox + 8, player_y);
+    if (player_inv && !f && (player_inv & 2)) {
+        hide_sprites_range(0, 4);
+        return;
+    }
+    if (!big) {
+        uint8_t y = player_form == FORM_SMALL ? player_y : player_y + 16;
+        draw16(0, player_form == FORM_SMALL ? player_frame : SPR_TEO_SMALL_IDLE, ox, y, pal);
+        hide_sprite(2); hide_sprite(3);
+    } else if (player_crouch) {
+        draw16(0, SPR_TEO_BIG_CROUCH, ox, player_y + 16, pal);
+        hide_sprite(2); hide_sprite(3);
+    } else {
+        uint8_t y = player_form == FORM_SMALL ? player_y - 16 : player_y;
+        draw16(0, big && player_form != FORM_SMALL ? player_frame : SPR_TEO_BIG_TOP, ox, y, pal);
+        draw16(2, big && player_form != FORM_SMALL ? player_frame_bot : SPR_TEO_BIG_BOT_IDLE, ox, y + 16, pal);
+    }
 }

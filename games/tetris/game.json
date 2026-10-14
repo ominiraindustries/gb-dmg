@@ -1,5 +1,10 @@
 {
   "title": "BLOCKS",
-  "common_res": ["font"],
-  "lcc_flags": []
+  "common_res": [
+    "font"
+  ],
+  "lcc_flags": [],
+  "common_src": [
+    "bcd.s"
+  ]
 }

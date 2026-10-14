@@ -9,14 +9,10 @@ uint8_t cheat_flags;
 uint8_t hud_cut;                // 1: the LYC ISR cuts the window at line 15 (HUD on top)
 uint8_t time_tick;
 
-extern uint8_t coins, lives, world, stage;
-extern uint16_t time_units;
 extern uint8_t player_dead;
-void hud_set_time(uint16_t units);
 
 #define TIME_START 300
 #define FRAMES_PER_TIME_UNIT 24
-#define CHEAT_NO_TIMER 2
 
 // Line 15 (LYC): wait for HBlank, then window off and sprites on in a single write (ui.md §2)
 void lcd_isr(void) {
@@ -43,6 +39,7 @@ void start_level(void) {
     DISPLAY_OFF;
     hide_sprites_range(0, 40);
     level_load();
+    actors_clear();
     time_units = TIME_START;
     time_tick = 0;
     hud_init();
@@ -105,6 +102,7 @@ void init(void) {
         add_VBL(vbl_isr);
     }
     set_interrupts(VBL_IFLAG | LCD_IFLAG);
+    sound_init();
     world = 1;
     stage = 1;
     lives = 3;
@@ -122,12 +120,19 @@ void main(void) {
         keys = joypad();
         pressed = keys & ~prev_keys;
         if (state == STATE_PLAY) {
-            player_update();
-            level_update_camera();
-            update_timer();
-            if (player_dead) start_level();   // step 1: restart; DYING/lives come later
+            if (player_freeze) {
+                player_update();            // power-up / damage animation: everything else waits
+            } else {
+                player_update();
+                actors_update();
+                level_update_camera();
+                update_timer();
+            }
+            if (player_dead) start_level();   // DYING/lives come in step 3
         }
+        sound_update();
         player_draw();
+        actors_draw();
         measure_frame();
     }
 }
