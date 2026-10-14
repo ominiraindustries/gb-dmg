@@ -57,7 +57,7 @@ void play_update(void) {
     if (no_fire) no_fire--;
     player_update();
     if (cheat_flags & CHEAT_STRESS) stress_spawn();
-    else objects_update();
+    else if (!(cheat_flags & (CHEAT_NO_LEVEL | CHEAT_FREEZE))) objects_update();
     if (!(cheat_flags & CHEAT_FREEZE)) {
         enemies_update();
         turrets_update();

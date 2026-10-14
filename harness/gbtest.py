@@ -109,6 +109,12 @@ class GB:
         self._write(a, value & 0xFF)
         self._write(a + 1, (value >> 8) & 0xFF)
 
+    def write_bytes(self, name, values, offset=0):
+        """Write consecutive bytes at a global + offset (e.g. a pool record: offset = i * 16)."""
+        a = self.addr(name) + offset
+        for i, v in enumerate(values):
+            self._write(a + i, v & 0xFF)
+
     def bytes(self, name, n):
         a = self.addr(name)
         return [self._read(a + i) for i in range(n)]

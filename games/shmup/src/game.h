@@ -61,6 +61,7 @@ enum { PS_NORMAL, PS_DYING, PS_RESPAWN, PS_BOSS_INTRO, PS_BOSS, PS_BOSS_DEAD, PS
 #define CHEAT_FREEZE     0x04   // objects frozen, only OAM rebuilt
 #define CHEAT_SCROLL     0x08   // scroll speed forced to cheat_scroll
 #define CHEAT_STRESS     0x10   // keep every pool full (frame budget measurement)
+#define CHEAT_NO_LEVEL   0x20   // level objects do not appear (isolated mechanic tests)
 
 #define SCROLL_SPEED 0x0080     // 0.5 px/f (GDD 2.9)
 
