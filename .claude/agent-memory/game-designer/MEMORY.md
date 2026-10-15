@@ -3,3 +3,4 @@
 - [Faro project](project_faro.md) — games/faro capture+survival RPG (GDD v1.1), protagonist Leo, M1b data in res/data/*.tbl, fixed ids
 - [Commercial scope](feedback_commercial_scope.md) — faro must be a real commercial product; decide theme/story myself, ask only expensive choices
 - [Dungeon project](project_dungeon.md) — games/dungeon first-person crawler (TORRE HUNDIDA, approved v1.0), double-buffered view, E1-E16 engine list incl. banking
+- [Mazmorra project](project_mazmorra.md) — games/mazmorra Zelda-like MADRIGUERA (GDD v0.1), gbe_world map per room, bombs, M1 = 3 rooms

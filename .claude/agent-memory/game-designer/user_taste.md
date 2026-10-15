@@ -21,6 +21,9 @@ the DMG (games/dungeon, 2026-10-14). There he **rejected my knight-world recomme
 picked TORRE HUNDIDA** (wizard's tower swallowed upside down) — so the knight world is not a default;
 he likes a fresh, quirky premise per game. Accepted all my technical/UX recommendations otherwise.
 
+Also asked for a Zelda-like (games/mazmorra, 2026-10-15) and said explicitly he does not want to be
+asked theme/tone/names/story/difficulty; finds the shared font too big/spaced (wants a compact one).
+
 **How to apply:** default to proven classic mechanics and numbers from the reference game; offer
 2-3 theme concepts including a fantasy/medieval one and an original twist (don't assume cute or the knight world); lean toward
 forgiving difficulty for GB sessions; write UI text in Spanish.
