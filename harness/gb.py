@@ -216,9 +216,22 @@ def tileset_labels(gdir, mt_file):
     die(f"{mt_file}: tileset '{ts}' not found")
 
 
+def stray_agent_memory():
+    """Subagents write their memory relative to their working directory: a '.claude' folder with files
+    under games/ or harness/ is memory saved in the wrong place (happened 3 times in faro/mazmorra/
+    happyvalley). The real place is .claude/agent-memory/<agent>/."""
+    for base in (ROOT / "games", ROOT / "harness"):
+        for d in base.rglob(".claude"):
+            files = [f for f in d.rglob("*") if f.is_file()]
+            if files:
+                print(f"WARNING: agent memory in the wrong place: {d} ({len(files)} files) - "
+                      f"move it to {ROOT / '.claude' / 'agent-memory'}")
+
+
 def build(name):
     if not LCC.exists():
         die("GBDK not found, run: python harness/gb.py setup")
+    stray_agent_memory()
     gdir = game_dir(name)
     cfg = load_config(gdir)
     sources = sorted((gdir / "src").rglob("*.c")) + sorted((gdir / "src").rglob("*.s"))
