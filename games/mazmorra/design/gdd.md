@@ -1,6 +1,6 @@
 # MADRIGUERA — Documento de diseño
 
-Estado: borrador (2026-10-15)    Versión: 0.1    Carpeta: `games/mazmorra`
+Estado: aprobado (2026-10-15, decisiones de §12 tomadas por el estudio con la recomendación)    Versión: 1.0    Carpeta: `games/mazmorra`
 
 > Aventura de acción cenital tipo Zelda con **una sola mazmorra** de 9 salas, pantalla a pantalla
 > (al salir por un borde la cámara se desliza a la sala vecina, como en Link's Awakening).
@@ -688,21 +688,21 @@ reproductor al arnés.
 
 ---
 
-## 12. Decisiones pendientes (para el usuario)
+## 12. Decisiones (tomadas 2026-10-15 con la recomendación del diseñador)
 Solo lo caro de cambiar una vez construido; el resto (tema, nombres, historia, dificultad, números)
 está decidido arriba y se cambia barato.
 
-- [ ] **Objeto que abre camino: bombas (recomendado) / gancho.** Bombas: reutilizan temporizador +
+- [x] **Objeto que abre camino: bombas (recomendado) / gancho.** Bombas: reutilizan temporizador +
   caja de efecto contra metatiles agrietados y sirven contra el jefe; ningún motor nuevo y nada de
   sprites en fila. Gancho: cadena de 3-4 sprites en una línea (con Tilo, espada y 2 enemigos pasa de
   10 por línea), estado de "volar sobre pozos" con pozos en el mapa y blancos enganchables: más motor
   y más riesgo.
-- [ ] **Formato de las salas: un mapa de `gbe_world` con cámara por sala (recomendado) / motor de
+- [x] **Formato de las salas: un mapa de `gbe_world` con cámara por sala (recomendado) / motor de
   salas propio.** El mapa de world.py reutiliza la caché, el anillo del BG, la cola de bordes, los
   objetos, la vista previa y `gbe_gact` (que depende de gbe_world), a cambio de ~3.2 KB de WRAM y de
   que las salas no coinciden con los sectores. Un motor propio (`gbe_room`: sala de 80 bytes, volcado
   por columnas al deslizar) gastaría menos WRAM pero obliga a reescribir los actores y la vista previa.
-- [ ] **Enemigos por casillas con Tilo libre (recomendado) / todo libre al píxel.** Por casillas =
+- [x] **Enemigos por casillas con Tilo libre (recomendado) / todo libre al píxel.** Por casillas =
   `gbe_gact` tal cual (medido, con asm) y un combate legible estilo Zelda NES; libre al píxel daría
   enemigos más fluidos (murciélagos en diagonal) pero pide un módulo de actores libres con colisión
   contra el mapa que hoy no existe.
