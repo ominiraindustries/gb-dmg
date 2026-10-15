@@ -1,0 +1,28 @@
+; HAPPY VALLEY - partida inicial (GDD 2.13). Atributos actuales y potenciales en puntos (VEL RES REM TEM SAL).
+; state: CUADRA (entrena y corre) / YEGUA (granja, cria). surf: + cesped, - arena.
+@ table start
+@ prefix START
+@ col name text 14
+@ col sex enum MACHO HEMBRA
+@ col state enum CUADRA YEGUA
+@ col age u8
+@ col vel u8
+@ col res u8
+@ col rem u8
+@ col tem u8
+@ col sal u8
+@ col pvel u8
+@ col pres u8
+@ col prem u8
+@ col ptem u8
+@ col psal u8
+@ col dpref u8
+@ col surf s8
+@ col style enum PUNTERO ACECHO CERRADOR
+@ col curve ref growth
+@ col rating u8
+;id     name            sex    state  age vel res rem tem sal pvel pres prem ptem psal dpref surf style    curve  rating
+ORO     "Oro Sesenta"   MACHO  CUADRA 3   38  32  36  55  60  58   50   55   60   60   12    1    PUNTERO  PRECOZ 30
+VIENTO  "Viento Feliz"  MACHO  CUADRA 3   34  38  30  45  55  50   62   48   55   55   16    0    ACECHO   NORMAL 25
+PERLA   "Perla Lunar"   HEMBRA CUADRA 2   30  28  32  60  65  64   56   62   65   65   14    1    CERRADOR TARDIO 35
+BRISA   "Brisa Dorada"  HEMBRA YEGUA  8   0   0   0   0   0   58   62   50   55   60   16    0    CERRADOR NORMAL 0

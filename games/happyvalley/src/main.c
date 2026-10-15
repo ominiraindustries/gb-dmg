@@ -1,4 +1,5 @@
-// HAPPY VALLEY - glue: init, the frame loop, the M1a screens (debug menu -> race -> results) and the
+// HAPPY VALLEY - glue: init, the frame loop, the screens (stable screens in ui.c; debug race menu ->
+// race -> results) and the
 // test hooks (GDD design/gdd.md). Loop rules (CLAUDE.md): vsync (+ stale guard) -> VBlank copies ->
 // frame_vram_check -> frame_begin -> logic -> sprites -> frame_end.
 #include "hv.h"
@@ -7,7 +8,6 @@
 #include "font_mini_lower.h"
 #include "font_mini_es.h"
 
-enum { SC_MENU, SC_RACE, SC_RESULT };
 uint16_t rules_cache[RULE_COUNT];
 uint8_t scene, cheat_flags, menu_course;
 // tests: race_req = 1 runs a whole race headless: rng_state = race_seed, rivals of course race_req_course
@@ -15,6 +15,8 @@ uint8_t scene, cheat_flags, menu_course;
 // race_req = 2 starts the same race on screen
 uint8_t race_req, race_req_course, race_lo, race_hi, race_req_n;
 uint16_t race_seed;
+// tests: game_req = 1 starts a new game (rng_state = race_seed); week_req = N advances N weeks headless
+uint8_t game_req, week_req;
 
 const sfx_t sfx_table[2] = {
     { 2, 1, 4, { 0, 0x80, 0x41, 0xC0, 0x87 } },          // cursor
@@ -60,14 +62,16 @@ void screen_build(uint8_t which) {
         bank_set_bkg_data(BANK(greybox), VRAM_GREYBOX, GREYBOX_COUNT, greybox_tiles);
         bank_set_bkg_data(BANK(font_mini), VRAM_FONT_MINI, FONT_MINI_COUNT, font_mini_tiles);
         clear_bg();
-        if (which == SC_MENU) {
+        if (which >= SC_STABLE) ui_build(which);
+        else if (which == SC_MENU) {
             row_text(1, 3, "HAPPY VALLEY M1A");
             row_text(4, 2, "CARRERA DE PRUEBA");
             row_text(6, 2, "CURSO:");
             row_text(10, 2, "IZQ/DER CAMBIA");
             row_text(11, 2, "A: CORRER");
-            row_text(13, 2, "EN CARRERA: A CAMARA");
+            row_text(13, 2, "B: CUADRA");
             row_text(14, 2, "B RAPIDO  START PAUSA");
+            menu_draw_course();
         } else {
             uint8_t t[20];
             uint16_t cs;
@@ -103,6 +107,9 @@ static void start_race(uint16_t seed, uint8_t course, uint8_t lo, uint8_t hi, ui
 }
 
 static void test_hook(void) {
+    if (game_req) { rng_state = race_seed; game_new(); game_req = 0; }
+    while (week_req) { week_advance(); week_req--; }
+    if (!race_req) { skip_measure = 1; return; }
     if (race_req == 2) { start_race(race_seed, race_req_course, race_lo, race_hi, race_req_n); race_req = 0; return; }
     rng_state = race_seed;
     race_gen_field(race_req_course, race_lo, race_hi, race_req_n);
@@ -113,6 +120,9 @@ static void test_hook(void) {
 }
 
 static void screen_update(void) {
+    uint8_t n;
+    if (scene >= SC_STABLE) { n = ui_update(scene); if (n != 0xFF) transition(n); return; }
+    if (scene == SC_MENU && (pressed & J_B)) { transition(SC_STABLE); return; }
     if (scene == SC_MENU && (pressed & (J_LEFT | J_RIGHT))) {
         menu_course = (pressed & J_LEFT) ? (menu_course ? menu_course - 1 : CRS_COUNT - 1)
                                          : (menu_course + 1 < CRS_COUNT ? menu_course + 1 : 0);
@@ -123,7 +133,7 @@ static void screen_update(void) {
         if (scene == SC_MENU) {
             bank_memcpy(BANK(tbl_courses), &crs, &tbl_courses[menu_course], sizeof(crs));
             start_race(rng_state ^ sys_time, menu_course, 40, 60, RN_MAX);
-        } else transition(SC_MENU);
+        } else transition(SC_STABLE);
     }
 }
 
@@ -138,8 +148,8 @@ void main(void) {
     video_init(0, 0xE4, 0xE4, 0x1B);
     sound_init();
     rng_state = 0xACE1;
-    show_screen_now(SC_MENU);
-    menu_draw_course();
+    game_new();                                 // M1b step 1: straight into the stable (title later)
+    show_screen_now(SC_STABLE);
     vsync();
     vram_late = 0;
     while (1) {
@@ -150,7 +160,7 @@ void main(void) {
         vq_draw_vram();
         frame_vram_check();
         frame_begin();
-        if (race_req) test_hook();
+        if (race_req | game_req | week_req) test_hook();
         if (!transition_update()) {
             if (scene == SC_RACE) { if (rv_update()) transition(SC_RESULT); }
             else screen_update();

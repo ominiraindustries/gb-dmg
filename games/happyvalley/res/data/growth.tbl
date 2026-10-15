@@ -1,0 +1,15 @@
+; HAPPY VALLEY - curva de crecimiento (GDD 2.5): multiplicador del entrenamiento por edad, en cuartos
+; (edades 2..8). Tambien el crecimiento natural de 2-4 anos: +EDAD/16 de punto por semana.
+@ table growth
+@ prefix CURVE
+@ col a2 u8
+@ col a3 u8
+@ col a4 u8
+@ col a5 u8
+@ col a6 u8
+@ col a7 u8
+@ col a8 u8
+;id      a2 a3 a4 a5 a6 a7 a8
+PRECOZ   6  5  4  2  1  0  0
+NORMAL   4  5  5  3  2  1  0
+TARDIO   2  4  5  5  3  2  1

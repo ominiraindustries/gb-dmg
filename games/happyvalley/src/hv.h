@@ -7,6 +7,9 @@
 #include "vram.h"
 #include "tbl_rules.h"
 #include "tbl_courses.h"
+#include "tbl_training.h"
+#include "tbl_growth.h"
+#include "tbl_start.h"
 
 extern uint16_t rules_cache[];
 #define RULE(id) (rules_cache[id])
@@ -51,6 +54,32 @@ void move_one_c(runner_t *r) BANKED;                   // its C reference
 extern uint8_t race_use_c;                      // tests: 1 = the C path
 void race_results(void) BANKED;
 uint8_t race_winner(void) BANKED;                      // the first one past the post so far (0xFF none)
+// ---------------------------------------------------------------- stable and week (stable.c)
+// Spec: tests/hv_week.py. Horse layout = HORSE in tests/test_week.py (byte offsets, no padding).
+#define HV_SLOTS 12                             // 6 boxes + 3 mares + 3 foals (GDD 9)
+enum { HS_EMPTY, HS_STABLE, HS_MARE, HS_FOAL };
+typedef struct {
+    uint8_t state, sex, age, curve, style, dpref, rating, fat, injury, idle, plan, sal;
+    int8_t surf;
+    uint8_t pot[5];                             // VEL RES REM TEM SAL ceilings (points)
+    uint16_t a16[4];                            // VEL RES REM TEM x16
+    char name[15];
+} horse_t;
+extern horse_t hv_horse[];
+extern uint8_t hv_week, hv_season;
+extern int32_t hv_money;                        // k$
+extern uint16_t hv_fame;
+extern training_t hv_train[];
+void game_new(void) BANKED;
+void week_advance(void) BANKED;
+
+// ---------------------------------------------------------------- screens (main.c, ui.c)
+enum { SC_MENU, SC_RACE, SC_RESULT, SC_STABLE, SC_HORSE, SC_REPORT };
+extern uint8_t ui_next, ui_sel;
+void ui_build(uint8_t which) BANKED;            // LCD off
+uint8_t ui_update(uint8_t which) BANKED;        // the next screen, 0xFF = stay
+void report_snapshot(void) BANKED;
+
 // ---------------------------------------------------------------- race view (race_view.c)
 void rv_build(void) BANKED;                     // LCD off
 uint8_t rv_update(void) BANKED;                 // per frame; 1 = over

@@ -78,8 +78,8 @@ documento son los de partida: (*) = ajustar con los bots de equilibrio (§11).
 | Fatiga `fat` | 0-100 | sí (barra) | > 50 rinde menos; > 80 no puede correr |
 | Lesión | semanas (bit 7 = grave) | sí | solo descanso |
 
-- Los atributos actuales VEL RES REM se guardan x16 (`vel16`, u16) para que el entrenamiento sume
-  fracciones; se muestran `>> 4`. TEM y SAL son u8 directos.
+- Los atributos actuales VEL RES REM **y TEM** se guardan x16 (`a16[4]`, u16) para que el entrenamiento
+  sume fracciones (Salidas sube TEM 1/16 por semana); se muestran `>> 4`. SAL es u8 directo.
 - **Estrellas de potencial** (ficha, tras 4 semanas en la cuadra; en el mercado, al momento): media de
   los potenciales de VEL RES REM: < 40 = 1, < 55 = 2, < 70 = 3, < 85 = 4, si no 5. Yeguas y sementales
   muestran sus potenciales como números (ya están hechos).
@@ -654,6 +654,11 @@ apagado (dibujo del texto proporcional) no destellen.
 ## 5. HUD e interfaz
 
 ### 5.1 Pantalla de carrera: cámara lateral de TV
+
+> **Sustituido (2026-10-15, decisión del usuario):** la carrera es "lo de menos"; se ve desde arriba como
+> un óvalo de píxeles con un punto por caballo (`design/gen_track.py`, `src/race_view.c`), campos de 8 a un
+> tick por frame, HUD con metros, tiempo y orden de dorsales, y comentario. Lo de abajo queda como
+> referencia de la vista lateral que se probó y se descartó.
 
 La cámara está **en el interior del óvalo** y corre junto al pelotón mirando hacia fuera: el palo
 interior queda delante (abajo), las calles exteriores más arriba y más lejos, y detrás la tribuna y la

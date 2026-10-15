@@ -1,0 +1,17 @@
+; HAPPY VALLEY - entrenamientos (GDD 2.5). Ganancia base en 1/16 de punto por semana; fatiga; riesgo /256.
+@ table training
+@ prefix TRN
+@ col name text 9
+@ col vel u8
+@ col res u8
+@ col rem u8
+@ col tem u8
+@ col fat s8
+@ col risk u8
+;id        name         vel res rem tem fat  risk
+DESCANSO   "Descanso"   0   0   0   0   -15  0
+GALOPE     "Galope"     6   6   4   0   12   2
+SERIES     "Series"     16  0   8   0   25   6
+FONDO      "Fondo"      0   16  0   0   20   3
+REMATES    "Remates"    4   0   16  0   22   5
+SALIDAS    "Salidas"    0   0   2   16  8    1

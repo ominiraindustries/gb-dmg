@@ -47,3 +47,14 @@ LANE_MASK    7
 COVER_SH     2
 LANES_MAX    13
 MAX_TICKS    8000
+; semana (GDD 2.2, 2.7, 2.8)
+MONEY0       800    ; dinero inicial (k$)
+BOX_COST     20     ; k$ por semana y caballo en cuadra
+FARM_COST    3      ; k$ por semana y yegua o potro
+REC_BASE     8      ; recuperacion de fatiga: REC_BASE + (SAL >> 3)
+FAT_TRAIN    70     ; por encima, el entrenamiento rinde la mitad
+INJ_FAT      50     ; riesgo de lesion: + (fat - INJ_FAT) >> 1
+INJ_SAL      60     ; + (INJ_SAL - SAL) >> 3
+IDLE_WEEKS   3      ; semanas sin trabajo antes del desentreno
+IDLE_LOSS    8      ; 1/16 de punto por semana
+WEEKS        44     ; semanas por temporada
