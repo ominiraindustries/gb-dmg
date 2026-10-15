@@ -14,6 +14,9 @@ First art pass (not yet user-reviewed when written):
 - Babosa: dark mound + light belly band + two stalk eyes (4x4 eyeballs); profile slugs read as shoes.
 - The ui-designer painted title.tiles with their own generator (design/paint_title.py) in parallel,
   although the brief gave the title to me. I did not overwrite it; their Tilo and door don't match.
+- 2026-10-15: title ownership moved to me; I now maintain design/paint_title.py (ui-designer's
+  generator, keep text positions). Title Tilo = link.tiles SIDE_A pasted in, hill flat with no
+  texture, door = dungeon timber frame with a black opening (steps inside read as a shutter).
 **Why:** two agents writing one tileset would clobber each other.
 **How to apply:** before drawing a shared screen asset, check games/<game>/design for another agent's
 generator and coordinate via the report instead of overwriting.

@@ -3,8 +3,9 @@ games/mazmorra/res/title.tiles + design/screens/title*.screen (ui-designer).
 
     python games/mazmorra/design/paint_title.py && python harness/gb.py preview mazmorra
 
-Scene: misty valley; the hill (cerro) with the mole's burrow door (wooden frame,
-roots), a 'no-topos' sign, Tilo from behind with his grandfather's wooden sword. Logo MADRIGUERA
+Scene: the hill (cerro), one calm light-grey shape with no texture, with the burrow door in the
+timber frame of the dungeon doors, a 'no-topos' sign, and Tilo as the player sprite (link.tiles
+SIDE_A, bell cap) walking to the door, on a 2 px black ground line (pixel-artist, 2026-10-15). Logo MADRIGUERA
 (outlined letters, white top / light bottom fill, 2 px dark shadow) and the subtitle painted with
 proportional spacing (the 19 chars do not fit centred in 8 px cells). Text rows 14-17 stay white:
 'Pulsa Start' / the menu are font tiles written by the code.
@@ -125,42 +126,30 @@ for xx in range(W):
         px(xx, yy, 1)                      # light grey earth
     px(xx, t, 3)                           # black ridge, 2 px
     px(xx, t + 1, 3)
-# earth texture: one pebble per fully interior tile, same spot (dedupes to 1 tile)
-for ty in range(8, 13):
-    for tx in range(20):
-        x0, y0 = tx * 8, ty * 8
-        if all(hill_top(x0 + i) + 2 < y0 for i in range(8)) and y0 + 8 <= HILL_BASE:
-            a, b = 3, 4                            # same spot in every tile: 1 tile
-            px(x0 + a, y0 + b, 2)
-            px(x0 + a + 1, y0 + b, 2)
+# No earth texture: the user dislikes noise; the hill is one calm light-grey shape.
 
-# burrow door: round arch in cols 8-11 rows 10-12, wooden frame, black hole, roots
+# burrow door: the timber frame of the dungeon doors (res/dungeon.tiles DOOR_*): 4 px posts
+# '#-+#', a double lintel beam over them, cols 8-11 rows 10-12. The passage is dark here (outside,
+# looking into the burrow).
 DX0, DX1, DTOP = 64, 95, 80
-CX, R_OUT = 79.5, 15.5
-for yy in range(DTOP, HILL_BASE):
+# lintel: two beams (black / light / dark / black), the upper one overhangs the posts by 2 px
+for yy, c in ((DTOP, 3), (DTOP + 1, 1), (DTOP + 2, 2), (DTOP + 3, 3)):
+    for xx in range(DX0 - 2, DX1 + 3):
+        px(xx, yy, c)
+for yy, c in ((DTOP + 4, 1), (DTOP + 5, 2), (DTOP + 6, 3)):
     for xx in range(DX0, DX1 + 1):
-        dy = max(0, (DTOP + R_OUT) - yy)
-        dist = ((xx - CX) ** 2 + dy ** 2) ** 0.5
-        if dist <= R_OUT:
-            if dist > R_OUT - 1:
-                px(xx, yy, 3)              # outline
-            elif dist > R_OUT - 4:
-                px(xx, yy, 2)              # wood
-            else:
-                px(xx, yy, 3)              # the hole
-            if R_OUT - 3 < dist <= R_OUT - 2 and (xx * 3 + yy) % 7 == 0:
-                px(xx, yy, 1)              # wood grain
-# keystone plank on top
-rect(77, DTOP, 82, DTOP + 4, 3)              # keystone inside row 10 (no spill above)
-rect(78, DTOP + 1, 81, DTOP + 3, 1)
-# roots hanging in the hole (light grey, readable on black)
-for rx, y0, ln in ((70, 90, 5), (74, 86, 3), (85, 86, 4), (89, 90, 3)):
-    for k in range(ln):
-        px(rx + (1 if k in (2, 3) else 0), y0 + k, 1)
-# threshold: a dark step across the door
-rect(DX0 + 2, HILL_BASE - 2, DX1 - 2, HILL_BASE - 1, 2)
+        px(xx, yy, c)
+for xx in (DX0 - 2, DX1 + 2):
+    px(xx, DTOP + 1, 3); px(xx, DTOP + 2, 3)
+# posts
+for yy in range(DTOP + 4, HILL_BASE):
+    for k, c in enumerate((3, 1, 2, 3)):
+        px(DX0 + k, yy, c)
+        px(DX1 - 3 + k, yy, c)
+# passage: plain darkness (steps inside read as a shutter)
+rect(DX0 + 4, DTOP + 7, DX1 - 4, HILL_BASE - 1, 3)
 
-# sign 'no moles' (prohibido el paso a no-topos: a crossed-out boot) right of the door
+# sign 'no moles' (prohibido el paso a no-topos: a crossed-out mole) right of the door
 SX, SY = 105, 80                                      # board in row 10, cols 13-14
 rect(SX + 4, SY + 8, SX + 5, HILL_BASE - 1, 3)         # post
 rect(SX, SY, SX + 10, SY + 7, 3)                      # board outline
@@ -170,51 +159,31 @@ px(SX + 4, SY + 3, 3); px(SX + 6, SY + 3, 3)
 for i in range(9):                                    # the 'no' bar
     px(SX + 1 + i, SY + 6 - (i * 5) // 8, 3)
 
-# Tilo from behind, left of the door, wooden sword on his back (16x16, black outline)
-TILO = [                                   # facing right, towards the door ('o' = white)
-    "................",
-    ".....######.....",
-    "....#++++++#....",
-    "...#++++++++#...",
-    "...#+++++oooo#..",
-    "...#++++oo#oo#..",
-    "...#++++oo#ooo#.",
-    "....#+++ooooo#..",
-    ".....########...",
-    "....#--#---#....",
-    "...#--#---#-#...",
-    "...#--#---#-#...",
-    "....##-----##...",
-    "....#--##--#....",
-    "....###..###....",
-    "................",
-]
-TX, TY = 40, HILL_BASE - 15
-code = {".": None, "o": 0, "-": 1, "+": 2, "#": 3}
+# Tilo = the player sprite (res/link.tiles SIDE_A, bell-shaped cap), facing right towards the door.
+# Sprite shade 0 is transparent: those pixels keep the hill. 16x16 tile-aligned (cols 5-6).
+LINK = asciitiles.parse(ROOT / "games/mazmorra/res/link.tiles")
+F = LINK[1]["SIDE_A"]
+TX, TY = 40, HILL_BASE - 16
+code = {".": None, "-": 1, "+": 2, "#": 3}
 pts = []
-for j, row in enumerate(TILO):
-    for i, ch in enumerate(row):
-        if code[ch] is not None:
-            px(TX + i, TY + j, code[ch])
-            pts.append((TX + i, TY + j))
+for half in (0, 1):
+    for vb in (0, 1):
+        t = LINK[0][F + half * 2 + vb]
+        for j, row in enumerate(t):
+            for i, ch in enumerate(row):
+                if code[ch] is not None:
+                    px(TX + half * 8 + i, TY + vb * 8 + j, code[ch])
+                    pts.append((TX + half * 8 + i, TY + vb * 8 + j))
 inside = set(pts)
-for (a, b) in pts:                         # white rim against the grey hill
+for (a, b) in pts:                         # white rim against the grey hill (sides and top)
     for dx, dy in ((1, 0), (-1, 0), (0, -1)):
         q = (a + dx, b + dy)
         if q not in inside and get(*q) == 1:
             px(q[0], q[1], 0)
 
-# ---------------------------------------------------------------- fog over the hill foot (row 12)
-FOG = [(96, "...--..."), (97, ".------."), (98, "--------"), (99, "--------"), (100, "--------"),
-       (101, "--....--"), (102, "........"), (103, "........")]
-for yy, pat in FOG:
-    for xx in range(W):
-        if pat[xx % 8] == "-" and (xx, yy) not in inside:
-            if get(xx, yy) == 1:
-                px(xx, yy, 0)
-# ground (row 13): fog line and a few tufts; rows 14-17 are text rows
-for xx in range(W):
-    px(xx, HILL_BASE, 1 if xx % 16 not in (5, 6, 12) else 0)
+# ---------------------------------------------------------------- ground (row 13)
+# a plain 2 px black ground line under the hill; rows 14-17 are text rows
+rect(0, HILL_BASE, W - 1, HILL_BASE + 1, 3)
 
 # ---------------------------------------------------------------- logo on top
 for (x, y) in logo:                         # white halo
@@ -269,10 +238,10 @@ POOL = [chr(c) for c in list(range(0x3B1, 0x3CA)) + list(range(0x391, 0x3AA)) + 
         + list(range(0x410, 0x430)) + list(range(0x5D0, 0x5EB))]
 POOL = [c for c in POOL if c not in "ς΢"]
 
-out = ["; MADRIGUERA - title screen art (ui-designer): logo, subtitle, hill with the burrow door, sign,",
-       "; Tilo, fog. Painted in screen coordinates by design/paint_title.py, sliced and deduped: never",
+out = ["; MADRIGUERA - title screen art (pixel-artist; layout by the ui-designer): logo, subtitle, hill,",
+       "; timber burrow door, sign, Tilo (= link.tiles SIDE_A). Painted in screen coordinates by design/paint_title.py, sliced and deduped: never",
        "; edit by hand, re-run the painter. Only used through screen_title_map / screen_title_menu_map",
-       "; (LCD-off load of TITULO). Shares the BG slot with dungeon (GDD 7.2, <= 104). Empty cells use ui",
+       "; (LCD-off load of TITULO). Shares the BG slot with dungeon (GDD 7.2, <= 106). Empty cells use ui",
        "; BLANK (not stored here).", ""]
 names = {}
 for i, t in enumerate(tiles):
@@ -285,7 +254,7 @@ for i, t in enumerate(tiles):
 print("title tiles", len(names), file=sys.stderr)
 # budget: the dungeon/title slot is max(dungeon, title). GDD 7.2 plans 104 + ui 24 + fonts 72 = 200;
 # ui is 21, so title <= 107 keeps the same 200 total (the 200-211 margin stays free).
-assert len(names) <= 107, len(names)
+assert len(names) <= 106, len(names)
 legend_of = {i: POOL[k] for k, i in enumerate(names)}
 
 
