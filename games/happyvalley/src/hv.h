@@ -40,6 +40,6 @@ void race_tick(void);                           // one tick = one frame of race
 void race_results(void);
 uint8_t race_winner(void);                      // the first one past the post so far (0xFF none)
 // ---------------------------------------------------------------- race view (race_view.c)
-void rv_build(void);                            // LCD off
-uint8_t rv_update(void);                        // per frame; 1 = over
+void rv_build(void) BANKED;                     // LCD off
+uint8_t rv_update(void) BANKED;                 // per frame; 1 = over
 extern int16_t cam;

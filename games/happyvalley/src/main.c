@@ -144,6 +144,7 @@ void main(void) {
         vsync();
         if (LY_REG < 144) vsync();
         frame_vsync_ly = LY_REG;
+        world_draw_vram();
         tiles_draw_vram();
         vq_draw_vram();
         frame_vram_check();

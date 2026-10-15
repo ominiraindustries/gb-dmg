@@ -1,52 +1,33 @@
-// HAPPY VALLEY - the race seen side-on (GDD 5.1, greybox): BG rows 0-14 = track scrolled with SCX (row 0
-// rail with a 64 px pattern, turf below, a periodic 32-column map: only the post columns are written,
-// through gbe_vq, when they come in and erased when they leave); one 8 px row per runner (rank by lane
-// then gate, eased 1 px/frame); window rows 15-17 = HUD (monospace digits) + 2 commentary lines
-// (proportional, gbe_vwf). Scale 1 px = 0.5 m (x = pos >> 3). Camera on the focus (the leader for now).
+// HAPPY VALLEY - the race seen from above over a big oval (user's choice): the track is a gbe_world map
+// (res/maps/hv.map, st.map, generated with the path tables by design/gen_track.py from tests/hv_geom.py);
+// the camera follows the focus horse; each runner is placed from its course table (a point every 8 m,
+// interpolated) plus its lane offset along the track normal. Horses are 8x16 sprites (box over the
+// saddlecloth digit, greybox). Bank 1 (calls the bank-0 race and world code). Window rows 15-17 = HUD (monospace digits) + commentary (gbe_vwf).
+#pragma bank 255
 #include "hv.h"
 #include "greybox.h"
 #include "font_mini.h"
+#include "metatiles.h"
+#include "track_data.h"
 
-#define SPR_BOX    GREYBOX_BOX                  // sprite tiles: greybox at 0, digits at SPR_DIGIT
-#define SPR_DIGIT  16
-#define TRACK_ROWS 15
+#define SPR_HORSE  0                            // 8x16 sprite pairs: horse k = tiles 2k (box), 2k+1 (digit)
 #define COMMENT_T  16                           // text slot: HUD 0-15 (unused), comment lines 16-53
 #define LINE_W     19
+#define RV_VIEW_H     120                          // track rows above the window
 #define BGT(n)     ((uint8_t *)((n) < 128 ? 0x9000 + ((uint16_t)(n) << 4) : 0x8800 + ((uint16_t)((n) - 128) << 4)))
 enum { RV_GATES, RV_RUN, RV_AFTER, RV_DONE };
 
-int16_t cam, cam_want;                          // world px (0.5 m) of the screen's left edge
-uint8_t rv_phase, rv_t, rv_focus, rv_row[RN_MAX], rv_y[RN_MAX], rv_leader, rv_lead_t;
+int16_t cam, cam_cx, cam_cy;                    // camera asked of gbe_world (world px of the top-left)
+uint8_t rv_phase, rv_t, rv_focus, rv_mode, rv_leader, rv_lead_t, rv_rot;
 uint8_t rv_said;                                // commentary already said (bits)
-uint8_t rv_idx[RN_MAX], rv_d1[RN_MAX], rv_d0[RN_MAX];   // horses by row; dorsal digit tiles (0 = none)
+uint16_t rv_x[RN_MAX], rv_y[RN_MAX];            // world px of each runner this frame
 uint8_t rv_cs, rv_sec, rv_min;                  // race clock (ticks x 4 cs), counted, not divided
 static const char *say_s;                       // commentary typed 1 letter per frame
 static uint8_t say_k, say_x;
-static uint16_t post_x[6];                      // world px of the posts (gates, 800-200 m, finish)
-static uint8_t post_tile[6], post_n, post_on;
 static uint8_t line_buf[LINE_W * 16];
+uint8_t track_pts[TRACK_MAX_POINTS * 5];        // the course's path table (x16 y16 h), copied at build
+uint16_t track_n;
 char rv_text[40];
-
-// ---------------------------------------------------------------- BG columns
-static void column(uint8_t c, uint8_t tile) {
-    uint8_t r, t;
-    for (r = 0; r < TRACK_ROWS; r++) {
-        t = tile;
-        if (tile == 0xFF) t = r ? VRAM_GREYBOX + GREYBOX_FLOOR : VRAM_GREYBOX + ((c >> 2) & 1 ? GREYBOX_GRAY : GREYBOX_WALL);
-        vq_push((uint8_t *)0x9800 + ((uint16_t)r << 5) + c, &t, 1);
-    }
-}
-
-void posts(void) {
-    uint8_t k;
-    int16_t sx;
-    for (k = 0; k < post_n; k++) {
-        sx = (int16_t)post_x[k] - cam;
-        if (sx > -8 && sx < 168) {
-            if (!(post_on & (1 << k))) { post_on |= 1 << k; column((uint8_t)(post_x[k] >> 3) & 31, post_tile[k]); }
-        } else if (post_on & (1 << k)) { post_on &= ~(1 << k); column((uint8_t)(post_x[k] >> 3) & 31, 0xFF); }
-    }
-}
 
 // ---------------------------------------------------------------- commentary (2 proportional lines)
 static void say(const char *s) {
@@ -95,7 +76,8 @@ void commentary(void) {
 
 // ---------------------------------------------------------------- HUD: "1200M  0:52.40"
 static void clock_tick(void) {                  // + 4 centiseconds
-    if ((rv_cs += 4) >= 100) { rv_cs -= 100; if (++rv_sec >= 60) { rv_sec = 0; rv_min++; } }
+    rv_cs += 4;
+    if (rv_cs >= 100) { rv_cs -= 100; rv_sec++; if (rv_sec >= 60) { rv_sec = 0; rv_min++; } }
 }
 
 static uint8_t *digits2(uint8_t *t, uint8_t v) { // 2 digits with a leading zero, no division
@@ -124,62 +106,85 @@ void hud(void) {
     vq_push((uint8_t *)0x9C00, t, 16);
 }
 
-// ---------------------------------------------------------------- rows and sprites
-// row of each horse = rank by (lane, gate); rv_idx stays almost sorted between calls (cheap insertion)
-void rows(void) {
-    uint8_t k, j, a, key[RN_MAX];
-    for (k = 0; k < rn_n; k++) key[k] = (rx[k].lane << 4) + rn_gate[k];
-    for (k = 1; k < rn_n; k++) {
-        a = rv_idx[k];
-        for (j = k; j && key[a] < key[rv_idx[j - 1]]; j--) rv_idx[j] = rv_idx[j - 1];
-        rv_idx[j] = a;
-    }
-    for (k = 0; k < rn_n; k++) rv_row[rv_idx[k]] = k;
 
+// ---------------------------------------------------------------- runners on the oval
+static int8_t sin_tab[64];
+
+// world px of runner k: the course table point at its metre (interpolated) + lane x the track normal
+static void place(uint8_t k) {
+    runner_t *r = &rx[k];
+    uint16_t p = r->pos, idx = p >> 7, last = track_n - 1;
+    uint8_t f = (uint8_t)(p & 127), h, *a;
+    int16_t x, y, off;
+    if (idx >= last) {                          // past the post: straight on (east, the home straight)
+        a = track_pts + (last << 2) + last;
+        x = a[0] | (a[1] << 8); y = a[2] | (a[3] << 8); h = a[4];
+        x += (p - (last << 7)) >> 2;
+    } else {
+        a = track_pts + (idx << 2) + idx;
+        x = a[0] | (a[1] << 8); y = a[2] | (a[3] << 8); h = a[4];
+        x += ((int16_t)((a[5] | (a[6] << 8)) - x) * f) >> 7;
+        y += ((int16_t)((a[7] | (a[8] << 8)) - y) * f) >> 7;
+    }
+    off = r->lane * TRACK_LANE_PX;              // outward = (sin h, -cos h)
+    x += (sin_tab[h] * off) >> 6;
+    y -= (sin_tab[(h + 16) & 63] * off) >> 6;
+    rv_x[k] = x; rv_y[k] = y;
 }
 
 void sprites(void) {
-    uint8_t k, y, want, x;
-    uint16_t sx;
+    uint8_t k, n, i;
+    uint16_t sx, sy;
     OAM_item_t *o = shadow_OAM;
-    for (k = 0; k < rn_n; k++) {
-        want = 8 + (rv_row[k] << 3);
-        y = rv_y[k];
-        if (y < want) y++; else if (y > want) y--;
-        rv_y[k] = y;
-        sx = (rx[k].pos >> 3) - (uint16_t)cam + 8;            // OAM x of the box (the horse's nose)
-        if (sx >= 168) continue;                             // off screen (also 'negative')
-        x = (uint8_t)sx;
-        y += 16;
-        o->y = y; o->x = x; o->tile = SPR_BOX; o->prop = 0; o++;
-        if (rv_d1[k]) { x += 8; o->y = y; o->x = x; o->tile = rv_d1[k]; o->prop = 0; o++; }
-        x += 8; o->y = y; o->x = x; o->tile = rv_d0[k]; o->prop = 0; o++;
+    i = rv_rot;                                 // rotating start: >10 per line flicker, never vanish
+    for (n = rn_n; n; n--) {
+        k = i;
+        if (++i >= rn_n) i = 0;
+        sx = rv_x[k] - cam_x + 4;               // OAM x = screen x - 4 + 8
+        sy = rv_y[k] - cam_y + 8;               // OAM y = screen y - 8 + 16
+        if (sx >= 168 || sy >= RV_VIEW_H + 8 || sy < 8) continue;
+        o->y = (uint8_t)sy; o->x = (uint8_t)sx; o->tile = SPR_HORSE + (k << 1); o->prop = 0; o++;
     }
     while (o < shadow_OAM + 40) { o->y = 0; o++; }
+    if (++rv_rot >= rn_n) rv_rot = 0;
+}
+
+// camera centred on the focus, clamped to the map, at most 8 px per frame per axis (gbe_world: 16)
+static int16_t towards(int16_t v, int16_t to) {
+    if (v < to) return to - v > 8 ? v + 8 : to;
+    if (v > to) return v - to > 8 ? v - 8 : to;
+    return v;
+}
+
+static int16_t cam_tx, cam_ty;
+static void cam_target(void) {
+    int16_t mw = (int16_t)wmap.w << 8, mh = (int16_t)wmap.h << 8;
+    cam_tx = (int16_t)rv_x[rv_focus] - 80;
+    cam_ty = (int16_t)rv_y[rv_focus] - 60;
+    if (cam_tx < 0) cam_tx = 0; else if (cam_tx > mw - 160) cam_tx = mw - 160;
+    if (cam_ty < 0) cam_ty = 0; else if (cam_ty > mh - RV_VIEW_H) cam_ty = mh - RV_VIEW_H;
 }
 
 void camera(void) {
-    int16_t f = (int16_t)(rx[rv_focus].pos >> 3), lead = (int16_t)(rx[order[0]].pos >> 3), c = f - 72;
-    if (lead > c + 144) c = lead - 144 < f - 16 ? lead - 144 : f - 16;
-    cam_want = c;
-    if (cam < c) cam += c - cam > 3 ? 3 : c - cam;
-    else if (cam > c) cam -= cam - c > 3 ? 3 : cam - c;
-    scx_shadow = (uint8_t)cam;
+    cam_target();
+    cam_cx = towards(cam_cx, cam_tx);
+    cam_cy = towards(cam_cy, cam_ty);
 }
 
 // ---------------------------------------------------------------- build (LCD off) and frame
-void rv_build(void) {
-    uint8_t c, r, t, k;
-    static const uint16_t marks[4] = { 800, 600, 400, 200 };
+void rv_build(void) BANKED {
+    uint8_t c, k;
+    track_ref_t tr;
     bank_set_bkg_data(BANK(greybox), VRAM_GREYBOX, GREYBOX_COUNT, greybox_tiles);
     bank_set_bkg_data(BANK(font_mini), VRAM_FONT_MINI, FONT_MINI_COUNT, font_mini_tiles);
-    bank_set_sprite_data(BANK(greybox), 0, GREYBOX_COUNT, greybox_tiles);
-    bank_set_sprite_data(BANK(font_mini), SPR_DIGIT, 10, font_mini_tiles);
-    for (r = 0; r < TRACK_ROWS; r++)
-        for (c = 0; c < 32; c++) {
-            t = r ? VRAM_GREYBOX + GREYBOX_FLOOR : VRAM_GREYBOX + ((c >> 2) & 1 ? GREYBOX_GRAY : GREYBOX_WALL);
-            *((uint8_t *)0x9800 + ((uint16_t)r << 5) + c) = t;
-        }
+    for (k = 0; k < RN_MAX; k++) {              // horse k: box over its saddlecloth digit
+        bank_set_sprite_data(BANK(greybox), SPR_HORSE + (k << 1), 1, greybox_tiles + (GREYBOX_BOX << 4));
+        bank_set_sprite_data(BANK(font_mini), SPR_HORSE + (k << 1) + 1, 1, font_mini_tiles + (((k + 1) % 10) << 4));
+    }
+    bank_memcpy(BANK(track_data), &tr, &track_index[race_course], sizeof(tr));
+    track_n = tr.n;
+    bank_memcpy(BANK(track_data), track_pts, tr.pts, tr.n * 5);
+    bank_memcpy(BANK(track_data), sin_tab, sine64, 64);
     vwf_clear(line_buf, LINE_W);                // text slot: blank tile 0, two empty comment lines
     set_bkg_data(VRAM_TEXT, 1, line_buf);
     set_bkg_data(VRAM_TEXT + COMMENT_T, LINE_W, line_buf);
@@ -189,46 +194,39 @@ void rv_build(void) {
         *((uint8_t *)0x9C20 + c) = c < LINE_W ? VRAM_TEXT + COMMENT_T + c : VRAM_TEXT;
         *((uint8_t *)0x9C40 + c) = c < LINE_W ? VRAM_TEXT + COMMENT_T + LINE_W + c : VRAM_TEXT;
     }
-    post_n = 0;                                 // gates, the 800-200 m posts, the finish
-    post_x[post_n] = 4; post_tile[post_n++] = VRAM_GREYBOX + GREYBOX_BOX;
-    for (k = 0; k < 4; k++)
-        if (marks[k] < crs.dist) { post_x[post_n] = (crs.dist - marks[k]) << 1; post_tile[post_n++] = VRAM_GREYBOX + GREYBOX_DOOR; }
-    post_x[post_n] = crs.dist << 1; post_tile[post_n++] = VRAM_GREYBOX + GREYBOX_CHECK;
-    post_on = 0;
-    for (k = 0; k < rn_n; k++) {
-        rv_idx[k] = k;
-        rv_d1[k] = k + 1 >= 10 ? SPR_DIGIT + 1 : 0;
-        rv_d0[k] = SPR_DIGIT + (k + 1 >= 10 ? k + 1 - 10 : k + 1);
-    }
-    rows();
-    for (k = 0; k < rn_n; k++) rv_y[k] = 8 + (rv_row[k] << 3);
+    for (k = 0; k < rn_n; k++) place(k);
+    rv_mode = 0;
+    rv_focus = order[0];
+    world_metatiles(BANK(metatiles), mt_tiles[0], mt_attr, MT_COUNT);
+    world_load_id(tr.map, 0, 0, 0, 0);          // map header first (its size clamps the camera)
+    cam_target();
+    cam_cx = cam_tx; cam_cy = cam_ty;
+    world_load_id(tr.map, (uint8_t)(rv_x[rv_focus] >> 4), (uint8_t)(rv_y[rv_focus] >> 4), cam_cx, cam_cy);
+    rv_phase = RV_GATES; rv_t = 0; rv_said = 0; rv_leader = 0xFF; rv_lead_t = 0; rv_rot = 0;
     rv_cs = rv_sec = rv_min = 0;
     say_s = 0;
-    rv_focus = order[0];
-    cam = cam_want = -72;
-    scx_shadow = (uint8_t)cam; scy_shadow = 0;
-    rv_phase = RV_GATES; rv_t = 0; rv_said = 0; rv_leader = 0xFF; rv_lead_t = 0;
     txt_font = VRAM_FONT_MINI;
-    WX_REG = 7; WY_REG = 120;
-    SPRITES_8x8;
+    WX_REG = 7; WY_REG = RV_VIEW_H;
+    SPRITES_8x16;
     SHOW_BKG; SHOW_WIN; SHOW_SPRITES;
 }
 
 // once per frame; returns 1 when the race scene is over
-uint8_t rv_update(void) {
+uint8_t rv_update(void) BANKED {
     uint8_t k;
     if (rv_phase == RV_GATES) { if (++rv_t >= 60) { rv_phase = RV_RUN; rv_t = 0; } }
     else if (rv_phase == RV_RUN) {
-        if (pressed & J_START) rv_phase |= 0x80;            // pause
+        if (pressed & J_START) { rv_phase |= 0x80; return 0; }   // pause
         for (k = (keys & J_B) ? 3 : 1; k && !race_done; k--) { race_tick(); clock_tick(); }
         if (race_done) { rv_phase = RV_AFTER; rv_t = 0; }
     } else if (rv_phase == (RV_RUN | 0x80)) { if (pressed & J_START) rv_phase = RV_RUN; return 0; }
     else if (rv_phase == RV_AFTER) { if (++rv_t >= 60) rv_phase = RV_DONE; }
     else return 1;
-    if (pressed & J_A) rv_focus = rv_focus == order[0] ? order[rn_n - 1] : order[0];   // M1b: your horse
-    if (!(race_t & 7)) rows();
+    if (pressed & J_A) rv_mode ^= 1;            // camera: the leader / the last one (M1b: your horse)
+    rv_focus = rv_mode ? order[rn_n - 1] : order[0];
+    for (k = 0; k < rn_n; k++) place(k);
     camera();
-    posts();
+    world_update((uint8_t)(rv_x[rv_focus] >> 4), (uint8_t)(rv_y[rv_focus] >> 4), cam_cx, cam_cy);
     if (!say_s && (!(rv_t & 15) || rv_phase == RV_RUN)) commentary();
     type_letter();
     if (!(race_t & 7)) hud();
