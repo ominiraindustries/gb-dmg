@@ -42,7 +42,17 @@ luego". The pipeline runs on its own from the idea to a playable, QA'd, bot-play
   was at 119 of 120 frame lines, 96 % WRAM and full ROM banks halfway through M1b, with visual bugs
   everywhere: the user closed it). If the idea is bigger, say so and propose the slice to start with.
 
-## Phase 2 - Art and UI (in parallel, one message with two Agent calls)
+## Greybox first (the user's rule, 2026-10-15)
+"Primero el juego sin arte, rollo cuadros, para ver que toda la lógica cuadra; el arte va al final."
+MADRIGUERA M1 spent hours in art/UI/agent rounds for 3 rooms and one enemy. So the order is:
+Phase 1 (short GDD) -> **Phase 3 greybox build** with `harness/common/greybox.tiles` (WALL, FLOOR,
+DOOR, BOX, DOT, CROSS...; `"common_res": ["greybox", "font", "font_lower"]`) and the shared font, you
+programming directly with no art/UI agents -> the user plays the greybox and says what to change ->
+only then **Phase 2 art and UI** on the logic that stays -> QA once -> playtest. Keep the process
+light: few agents, short notes, no waiting rounds. The design can stay small and change cheaply
+while it is squares.
+
+## Phase 2 - Art and UI (AFTER the greybox is played and the logic is settled; in parallel)
 - **pixel-artist**: asset list from the GDD -> `res/*.tiles` (+ mockups showing art in context).
 - **ui-designer**: every screen of the flow -> `design/screens/*.screen`, `design/ui.md`, `res/ui.tiles`.
 - They must not edit the same files (artist: game tilesets; ui: `ui.tiles` + screens).
@@ -54,7 +64,7 @@ luego". The pipeline runs on its own from the idea to a playable, QA'd, bot-play
   variants side by side in the same scenes (games/dungeon: `variant_windows.png`); the user could
   not choose from text alone.
 
-## Phase 3 - Build (you, with the gbdk / gb-asm skills)
+## Phase 3 - Build (you, with the gbdk / gb-asm skills; first as a greybox, see above)
 - Implement milestone by milestone (M1 first). Follow CLAUDE.md: loop structure, VRAM rules,
   `max_frame_lines` / `vram_late` / `skip_measure`, non-static globals for tests.
 - Tests for each mechanic as you go (`games/<game>/tests/`). Keep `python harness/gb.py test <game>` green.
