@@ -144,3 +144,14 @@ and tests run with GBDK 4.5.0 (marked *tested*).
 (y = 29 gave 208, not 464): the cast is dropped when the local lives on the stack because its
 address was taken. Globals and parameters are fine (`add hl, hl`). Workaround: copy into a u16
 first: `out = y; out <<= 4;`. Check with `lcc -S` when a shifted value from an out-parameter looks wrong.
+It is not only address-taken locals: in games/happyvalley `(uint16_t)(r + 4) << 5` (r a plain u8 loop
+local) compiled to `swap a; rlca; and a,#0xE0` (8 bits), so BG map rows >= 8 wrapped onto 0-7, while the
+same expression one line above was fine. For map row offsets use `gbe_row32(r)` (gbe_util.s, r * 32 in BC).
+
+## SDCC 4.5 miscompile: an u8 local lost across a BANKED call (verified, games/happyvalley)
+With `--max-allocs-per-node50000` (the harness default) `a = say_x >> 3; say_x = vwf_draw(...); ... a`
+kept `a` in E and then loaded the first argument into DE over it (`ld de, #_line_buf` right after the
+shifts): `a` came back as the low byte of line_buf (tiles_push got dst 0x9F90, 63 tiles: garbage over
+the text slot). Without the flag the same code was right. Workaround: keep values that must survive a
+BANKED / GBE_FAR call in statics, or compute them after the call. Symptom: queue entries or arguments
+with absurd values right after a banked call; confirm with `lcc -S`.

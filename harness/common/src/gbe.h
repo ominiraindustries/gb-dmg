@@ -50,6 +50,23 @@ void video_init(uint8_t cut_line, uint8_t bgp, uint8_t obp0, uint8_t obp1);   //
 void set_fade(uint8_t k);     // 0 = normal palettes .. 3 = white (ui.md 1.2 formula)
 void set_fade_dark(uint8_t k);  // 0 = normal .. 3 = black
 
+// ---------------------------------------------------------------- gbe_util.s
+// r * 32 in 16 bits: SDCC sometimes compiles (uint16_t)r << 5 of an u8 local in 8 bits (BG map rows
+// >= 8 wrap onto 0-7). Use it for map row offsets: (uint8_t *)0x9800 + gbe_row32(r) + c.
+uint16_t gbe_row32(uint8_t r) __preserves_regs(d, e, h, l);
+
+// ---------------------------------------------------------------- gbe_raster.c / .s
+// Up to RASTER_MAX SCX changes per frame at chosen lines (parallax, curving tracks). Fill raster_line[]
+// (ascending, >= 1) / raster_scx[] / raster_n, then raster_commit(); taken at the next VBlank. Line 0
+// keeps scx_shadow. raster_init() after video_init(); not together with gbe_video's hud_cut.
+#ifndef RASTER_MAX
+#define RASTER_MAX 10
+#endif
+extern uint8_t raster_n, raster_line[], raster_scx[];
+void raster_init(void);
+void raster_commit(void);
+void raster_isr(void);                  // asm (gbe_raster.s), installed by raster_init
+
 // ---------------------------------------------------------------- gbe_screen.c
 // Transitions: fade out 16 f -> screen_build(next) with the LCD off -> fade in 16 f.
 // The game defines:  void screen_build(uint8_t which);
@@ -423,7 +440,8 @@ void script_update(void);
 // ---------------------------------------------------------------- gbe_tiles.c
 // Tile DATA queue: tiles_push(VRAM address, bank, src, n tiles); tiles_prepare() in the logic
 // (copies <= tiles_budget tiles to WRAM with the bank switched), tiles_draw_vram() in VBlank.
-extern uint8_t tiles_budget, tiles_lost;
+extern uint8_t tiles_budget, tiles_lost;   // tiles_budget <= 4 (TQ_STAGE: larger is clamped)
+extern uint8_t tq_staged;                  // tiles staged for the next tiles_draw_vram()
 uint8_t tiles_push(uint8_t *dst, uint8_t bank, const uint8_t *src, uint8_t n);
 uint8_t tiles_pending(void);
 void tiles_prepare(void);

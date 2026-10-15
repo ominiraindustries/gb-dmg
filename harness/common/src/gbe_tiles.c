@@ -38,6 +38,8 @@ void tiles_prepare(void) {
     uint8_t i, saved;
     if (tq_staged) return;                       // last frame's tiles not copied yet
     saved = CURRENT_BANK;
+    if (tiles_budget > TQ_STAGE) tiles_budget = TQ_STAGE;   // the staging buffer's size (happyvalley set 6:
+                                                            // 2 tiles past it overwrote the WRAM after it)
     while (tq_head != tq_tail && tq_staged < tiles_budget) {
         i = tq_head & (TQ_N - 1);
         if (tq_bank[i]) SWITCH_ROM(tq_bank[i]);
@@ -52,8 +54,14 @@ void tiles_prepare(void) {
 
 void tile_copy16(uint8_t *dst, const uint8_t *src);   // asm
 
+// Only with enough VBlank left: a tile is ~400 T (~0.9 line), so the copies start at LY <= 153 - budget
+// (4 tiles: 149). A frame that ended inside VBlank makes vsync() return at LY 150+ and the copies ran
+// into line 0 (happyvalley: vram_late 178 in 400 frames). Skipped tiles stay staged (tiles_prepare
+// waits) and go next frame. With gbe_raster and a busy VBlank ISR vsync() returns at LY 148-149: run
+// vq_draw_vram() first (it stops at 150 by itself) and use tiles_budget 2 (happyvalley's race).
 void tiles_draw_vram(void) {
     uint8_t k;
+    if ((uint8_t)(LY_REG - 144) > 9 - tiles_budget) return;
     for (k = 0; k < tq_staged; k++) tile_copy16(tq_stage_dst[k], tq_stage + (k << 4));
     tq_staged = 0;
 }

@@ -29,7 +29,8 @@
     "gbe_tiles.s",
     "gbe_list.c",
     "gbe_menu.c",
-    "gbe_vwf.c"
+    "gbe_vwf.c",
+    "gbe_vwf_blit.s"
   ],
   "lcc_flags": [
     "-autobank",

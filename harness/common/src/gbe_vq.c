@@ -18,6 +18,8 @@ uint8_t vq_buf[VQ_BYTES], vq_rd, vq_wr;
 uint8_t vq_push(uint8_t *dst, const uint8_t *src, uint8_t len) {
     uint8_t *p;
     if (!len) return 1;
+    if (vq_rd == vq_wr) vq_rd = vq_wr = 0;      // empty: restart here too (a game that skips
+                                                // vq_draw_vram() when idle lost every push past 233)
     if ((uint16_t)vq_wr + 3 + len > VQ_BYTES) { vq_lost++; return 0; }
     p = vq_buf + vq_wr;
     p[0] = len;

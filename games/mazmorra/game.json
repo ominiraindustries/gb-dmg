@@ -26,6 +26,7 @@
     "gbe_tiles.c",
     "gbe_tiles.s",
     "gbe_vwf.c",
+    "gbe_vwf_blit.s",
     "gbe_selftest.c"
   ],
   "lcc_flags": [

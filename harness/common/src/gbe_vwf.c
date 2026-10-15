@@ -15,6 +15,8 @@
 
 typedef struct { uint8_t bank; const uint8_t *tiles; const uint8_t *met; } vwf_set_t;
 static vwf_set_t sets[3];
+extern uint8_t vb_glyph[16], vb_first, vb_sh, *vb_dst0, *vb_dst1;
+void vwf_blit(void);                    // gbe_vwf_blit.s (list it next to gbe_vwf.c in common_src)
 uint8_t vwf_space = 3;                  // pixels of a ' ' (vwf.py SPACE)
 
 void vwf_font(uint8_t k, uint8_t bank, const uint8_t *tiles, const uint8_t *metrics) GBE_FAR {
@@ -65,20 +67,19 @@ void vwf_clear(uint8_t *buf, uint8_t ntiles) GBE_FAR {
 // Draw s into buf (ntiles tiles, already cleared or holding earlier text) from pixel x; returns the
 // pen position after it. Pixels past the strip are dropped.
 uint8_t vwf_draw(uint8_t *buf, uint8_t ntiles, uint8_t x, const char *s) GBE_FAR {
-    uint8_t data[16], set, g, m, first, sh, k, v, *t0, *t1;
+    uint8_t set, g, m, sh, k;
     for (; *s; s++) {
         m = metric(*s, &set, &g);
         if (!(m & 15)) { x += vwf_space; continue; }
-        first = m >> 4;
-        bank_memcpy(sets[set].bank, data, sets[set].tiles + ((uint16_t)g << 4), 16);
         sh = x & 7;
         k = x >> 3;
-        t0 = k < ntiles ? buf + ((uint16_t)k << 4) : 0;
-        t1 = (sh && k + 1 < ntiles) ? buf + ((uint16_t)(k + 1) << 4) : 0;
-        for (k = 0; k < 16; k++) {
-            v = data[k] << first;
-            if (t0) t0[k] |= v >> sh;
-            if (t1) t1[k] |= v << (8 - sh);
+        if (k < ntiles) {                       // the shifting loop: vwf_blit (gbe_vwf_blit.s)
+            bank_memcpy(sets[set].bank, vb_glyph, sets[set].tiles + ((uint16_t)g << 4), 16);
+            vb_first = m >> 4;
+            vb_sh = sh;
+            vb_dst0 = buf + ((uint16_t)k << 4);
+            vb_dst1 = (sh && k + 1 < ntiles) ? buf + ((uint16_t)(k + 1) << 4) : 0;
+            vwf_blit();
         }
         x += (m & 15) + 1;
     }

@@ -228,6 +228,10 @@ def stray_agent_memory():
                       f"move it to {ROOT / '.claude' / 'agent-memory'}")
 
 
+# common_src files that need others (besides gbe_x.c -> gbe_x.s, checked by name)
+COMMON_NEEDS = {"gbe_vwf.c": ["gbe_vwf_blit.s"], "gbe_sfx.c": ["gbe_sfx_asm.s"]}
+
+
 def build(name):
     if not LCC.exists():
         die("GBDK not found, run: python harness/gb.py setup")
@@ -240,6 +244,14 @@ def build(name):
         if not (common_src / name).exists():
             die(f"common_src '{name}' not found in {common_src}")
         sources.append(common_src / name)
+    listed = set(cfg.get("common_src", []))
+    for name in sorted(listed):                 # gbe_x.c needs its asm half (mazmorra lost vwf_blit: link error)
+        need = list(COMMON_NEEDS.get(name, []))
+        if name.endswith(".c") and (common_src / (name[:-2] + ".s")).exists():
+            need.append(name[:-2] + ".s")
+        missing = [n for n in need if n not in listed]
+        if missing:
+            die(f"common_src '{name}' needs {missing} in game.json common_src")
     if not sources:
         die(f"no sources in {gdir / 'src'}")
     problems = check_sources(gdir, cfg)
