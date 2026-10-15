@@ -28,7 +28,8 @@
     "gbe_tiles.c",
     "gbe_tiles.s",
     "gbe_list.c",
-    "gbe_menu.c"
+    "gbe_menu.c",
+    "gbe_vwf.c"
   ],
   "lcc_flags": [
     "-autobank",

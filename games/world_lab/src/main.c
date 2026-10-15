@@ -21,6 +21,9 @@ static const int8_t dir_dx[4] = { 0, 0, -1, 1 };    // 0 down, 1 up, 2 left, 3 r
 static const int8_t dir_dy[4] = { 1, -1, 0, 0 };
 
 uint8_t px, py, pdir, pstep_px, moving, pspeed;
+// tests/test_vwf.py: vwf_req = 1 draws vwf_str into vwf_buf (20 tiles) from pixel vwf_x -> vwf_end
+uint8_t vwf_req, vwf_x, vwf_end, vwf_buf[20 * 16];
+char vwf_str[48];
 uint16_t steps;
 uint8_t actors_on = 1;
 uint8_t given_item, given_count, spin_left, npc, tq_test, list_mode, list_chosen = 0xFF, warps;
@@ -109,6 +112,9 @@ static void ui_init(void) {
     txt_font = VRAM_FONT;
     txt_lower = VRAM_FONT_LOWER;
     txt_es = VRAM_FONT_ES;
+    vwf_font(0, BANK(font), font_tiles, font_vwf);
+    vwf_font(1, BANK(font_lower), font_lower_tiles, font_lower_vwf);
+    vwf_font(2, BANK(font_es), font_es_tiles, font_es_vwf);
     txt_blank = VRAM_UI + UI_BLANK;
     tbox_name[0] = 'L'; tbox_name[1] = 'e'; tbox_name[2] = 'o'; tbox_name[3] = 0;
 }
@@ -251,6 +257,7 @@ void main(void) {
         frame_vram_check();
         frame_begin();
         if (gbe_eq_request) { gbe_eq_request = 0; gbe_selftest(); skip_measure = 1; }
+        if (vwf_req) { vwf_req = 0; vwf_clear(vwf_buf, 20); vwf_end = vwf_draw(vwf_buf, 20, vwf_x, vwf_str); skip_measure = 1; }
         update();
         if (tq_test) { tq_test = 0; tiles_push((uint8_t *)0x8000 + 60 * 16, BANK(spr), spr_tiles, 6); }
         tiles_prepare();

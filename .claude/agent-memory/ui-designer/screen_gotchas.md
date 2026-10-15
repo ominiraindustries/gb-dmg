@@ -29,3 +29,14 @@ name or shifted row becomes a bug.
   name swallows the number (`ATQ_19`); pick short sample values (faro EQUIPO uses Nv3 stats).
 - Big mockup sets: generate them with a script (design/gen_screens.py in faro) with box/tab/bar
   helpers; re-run it when shared glyphs arrive instead of hand-editing .screen files.
+- Painted title art blows the tile budget fast: a smooth hill curve made every ridge tile unique
+  (MADRIGUERA 141 tiles vs 104). Use tile-aligned slopes (flat / 1:4 / 1:2 from tile corners),
+  logo letters on a 16 px pitch with the fill change on a tile row edge, texture at the same spot of
+  every tile, objects inside whole tile rows (no 1 px spill). Measure each element by toggling it
+  (paint_title.py --debug prints new tiles per row). Got it to 106.
+- Odd-length lines (19 chars) cannot be centred on the 20-col grid: paint them proportionally into
+  the art (title subtitle) or rephrase to an even length.
+- A '.' (font:DOT via a legend char like '·') ends a text run: "salir." -> define SALIR, LEN 5.
+- Full-screen window (pause): never put the LYC cut at line 144: LYC and VBlank fire together, the
+  VBlank ISR runs first and the gbe_video LYC handler leaves window off / OBJ on for the next frame.
+  Specify hud_cut = 0 + LCDC window on / OBJ off instead (MADRIGUERA ui.md 7).

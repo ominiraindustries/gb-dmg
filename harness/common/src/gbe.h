@@ -218,6 +218,16 @@ uint8_t vq_push_fill(uint8_t *dst, uint8_t tile, uint8_t len);
 uint8_t vq_pending(void);
 void vq_draw_vram(void);                        // VBlank (asm, ~20 T per tile)
 
+// ---------------------------------------------------------------- gbe_vwf.c
+// Proportional text drawn into a strip of tiles (reference + test decoder: harness/vwf.py). Register
+// the fonts once: vwf_font(0, BANK(font), font_tiles, font_vwf), 1 = font_lower, 2 = font_es.
+// Strips up to 31 tiles (the pen is 8-bit). ~2k T per glyph: draw outside VBlank, copy with gbe_tiles.
+extern uint8_t vwf_space;
+void vwf_font(uint8_t k, uint8_t bank, const uint8_t *tiles, const uint8_t *metrics) GBE_FAR;
+uint8_t vwf_width(const char *s) GBE_FAR;
+void vwf_clear(uint8_t *buf, uint8_t ntiles) GBE_FAR;
+uint8_t vwf_draw(uint8_t *buf, uint8_t ntiles, uint8_t x, const char *s) GBE_FAR;
+
 // ---------------------------------------------------------------- gbe_text.c
 // Shared font text (0-9 A-Z - ! . : ? /, a-z with font_lower) + a 4-line message log through gbe_vq.
 // The game sets txt_font = VRAM_FONT, txt_blank = its blank tile, txt_lower = VRAM_FONT_LOWER when

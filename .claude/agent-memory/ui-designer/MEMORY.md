@@ -9,4 +9,4 @@
 - [Decide UI details, commercial bar](feedback_autonomy.md) — FARO: don't ask about UI details; deliver polished, decided screens
 
 ## Working notes
-- [Screen mockup gotchas](screen_gotchas.md) — run naming, row widths, no letter legend keys, descenders, 8x16 preview halves, one file per VRAM slot
+- [Screen mockup gotchas](screen_gotchas.md) — run naming, row widths, legend keys, descenders, 8x16 halves, VRAM slots, title tile budget tricks, no LYC 144

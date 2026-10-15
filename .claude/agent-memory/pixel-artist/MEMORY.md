@@ -9,6 +9,7 @@
   the .tiles files are the source of truth afterwards.
 - [GRIFO shmup lessons](shmup_lessons.md) — bullet/BG readability rules learned on games/shmup (2026-10-14)
 - [First-person view lessons](fpview_lessons.md) — view.pcs generator, tile budget tricks, layered-shape monsters (games/dungeon)
-- [Shared font lessons](font_lessons.md) — user hated thin 5x7 font; bold 7x7 rules (2 px stems, 6 px digits) used since 2026-10-14; lowercase in font_lower.tiles
+- [Shared font lessons](font_lessons.md) — user hated thin 5x7 font; bold 7x7 rules; lowercase in font_lower.tiles; 2026-10-15 user wants PROPORTIONAL font (font_mini, 1 px gap)
 - [FARO style](faro_style.md) — user wants clean Link's Awakening look with own identity (no noise/hatching); hero is Leo (boy)
+- [MADRIGUERA style](mazmorra_style.md) — burrow walls, Tilo bell cap, babosa; title.tiles clash with ui-designer (2026-10-15)
 - [Map lessons](map_lessons.md) — world .map generator/autotile rules, boats on sand, one object per cell, species-window lint (games/faro)

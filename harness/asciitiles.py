@@ -55,20 +55,32 @@ def encode(rows):
     return out
 
 
+def metrics(rows):
+    """(first ink column, ink width) of a glyph tile; (0, 0) for a blank one."""
+    cols = [x for x in range(8) if any(COLORS[r[x]] for r in rows)]
+    return (cols[0], cols[-1] - cols[0] + 1) if cols else (0, 0)
+
+
 def convert(src, out_dir):
     src, out_dir = Path(src), Path(out_dir)
     stem = src.stem
     tiles, labels = parse(src)
     out_dir.mkdir(parents=True, exist_ok=True)
     body = ",\n".join("    " + ",".join(f"0x{b:02X}" for b in encode(t)) for t in tiles)
+    vwf = ""
+    if stem.startswith("font"):                 # fonts: glyph metrics for gbe_vwf (proportional text)
+        m = ", ".join(f"0x{(f << 4) | w:02X}" for f, w in (metrics(t) for t in tiles))
+        vwf = (f"// per glyph: (first ink column << 4) | ink width (0 = blank), for gbe_vwf\n"
+               f"const uint8_t {stem}_vwf[] = {{ {m} }};\n")
     (out_dir / f"{stem}.c").write_text(encoding="utf-8", data=
         f"// Generated from {src.name} by harness/asciitiles.py - do not edit\n"
-        f"#include <stdint.h>\n\nconst uint8_t {stem}_tiles[] = {{\n{body}\n}};\n")
+        f"#include <stdint.h>\n\nconst uint8_t {stem}_tiles[] = {{\n{body}\n}};\n{vwf}")
     defines = "\n".join(f"#define {stem.upper()}_{k} {v}" for k, v in labels.items())
     (out_dir / f"{stem}.h").write_text(encoding="utf-8", data=
         f"// Generated from {src.name} by harness/asciitiles.py - do not edit\n"
         f"#pragma once\n#include <stdint.h>\n\n"
-        f"extern const uint8_t {stem}_tiles[];\n#define {stem.upper()}_COUNT {len(tiles)}\n{defines}\n")
+        f"extern const uint8_t {stem}_tiles[];\n#define {stem.upper()}_COUNT {len(tiles)}\n{defines}\n"
+        + (f"extern const uint8_t {stem}_vwf[];\n" if stem.startswith("font") else ""))
     return out_dir / f"{stem}.c"
 
 

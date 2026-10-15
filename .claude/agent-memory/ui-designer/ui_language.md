@@ -23,3 +23,8 @@ button names, compass letters, and title logos. Apply to every new game's mockup
 box titles as tabs cut into the top border (also the dialogue speaker name); Start panel as a
 right-hand drawer without right border; HUD = 2 sprite icons only. Logo with outlined letters,
 light top / dark bottom fill and a 3 px dark shadow; hero sprite on the title again.
+
+**MADRIGUERA (2026-10-15, not yet reviewed by the user):** same frame, rounded corners, inner line
+as a dashed "stitch" (sewn sack, period 4 symmetric); HUD in window row 0 with row 1 blank; game over
+= framed box on solid black, ending = box on white (dawn); title logo MADRIGUERA outlined white/light
+with dark shadow, painted proportional subtitle, Tilo drawn into the BG art (no sprite dependency).
