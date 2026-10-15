@@ -256,7 +256,7 @@ def build(name):
         for name in cfg["screens"]:
             try:
                 sources.append(screens.convert(gdir / "design" / "screens" / f"{name}.screen", gen,
-                                               sets, cfg.get("vram_order", [])))
+                                               sets, cfg.get("vram_order", []), cfg.get("vwf"), gdir))
             except (KeyError, ValueError) as e:
                 die(str(e))
     for mt_file in sorted((gdir / "res").glob("metatiles*.mt")):          # metatiles.mt, metatiles_<set>.mt

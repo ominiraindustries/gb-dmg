@@ -145,12 +145,16 @@ class GB:
 
     def screen_tiles(self):
         """The 18 x 20 tiles the player sees: the BG map of LCDC bit 3 scrolled by SCX/SCY (rounded
-        to tiles) with the window (LCDC bits 5 and 6, WX/WY) on top. Sprites are not included."""
+        to tiles) with the window (LCDC bits 5 and 6, WX/WY) on top, down to the LYC line with gbe's HUD
+        cut (hud_cut). Sprites are not included."""
         lcdc, scy, scx = self.io(0xFF40), self.io(0xFF42), self.io(0xFF43)
         bg = self.bg_map(map=1 if lcdc & 0x08 else 0)
         win = self.bg_map(map=1 if lcdc & 0x40 else 0)
         on, wy, wx = self.window_on(), self.io(0xFF4A), self.io(0xFF4B) - 7
-        return [[win[(r * 8 - wy) >> 3][(c * 8 - wx) >> 3] if on and r * 8 >= wy and c * 8 >= wx
+        cut = 144                                       # gbe HUD cut: the window ends at line LYC
+        if "hud_cut" in self.syms and self.u8("hud_cut"):
+            cut = self.io(0xFF45)
+        return [[win[(r * 8 - wy) >> 3][(c * 8 - wx) >> 3] if on and wy <= r * 8 < cut and c * 8 >= wx
                  else bg[((scy + r * 8) >> 3) & 31][((scx + c * 8) >> 3) & 31] for c in range(20)]
                 for r in range(18)]
 
@@ -164,6 +168,11 @@ class GB:
         """Screen cells that differ from design/screens/<name>.screen (harness/vramcheck.py)."""
         import vramcheck
         return vramcheck.mockup_errors(self, self.game_dir, name, region, ignore)
+
+    def read_text(self, row, c0=0, c1=20):
+        """Proportional (gbe_vwf / screens.py vwf) text on screen row `row`, decoded from the pixels."""
+        import vramcheck
+        return vramcheck.read_text(self, self.game_dir, row, c0, c1)
 
     def bg_map(self, window=False, map=None):
         """32 rows of 32 tile indices: map=0 $9800, map=1 $9C00. window=True = map 1 AND asserts the

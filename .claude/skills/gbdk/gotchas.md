@@ -138,3 +138,9 @@ and tests run with GBDK 4.5.0 (marked *tested*).
   Lesson: a test must read every important 16-bit value back (here the whole map read as solid);
   when a value is "half right", read the asm (`lcc -S`) before suspecting the logic.
 
+
+## SDCC 4.5 miscompile: 16-bit shift of an address-taken u8 local (verified, games/mazmorra)
+`uint8_t y; get(&x, &y); out = (uint16_t)y << 4;` compiles to `sla c` x4 with the high byte 0
+(y = 29 gave 208, not 464): the cast is dropped when the local lives on the stack because its
+address was taken. Globals and parameters are fine (`add hl, hl`). Workaround: copy into a u16
+first: `out = y; out <<= 4;`. Check with `lcc -S` when a shifted value from an out-parameter looks wrong.

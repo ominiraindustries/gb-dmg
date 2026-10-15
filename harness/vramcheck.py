@@ -51,6 +51,11 @@ class Scene:
         self.bg = [self._region(e) for e in sc.get("bg", [])]
         base = 0
         for slot in cfg.get("vram_order", []):           # vram_order slots (screens.vram_bases rules)
+            if isinstance(slot, dict):                  # reserved slot (proportional text): drawn at run
+                (_, size), = slot.items()               # time, any content is its own
+                self.bg.append((base, size, [], "free"))
+                base += size
+                continue
             group = slot if isinstance(slot, list) else [slot]
             size = max(len(self.sets[g].tiles) for g in group)
             self.bg.append((base, size, [self._tiles(g) for g in group], "slot"))
@@ -77,6 +82,8 @@ class Scene:
             if not first <= n < first + count:
                 continue
             k = n - first
+            if mode == "free":
+                return None
             if mode == "any":
                 return None if data in set(groups[0]) else f"not a tile of its slot's tileset"
             if any(k < len(g) and g[k] == data for g in groups):
@@ -124,27 +131,54 @@ def vram_errors(gb, gdir, scene):
 def mockup_errors(gb, gdir, name, region=None, ignore=()):
     """Cells of the screen that differ from design/screens/<name>.screen. region = (col0, row0, col1,
     row1) end-exclusive (default the whole screen); ignore: text names of the mockup (dynamic values,
-    the 'FASE' of "SCREEN_X_AT_FASE") or (row, col, len) tuples. Returns [(row, col, want, got)]."""
+    the 'FASE' of "SCREEN_X_AT_FASE") or (row, col, len) tuples. Returns [(row, col, want, got)].
+    With proportional text (game.json "vwf") the text cells are also compared pixel by pixel with
+    what the build drew (want/got are then the 16 tile bytes)."""
     gdir = Path(gdir)
     cfg = json.loads((gdir / "game.json").read_text(encoding="utf-8"))
     sets = preview.find_tilesets(gdir)
-    bases = screens.vram_bases(cfg["vram_order"], sets)
     path = gdir / "design" / "screens" / f"{name}.screen"
-    cells, _ = preview.parse_screen(path, sets)
+    want_map, _, runs = screens.screen_map(path, sets, cfg["vram_order"], cfg.get("vwf"), gdir)
     skip = set()
-    runs = {t: (r, c, n) for t, r, c, n, _ in screens.text_runs(path)}
+    names = {t: (r, c, n) for t, r, c, n, _ in screens.text_runs(path)}
     for item in ignore:
-        r, c, n = runs[item] if isinstance(item, str) else item
+        r, c, n = names[item] if isinstance(item, str) else item
         skip |= {(r, c + k) for k in range(n)}
+    pixels = {(run["r"], run["c"] + k): run["data"][k] for run in runs for k in range(run["n"])}
     c0, r0, c1, r1 = region or (0, 0, 20, 18)
     got = gb.screen_tiles()
+    lcdc = gb.io(0xFF40)
     out = []
     for r in range(r0, r1):
         for c in range(c0, c1):
             if (r, c) in skip:
                 continue
-            ts, i = cells[r][c]
-            want = bases[ts.name] + i
-            if got[r][c] != want:
-                out.append((r, c, want, got[r][c]))
+            if got[r][c] != want_map[r][c]:
+                out.append((r, c, want_map[r][c], got[r][c]))
+            elif (r, c) in pixels:
+                a = tile_addr(got[r][c], False, lcdc)
+                vram = list(gb.pyboy.memory[a:a + 16])
+                if vram != list(pixels[(r, c)]):
+                    out.append((r, c, list(pixels[(r, c)]), vram))
     return out
+
+
+def read_text(gb, gdir, row, c0=0, c1=20):
+    """Proportional text shown in screen row `row`, cells c0..c1-1 (decoded from the tile bytes with
+    the game's vwf fonts: harness/vwf.py decode). With game.json "vwf" only tiles of the text slot
+    are read (frames and icons count as blank); otherwise unknown shapes read as '?'."""
+    import vwf
+    cfg = json.loads((Path(gdir) / "game.json").read_text(encoding="utf-8"))
+    fonts = tuple(cfg["vwf"]["fonts"]) if cfg.get("vwf") else ("font", "font_lower", "font_es")
+    lo, hi = 0, 256                             # with a text slot, only its tiles are text (box
+    if cfg.get("vwf"):                          # frames and icons would read as '?')
+        bases = screens.vram_bases(cfg["vram_order"], preview.find_tilesets(Path(gdir)))
+        slot = cfg["vwf"]["slot"]
+        size = next(next(iter(e.values())) for e in cfg["vram_order"] if isinstance(e, dict) and slot in e)
+        lo, hi = bases[slot], bases[slot] + size
+    lcdc = gb.io(0xFF40)
+    tiles = []
+    for n in gb.screen_tiles()[row][c0:c1]:
+        a = tile_addr(n, False, lcdc)
+        tiles.append(list(gb.pyboy.memory[a:a + 16]) if lo <= n < hi else [0] * 16)
+    return vwf.decode(gdir, tiles, fonts).strip()

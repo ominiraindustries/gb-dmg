@@ -1,7 +1,9 @@
 ; TITULO, menu state (M3, after Start when a save exists). Same art; the code copies rows 14-17
 ; of screen_title_menu_map over the 'Pulsa Start' rows. Cursor (BG) col 4, options col 5, 2-row
-; pitch. Without a save the title goes straight to INTRO on Start (no menu).
-tilesets: title ui font font_lower font_es
+; pitch, left-aligned. Without a save the title goes straight to INTRO on Start (no menu).
+; Text slot tiles 11-32 (text: 11): no clash with 'Pulsa Start' when B goes back.
+tilesets: title ui font_mini font_mini_lower font_mini_es
+text: 11
 legend:
 α title:T000
 β title:T001

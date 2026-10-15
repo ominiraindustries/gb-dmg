@@ -1,0 +1,27 @@
+; MADRIGUERA - constantes de reglas (GDD 2.12). El C lee RULE(RULE_<ID>): nada de numeros de
+; equilibrio en el codigo. Velocidades en 8.8 (256 = 1 px/f), tiempos en frames.
+@ table rules
+@ prefix RULE
+@ col v u16
+;id                v
+LINK_SPEED         320    ; 1.25 px/f
+SWORD_FRAMES       14
+SWORD_ACTIVE_FROM  2
+SWORD_ACTIVE_TO    9
+SWORD_BUFFER_FROM  8
+HITSTOP            2
+HURT_INVULN        60
+KNOCK_FRAMES       8
+KNOCK_SPEED        2      ; px/f
+HP_START           6      ; medios corazones
+HP_MAX             8
+SCROLL_SPEED       4      ; px/f de la camara al cambiar de sala
+SCROLL_WALK        32     ; frames que Tilo anda 1 px/f al cambiar de sala
+ENEMY_INVULN       20
+ENEMY_KNOCK_FPC    6      ; frames por celda del retroceso de un enemigo golpeado
+PICKUP_LIFE        300
+PICKUP_BLINK       60
+HEART_HEAL         2
+DEATH_FREEZE       30
+SHAKE_FRAMES       6
+CORNER_SLIDE       6      ; px de margen para deslizar en esquinas y puertas

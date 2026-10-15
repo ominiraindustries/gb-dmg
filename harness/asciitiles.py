@@ -55,6 +55,10 @@ def encode(rows):
     return out
 
 
+FONT_LAYOUT = {"DIGIT0": 0, "LETTER_A": 10, "DASH": 36, "EXCLAM": 37, "DOT": 38, "COLON": 39,
+               "QUESTION": 40, "SLASH": 41}       # gbe.h GBE_FONT_*: every main font has this layout
+
+
 def metrics(rows):
     """(first ink column, ink width) of a glyph tile; (0, 0) for a blank one."""
     cols = [x for x in range(8) if any(COLORS[r[x]] for r in rows)]
@@ -65,6 +69,10 @@ def convert(src, out_dir):
     src, out_dir = Path(src), Path(out_dir)
     stem = src.stem
     tiles, labels = parse(src)
+    if "DIGIT0" in labels and labels != {k: v for k, v in FONT_LAYOUT.items() if k in labels} | {
+            k: v for k, v in labels.items() if k not in FONT_LAYOUT}:
+        raise ValueError(f"{src}: a main font must keep the shared glyph layout {FONT_LAYOUT} "
+                         f"(gbe.h GBE_FONT_*), got {labels}")
     out_dir.mkdir(parents=True, exist_ok=True)
     body = ",\n".join("    " + ",".join(f"0x{b:02X}" for b in encode(t)) for t in tiles)
     vwf = ""

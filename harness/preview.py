@@ -159,12 +159,20 @@ def parse_screen(path, sets):
     return cells, sprs
 
 
-def render_screen(path, sets, out, scale=3):
+def render_screen(path, sets, out, scale=3, gdir=None):
     cells, sprs = parse_screen(path, sets)
     screen = Image.new("RGBA", (160, 144), SHADES[0] + (255,))
     for ty, row in enumerate(cells):
         for tx, (ts, i) in enumerate(row):
             screen.paste(ts.images[i], (tx * 8, ty * 8))
+    cfg = _config(gdir) if gdir else {}
+    if cfg.get("vwf"):                                  # proportional text, as the build draws it
+        import screens
+        for run in screens.screen_map(path, sets, cfg["vram_order"], cfg["vwf"], gdir)[2]:
+            for k, t in enumerate(run["data"]):
+                rows = ["".join(".-+#"[((t[2 * r] >> (7 - x)) & 1) | (((t[2 * r + 1] >> (7 - x)) & 1) << 1)]
+                                for x in range(8)) for r in range(8)]
+                screen.paste(tile_image(rows), ((run["c"] + k) * 8, run["r"] * 8))
     for ts, i, x, y, fx, fy in sprs:
         spr = ts.sprites[i]
         if fx:
@@ -277,7 +285,7 @@ def preview(gdir):
         written += fpview.preview(gdir, out)
     for scr in sorted((gdir / "design" / "screens").glob("*.screen")):
         p = out / f"screen_{scr.stem}.png"
-        render_screen(scr, sets, p)
+        render_screen(scr, sets, p, gdir=gdir)
         written.append(p)
     return written
 

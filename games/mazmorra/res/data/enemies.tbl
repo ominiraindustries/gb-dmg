@@ -1,0 +1,16 @@
+; MADRIGUERA - enemigos (GDD 2.6). Orden = enum kind de los objetos 'enemy' del mapa (game.json).
+@ table enemies
+@ prefix EN
+@ col hp     u8
+@ col dmg    u8          ; medios corazones por contacto
+@ col fpc    u8          ; frames por celda
+@ col t1     u8          ; BABOSA -, TOPILLO aviso, ESCUPIDOR reposo
+@ col t2     u8          ; TOPILLO fuera, ESCUPIDOR carga
+@ col t3     u8          ; TOPILLO espera
+@ col shot   u16         ; velocidad de proyectil 8.8 (0 = no dispara)
+@ col heart  u8          ; corazon al morir: 1 de cada N (0 = nunca)
+@ col bombs  u8          ; bombas al morir si bombs < 2: 1 de cada N
+;id        hp dmg fpc t1  t2  t3  shot heart bombs
+BABOSA     2  1   24  0   0   0   0    4     3
+TOPILLO    1  1   20  20  60  90  0    3     3
+ESCUPIDOR  3  1   0   90  20  0   384  4     3

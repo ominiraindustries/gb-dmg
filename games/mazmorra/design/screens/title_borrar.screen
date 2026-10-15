@@ -1,7 +1,9 @@
 ; TITULO, confirm (M3): 'Nueva partida' with a save. Box rows 11-17 over the scene (code copies
 ; rows 11-17 of screen_title_borrar_map; B/No restores rows 11-17 from screen_title_menu_map).
-; Starts on 'No'. Cursor col 5 (Si) / col 11 (No).
-tilesets: title ui font font_lower font_es
+; Starts on 'No'. Cursor col 5 (Si) / col 11 (No). Question centred; text slot tiles 33-70.
+tilesets: title ui font_mini font_mini_lower font_mini_es
+text: 33
+center: EMPEZAR_DE_NUEVO SE_BORRARA_TODO
 legend:
 α title:T000
 β title:T001
@@ -104,9 +106,9 @@ _ ui:FRAME_T
 ( ui:FRAME_BL
 = ui:FRAME_B
 ) ui:FRAME_BR
-? font:QUESTION
-¿ font_es:QUEST_OPEN
-· font:DOT
+? font_mini:QUESTION
+¿ font_mini_es:QUEST_OPEN
+· font_mini:DOT
 grid:
 ....................
 αβγδεζηθικλμνξοπθρδσ
@@ -120,8 +122,8 @@ grid:
 ..ыьэююююююююююяАБ..
 ыьВююГюДЕЖЖЗИЙКююЛАБ
 <__________________>
-{.Se.borrara.la....}
-{.partida·.¿Seguro?}
+{¿Empezar.de.nuevo?}
+{.Se.borrara.todo·.}
 {..................}
 {.....Si...*No.....}
 {..................}

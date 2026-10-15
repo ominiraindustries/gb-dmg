@@ -1,22 +1,111 @@
 {
   "title": "MADRIGUERA",
-  "common_res": ["font", "font_lower", "font_es"],
-  "common_src": ["gbe_frame.c", "gbe_oam.c", "gbe_video.c", "gbe_screen.c", "gbe_sfx.c", "gbe_sfx_asm.s",
-                 "gbe_bank.c", "gbe_save.c", "gbe_rng.c", "gbe_vram.s", "gbe_vq.c", "gbe_vq.s", "gbe_text.c",
-                 "gbe_world.c", "gbe_world.s", "gbe_gact.c", "gbe_gact.s", "gbe_tiles.c", "gbe_tiles.s",
-                 "gbe_vwf.c", "gbe_selftest.c"],
-  "lcc_flags": ["-autobank", "-Wm-yt0x1B", "-Wm-yo4", "-Wm-ya1"],
-  "vram_order": [["dungeon", "title"], "ui", "font", "font_lower", "font_es"],
-  "banked_res": ["title", "ui", "font", "font_lower", "font_es", "dungeon", "link", "enemies", "fx", "items",
-                 "metatiles", "map_mazmorra", "screen_title", "screen_play", "screen_fin"],
-  "screens": ["title", "play", "fin"],
+  "common_res": [
+    "font_mini",
+    "font_mini_lower",
+    "font_mini_es"
+  ],
+  "common_src": [
+    "gbe_frame.c",
+    "gbe_oam.c",
+    "gbe_video.c",
+    "gbe_screen.c",
+    "gbe_sfx.c",
+    "gbe_sfx_asm.s",
+    "gbe_bank.c",
+    "gbe_save.c",
+    "gbe_rng.c",
+    "gbe_vram.s",
+    "gbe_vq.c",
+    "gbe_vq.s",
+    "gbe_text.c",
+    "gbe_world.c",
+    "gbe_world.s",
+    "gbe_gact.c",
+    "gbe_gact.s",
+    "gbe_tiles.c",
+    "gbe_tiles.s",
+    "gbe_vwf.c",
+    "gbe_selftest.c"
+  ],
+  "lcc_flags": [
+    "-autobank",
+    "-Wm-yt0x1B",
+    "-Wm-yo4",
+    "-Wm-ya1"
+  ],
+  "vram_order": [
+    [
+      "dungeon",
+      "title"
+    ],
+    "ui",
+    {
+      "text": 90
+    }
+  ],
+  "banked_res": [
+    "title",
+    "ui",
+    "dungeon",
+    "link",
+    "enemies",
+    "fx",
+    "items",
+    "metatiles",
+    "map_mazmorra",
+    "screen_title",
+    "screen_play",
+    "screen_fin",
+    "font_mini",
+    "font_mini_lower",
+    "font_mini_es"
+  ],
+  "screens": [
+    "title",
+    "play",
+    "fin"
+  ],
   "world_objects": {
-    "enemy": ["kind enum BABOSA TOPILLO ESCUPIDOR"],
+    "enemy": [
+      "kind enum BABOSA TOPILLO ESCUPIDOR"
+    ],
     "start": []
   },
   "vram_scenes": {
-    "title": { "spr": [] },
-    "play": { "spr": [[0, "link"], [46, "enemies"], [76, "fx"], [98, "items"]] },
-    "gameover": { "spr": [] }
+    "title": {
+      "spr": []
+    },
+    "play": {
+      "spr": [
+        [
+          0,
+          "link"
+        ],
+        [
+          46,
+          "enemies"
+        ],
+        [
+          76,
+          "fx"
+        ],
+        [
+          98,
+          "items"
+        ]
+      ]
+    },
+    "gameover": {
+      "spr": []
+    }
+  },
+  "vwf": {
+    "fonts": [
+      "font_mini",
+      "font_mini_lower",
+      "font_mini_es"
+    ],
+    "slot": "text"
   }
 }

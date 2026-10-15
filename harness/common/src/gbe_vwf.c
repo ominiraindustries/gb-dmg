@@ -12,7 +12,6 @@
 #pragma bank 255
 #endif
 #include "gbe.h"
-#include "font.h"
 
 typedef struct { uint8_t bank; const uint8_t *tiles; const uint8_t *met; } vwf_set_t;
 static vwf_set_t sets[3];
@@ -25,15 +24,15 @@ void vwf_font(uint8_t k, uint8_t bank, const uint8_t *tiles, const uint8_t *metr
 // font set and glyph index of c; 0xFF = space / not in the fonts (same table as gbe_text txt_char)
 static uint8_t glyph(char c, uint8_t *set) {
     *set = 0;
-    if (c >= 'A' && c <= 'Z') return FONT_LETTER_A + (c - 'A');
-    if (c >= '0' && c <= '9') return FONT_DIGIT0 + (c - '0');
+    if (c >= 'A' && c <= 'Z') return GBE_FONT_LETTER_A + (c - 'A');
+    if (c >= '0' && c <= '9') return GBE_FONT_DIGIT0 + (c - '0');
     switch (c) {
-    case '-': return FONT_DASH;
-    case '!': return FONT_EXCLAM;
-    case '.': return FONT_DOT;
-    case ':': return FONT_COLON;
-    case '?': return FONT_QUESTION;
-    case '/': return FONT_SLASH;
+    case '-': return GBE_FONT_DASH;
+    case '!': return GBE_FONT_EXCLAM;
+    case '.': return GBE_FONT_DOT;
+    case ':': return GBE_FONT_COLON;
+    case '?': return GBE_FONT_QUESTION;
+    case '/': return GBE_FONT_SLASH;
     }
     if (c >= 'a' && c <= 'z') { *set = 1; return c - 'a'; }
     *set = 2;

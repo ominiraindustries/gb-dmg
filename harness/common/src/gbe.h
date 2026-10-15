@@ -218,6 +218,17 @@ uint8_t vq_push_fill(uint8_t *dst, uint8_t tile, uint8_t len);
 uint8_t vq_pending(void);
 void vq_draw_vram(void);                        // VBlank (asm, ~20 T per tile)
 
+// Glyph layout shared by every main font (font, font_mini...: asciitiles.py stops the build if a font
+// with a DIGIT0 label differs), so gbe_text / gbe_vwf work with whichever font the game loads
+#define GBE_FONT_DIGIT0    0
+#define GBE_FONT_LETTER_A  10
+#define GBE_FONT_DASH      36
+#define GBE_FONT_EXCLAM    37
+#define GBE_FONT_DOT       38
+#define GBE_FONT_COLON     39
+#define GBE_FONT_QUESTION  40
+#define GBE_FONT_SLASH     41
+
 // ---------------------------------------------------------------- gbe_vwf.c
 // Proportional text drawn into a strip of tiles (reference + test decoder: harness/vwf.py). Register
 // the fonts once: vwf_font(0, BANK(font), font_tiles, font_vwf), 1 = font_lower, 2 = font_es.

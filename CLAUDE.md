@@ -120,6 +120,9 @@ Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `
   o con banco: 16 B por tile ~480 T, 128 B con `bank_memcpy` 4.2k; en VBlank usar copias asm desenrolladas como
   `tile_copy16` de gbe_tiles.s, ~20 T/byte); `memmove` (~190 T/byte) y `strncpy`
   (~290 T/byte) son C: evitarlos en el juego (games/dungeon: 11k T por un scroll de 60 bytes).
+- SDCC 4.5 compila mal `(uint16_t)y << 4` si `y` es un `uint8_t` local cuya dirección se pasó a una
+  función (`get(&x, &y)`): lo hace en 8 bits. Copiar antes a un u16 (`v = y; v <<= 4;`); detalle en gbdk
+  `gotchas.md`.
 - Trampas medidas de SDCC: indexar con `int8_t` (`board[row_off[r] + i]`) ~466 T por acceso → usar
   punteros/`memcpy`; recalcular datos de una forma en cada llamada → cachear; `memcpy`/`memset` de
   GBDK son asm y rápidos.
