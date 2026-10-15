@@ -13,7 +13,7 @@ extern uint16_t rules_cache[];
 #define R8(id) ((uint8_t)rules_cache[id])
 
 // ---------------------------------------------------------------- race (race.c)
-#define RN_MAX 14
+#define RN_MAX 8                                // fields of 8 (user: faster races, the weight is the management)
 // runners: inputs (the stable's horses or gen_field's rivals)
 extern uint8_t rn_n, rn_vel[], rn_res[], rn_pun[], rn_tem[], rn_dpref[], rn_fat[], rn_jock[], rn_estilo[];
 extern uint8_t rn_tac[], rn_gate[], rn_weight[], rn_rating[], rn_name0[], rn_name1[];
@@ -43,6 +43,7 @@ void race_runners_range(uint8_t from, uint8_t to);   // part of a tick (split ov
 void race_tick_end(void);                       // sort, clock, end of race
 extern uint8_t rl_from, rl_to;
 void move_one(runner_t *r);                     // race_move.s (asm)
+void sprites(void);                             // race_spr.s (spec: sprites_c in race_view.c)
 void think_asm(runner_t *x, uint8_t i);         // race_think.s (asm)
 void think_c(runner_t *x, uint8_t i) BANKED;           // its C reference
 void race_runners(void);                        // race_loop.s: think + move every runner
@@ -55,5 +56,3 @@ uint8_t race_winner(void) BANKED;                      // the first one past the
 void rv_build(void) BANKED;                     // LCD off
 uint8_t rv_update(void) BANKED;                 // per frame; 1 = over
 extern int16_t cam;
-void place_all(void);                           // race_place.s: rv_x/rv_y of every runner
-extern uint16_t rv_x[], rv_y[];

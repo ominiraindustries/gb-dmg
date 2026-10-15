@@ -22,11 +22,12 @@
     "gbe_tiles.c",
     "gbe_tiles.s",
     "gbe_vwf.c",
+    "gbe_vwf_blit.s",
     "gbe_menu.c",
     "gbe_list.c",
-    "gbe_world.c",
-    "gbe_world.s",
-    "gbe_vram.s"
+    "gbe_raster.c",
+    "gbe_raster.s",
+    "gbe_util.s"
   ],
   "lcc_flags": [
     "-autobank",
@@ -53,10 +54,7 @@
     "greybox",
     "font_mini",
     "font_mini_lower",
-    "font_mini_es",
-    "metatiles",
-    "map_hv",
-    "map_st"
+    "font_mini_es"
   ],
   "screens": [],
   "vram_scenes": {
@@ -69,7 +67,14 @@
       ]
     },
     "race": {
-      "spr": []
+      "spr": [
+        [
+          0,
+          "greybox",
+          5,
+          1
+        ]
+      ]
     }
   }
 }

@@ -684,7 +684,7 @@ La y real se acerca 1 px/frame (los cambios de calle se ven como subir/bajar). P
 Escala por profundidad: filas visuales 0-6 usan los fotogramas "lejos" (caballo de 12 px de alto dentro
 del 16x16), 7-13 los "cerca" (16 px). Mismo número de sprites.
 
-**Caballos**: 16x16 = 2 sprites 8x16, galope de 4 fotogramas compartidos (fase = `(t >> 2) + i` & 3),
+**Caballos**: **16x16 (elegido por el usuario, 2026-10-15: todo el pelotón en pantalla; el arte se pule al final, ver design/horse_study.png)** = 2 sprites 8x16, galope de 4 fotogramas compartidos (fase = `(t >> 2) + i` & 3),
 x de pantalla en 8 bits relativa a la cámara (`(pos >> 2) - cam`, más `curva[banda de sus pies]`),
 morro en x. Tus caballos con OBP1 (seda invertida). Ocultos con Y = 0 si están fuera de 0..167 en x.
 Orden de OAM: de la fila más cercana a la más lejana (en la misma x gana el cercano). **Límite del DMG**:

@@ -4,7 +4,7 @@ import pytest
 
 import hv_model as M
 
-CASES = [("HV1200", 12), ("HV1650", 12), ("ST1000", 14), ("ST1600", 14), ("ST2400", 14), ("AW1200", 14)]
+CASES = [("HV800", 8), ("HV1000", 8), ("HV1200", 8), ("ST1000", 8), ("AW800", 8), ("AW1200", 8)]
 
 
 def rom_race(gb, seed, course, lo, hi, n):

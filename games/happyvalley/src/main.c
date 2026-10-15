@@ -55,6 +55,10 @@ void screen_build(uint8_t which) {
     txt_blank = VRAM_GREYBOX + GREYBOX_BLANK;
     if (which == SC_RACE) rv_build();
     else {
+        raster_n = 0;                           // no SCX splits outside the race
+        raster_commit();
+        scx_shadow = scy_shadow = 0;
+        WY_REG = 144;
         bank_set_bkg_data(BANK(greybox), VRAM_GREYBOX, GREYBOX_COUNT, greybox_tiles);
         bank_set_bkg_data(BANK(font_mini), VRAM_FONT_MINI, FONT_MINI_COUNT, font_mini_tiles);
         clear_bg();
@@ -120,7 +124,7 @@ static void screen_update(void) {
     if (pressed & J_A) {
         if (scene == SC_MENU) {
             bank_memcpy(BANK(tbl_courses), &crs, &tbl_courses[menu_course], sizeof(crs));
-            start_race(rng_state ^ sys_time, menu_course, 40, 60, crs.track == COURSES_TRACK_HV ? 12 : 14);
+            start_race(rng_state ^ sys_time, menu_course, 40, 60, RN_MAX);
         } else transition(SC_MENU);
     }
 }
@@ -134,6 +138,7 @@ void main(void) {
     LCDC_REG |= LCDCF_WIN9C00;
     WY_REG = 144;
     video_init(0, 0xE4, 0xE4, 0x1B);
+    raster_init();
     sound_init();
     rng_state = 0xACE1;
     show_screen_now(SC_MENU);
@@ -144,9 +149,9 @@ void main(void) {
         vsync();
         if (LY_REG < 144) vsync();
         frame_vsync_ly = LY_REG;
-        world_draw_vram();
-        tiles_draw_vram();
-        vq_draw_vram();
+        if (scene != SC_RACE) { tiles_draw_vram(); vq_draw_vram(); }
+        else if (vq_pending() && ((sys_time & 1) || !tq_staged)) vq_draw_vram();   // race: vsync() returns
+        else tiles_draw_vram();                 // at LY 149 (raster + ISR), ~5 lines: map rows and tile data
         frame_vram_check();
         frame_begin();
         if (race_req) test_hook();
