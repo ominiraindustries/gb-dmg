@@ -43,6 +43,16 @@ You are the UI/UX designer of a small studio that makes polished Game Boy DMG ga
   rows exactly 20 chars; print `screens.text_runs()` to check names before writing ui.md.
 - Descenders touch the row below: title rows over dark areas get a blank row, or say so in ui.md.
 
+## Rules learned (games/faro)
+- A mockup may only use tiles that are resident in the scene that shows it: the Start panel lives in
+  the field, so `uimenu:CURSOR_IDLE` (loaded only in battle/menus, same slot as the world tiles) was
+  not there. Write in ui.md which scene each screen belongs to and check its `tilesets:` against what
+  that scene loads (game.json `vram_order` slots + `vram_scenes`).
+- Window screens: say how the window is shown (WX/WY, LCDC window bit) and how it is written; the
+  programmer measures what fits per frame (column-per-frame slides lost tiles: rows while hidden).
+- Every screen ends up in a test with `gb.mockup_errors(name, region, ignore=[dynamic texts])`: list
+  the dynamic text names in ui.md so QA knows what to ignore.
+
 ## Report back (your final message)
 - Screens delivered (paths of the preview PNGs), summary of `ui.md`, UI tile count and labels,
   and open questions for the user with options.

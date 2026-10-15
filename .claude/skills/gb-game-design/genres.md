@@ -28,10 +28,22 @@
 - Art: the same scale on every face (4 stone courses near and far), BG 16 px periodic, flat tones
   per depth (gb-pixel-art). The user saw the near/far mismatch at once.
 
+## Open-world RPG (games/faro, closed halfway through M1b)
+What was built and works (reuse it): continuous 4-way world in 16x16-cell sectors (gbe_world),
+actors with AI (gbe_gact), scripts + dialogue box (gbe_script, gbe_tbox), data tables (tables.py),
+turn-based battle core mirrored by a Python model, chunked saves. Why it was closed: too much at
+once. Halfway through M1b the field used 119 of 120 frame lines with 16 actors, WRAM was at 96 %,
+five 16 KB banks were full, and the user saw NPCs with wrong graphics, a text box that never showed
+and a font too big. Next time: one map, two NPCs, one creature, the battle and one menu, polished and
+checked on screen (`gb.vram_errors`, `gb.mockup_errors`) before adding the next system. Plan VRAM
+homes (every tileset, every shared slot and who reloads it) in the GDD; worst-case costs to budget:
+a sector crossing (objects in/out + the step), a creature spawn (~19k T before splitting it in 3).
+
 ## Scope ladder (suggested order of projects)
 1. Fixed-screen arcade (done: breakout)
 2. Grid puzzle (done: tetris)
 3. Single-screen action with enemies and animation (sprite animation, simple AI)
 4. Horizontal scrolling platformer, one level (streaming, metatiles, camera) (done: platformer)
 5. Multi-level game with save (MBC5, banking, SRAM) (banking + save done: dungeon, one floor)
-6. Adventure/RPG (text engine, menus, data in banks) (text log + menus: dungeon)
+6. Adventure/RPG (text engine, menus, data in banks) (text log + menus: dungeon; open world + battles
+   attempted in faro and closed: start from a much smaller slice, see above)

@@ -28,8 +28,21 @@ You are the QA tester of a small studio that makes polished Game Boy DMG games.
    transitions): `vram_late == 0`, no frame = 255, worst < 120 lines. `gb.profile([...])` +
    `report()` names the slowest functions (only non-static ones; missing names are listed).
    If the game links the gbe engine, `gb.selftest()` must return 0 mismatches.
-4. **Visual review**: take screenshots of every screen and key moments, Read them, compare with
-   `design/screens/` mockups and the GDD. Look for leftover sprites, wrong tiles, misaligned HUD.
+4. **Visual review - what the player SEES, never only variables or VRAM maps** (games/faro shipped
+   a dialogue box that was never on screen and NPCs drawn with the title's beam tiles while every
+   test passed):
+   - `gb.vram_errors("<scene>")` in every scene of game.json `vram_scenes` (field, battle, menus...)
+     and after every transition INTO it (title -> field, battle -> field, menu -> field): every
+     visible sprite and BG/window tile must hold its own bytes. A scene missing from `vram_scenes`
+     is a finding (ask the producer to declare it).
+   - `gb.mockup_errors("<screen>", region, ignore=[dynamic texts])` for every fixed screen and menu
+     with a `design/screens` mockup.
+   - Text through `gb.screen_tiles()` (BG + window as shown), not `bg_map`: a box written to a hidden
+     window reads fine in VRAM.
+   - A contact sheet: a bot walks/plays each scene and screenshots every ~60 frames and on every
+     state change (turning NPCs, opening menus, entering/leaving battles); Read them ALL, sprites
+     included (vram_errors does not judge art, only ownership). Look for leftover sprites, sprites
+     with the wrong look, misaligned HUD, text cut or overlapping, glitches right after transitions.
 5. **Code review** against the gbdk skill `gotchas.md` checklist and CLAUDE.md rules (VRAM writes
    outside VBlank, `int8_t` indexing in hot loops, `/` and `%` by non-powers of 2, prototypes in
    blocks, unset palettes, sprites hidden by X instead of Y).
@@ -50,6 +63,8 @@ Known bugs you find become tests marked `@pytest.mark.xfail(strict=True, reason=
 suite stays green, and the fix turns the test into XPASS (a failure) so the mark gets removed.
 
 ## Harness helpers worth knowing
+- Graphics: `gb.vram_errors(scene)`, `gb.mockup_errors(name, region, ignore)`, `gb.screen_tiles()`,
+  `gb.window_on()` (harness/vramcheck.py doc has the `vram_scenes` format).
 - Text on screen: `GB.tile_text(tiles, font_base, lower_base)` (mixed case). Take the bases from
   `screens.vram_bases(game.json vram_order, ...)`, never hand numbers (a new font glyph broke
   the shmup's hard-coded bases).

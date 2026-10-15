@@ -15,6 +15,9 @@ Look at the PNG (Read tool) before calling a screen done.
 - Icons (hearts, lives) beat digits for small counts (<= 5).
 
 ## Text
+- The user finds the shared font too big and too spaced (games/faro). A new game's GDD plans a
+  tighter font: narrower glyphs (5-6 px, lower x-height) in the same 8x8 cells, or variable-width
+  text drawn into tiles for long dialogues (costs VRAM: budget it). Show a comparison image first.
 - Shared fonts: `harness/common/font.tiles` (digits, A-Z, `- ! . : ? /`, bold 7x7, 42 tiles) and
   `font_lower.tiles` (a-z, 26 tiles, same baseline). Missing glyphs go there (shared), never per game.
   No accents or n-tilde: write "Pocion", and rephrase words that need the n-tilde.

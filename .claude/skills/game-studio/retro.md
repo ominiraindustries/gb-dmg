@@ -6,6 +6,9 @@ Goal: the next game must start better than this one did. For each item, do it or
 - [ ] Read the git log of the game, the QA reports and the agents' memories (`.claude/agent-memory/`).
 - [ ] List every bug that reached QA or the user, every performance problem and every time a tool
       or document was wrong or missing.
+- [ ] For every bug the USER saw (they play, tests do not): which check would have caught it, and
+      why did ours pass? (games/faro: tests read VRAM maps and tile numbers, never what was drawn ->
+      `gb.vram_errors`, `gb.mockup_errors`, `gb.screen_tiles`.)
 
 ## 2. Turn mistakes into checks (best: impossible to repeat)
 - [ ] Build check (`harness/gb.py check_warnings`) for compiler-detectable mistakes.

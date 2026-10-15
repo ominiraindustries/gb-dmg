@@ -37,6 +37,10 @@ luego". The pipeline runs on its own from the idea to a playable, QA'd, bot-play
   Send answers back to the designer (SendMessage) to update the GDD, or edit it yourself if tiny.
 - "Decisiones pendientes": decide them with the designer's recommendation; ask only the expensive
   ones (core mechanic, view, scope), batched. Mark the GDD "aprobado" with the date. Commit.
+- **M1 is the smallest vertical slice, polished**: one map/level, one enemy type, one of each screen
+  kind. Size the game against what the engine can carry today (games/faro, an open-world RPG,
+  was at 119 of 120 frame lines, 96 % WRAM and full ROM banks halfway through M1b, with visual bugs
+  everywhere: the user closed it). If the idea is bigger, say so and propose the slice to start with.
 
 ## Phase 2 - Art and UI (in parallel, one message with two Agent calls)
 - **pixel-artist**: asset list from the GDD -> `res/*.tiles` (+ mockups showing art in context).
@@ -55,6 +59,15 @@ luego". The pipeline runs on its own from the idea to a playable, QA'd, bot-play
   `max_frame_lines` / `vram_late` / `skip_measure`, non-static globals for tests.
 - Tests for each mechanic as you go (`games/<game>/tests/`). Keep `python harness/gb.py test <game>` green.
 - Measure with `gb.profile([...])` before optimizing; asm only for measured hot spots, with tests.
+- Declare game.json `vram_scenes` (harness/vramcheck.py) from the first scene, and for every scene
+  and screen a test with `gb.vram_errors(scene)` (also after each transition into it) and
+  `gb.mockup_errors(screen, ...)`. Text through `gb.screen_tiles()`, never the VRAM maps.
+- **Look at the game yourself after every visible feature**: screenshots of the feature in action
+  (NPCs turning, menus opening, after transitions), Read them. Green tests are not "it works": in
+  games/faro the dialogue box was never on screen and NPCs wore the title's tiles, all tests green.
+- Small visible increments, each with a one-line checkpoint to the user ("pruébalo: Start abre el
+  panel") so they can follow the game as it grows; for a big game, stop for their look every few
+  features instead of only at the end ("hay que hacerle más seguimiento").
 - Commit at each milestone.
 
 ## Phase 4 - QA

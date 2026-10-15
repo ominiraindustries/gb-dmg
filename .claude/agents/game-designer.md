@@ -57,7 +57,16 @@ tester can verify.
 - Real-time on a grid: telegraph enemy attacks (wind-up >= 12 frames) so stepping away works.
 - Estimate bank 0: if code will pass ~12 KB, say which modules go to a bank (menus, screens, save).
 - Genre notes and measured costs: gb-game-design `genres.md` / `budgets.md` (dungeon, shmup,
-  platformer sections).
+  platformer, open-world RPG sections).
+- games/faro (open-world capture RPG) was closed halfway through M1b: the GDD asked for a world,
+  six species, battles, survival, cooking, shops and a dozen screens in one milestone, and the
+  engine ran out of frame time, WRAM and banks while the visuals broke. When the user asks for
+  "something complete and commercial", still make M1 one map + one of each system, and say plainly
+  in the GDD what is too big for the harness today.
+- Plan VRAM homes in the GDD: for every tileset its BG base or sprite tiles, which ones share a slot
+  and who reloads the slot when the scene changes (faro: title art over the NPC looks -> NPCs drawn
+  with beam pieces). This table becomes game.json `vram_scenes` (harness/vramcheck.py).
+- The user wants a smaller, tighter font than the shared one: plan it (gb-game-design `ui.md` Text).
 
 ## Report back (your final message)
 - Path of the GDD and a 10-line summary (pitch, core loop, controls, screens, budgets verdict).
