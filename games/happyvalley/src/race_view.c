@@ -25,7 +25,7 @@ uint8_t rv_cs, rv_sec, rv_min;                  // race clock (ticks x 4 cs), co
 static const char *say_s;                       // commentary typed 1 letter per frame
 static uint8_t say_k, say_x;
 static uint8_t line_buf[LINE_W * 16];
-uint8_t track_pts[TRACK_MAX_POINTS * 5];        // the course's path table (x16 y16 h), copied at build
+uint8_t track_pts[TRACK_MAX_POINTS * 5 + 5];   // + 1 point: place_all reads idx + 1        // the course's path table (x16 y16 h), copied at build
 uint16_t track_n;
 char rv_text[40];
 
@@ -37,7 +37,7 @@ static void say(const char *s) {
 }
 
 // one letter per frame (GDD 5.1 typewriter): a whole line at once cost 140k T
-static void type_letter(void) {
+void type_letter(void) {
     char c[2];
     if (!say_s) return;
     c[0] = say_s[say_k]; c[1] = 0;
@@ -111,7 +111,7 @@ void hud(void) {
 static int8_t sin_tab[64];
 
 // world px of runner k: the course table point at its metre (interpolated) + lane x the track normal
-static void place(uint8_t k) {
+void place(uint8_t k) {
     runner_t *r = &rx[k];
     uint16_t p = r->pos, idx = p >> 7, last = track_n - 1;
     uint8_t f = (uint8_t)(p & 127), h, *a;
@@ -224,7 +224,7 @@ uint8_t rv_update(void) BANKED {
     else return 1;
     if (pressed & J_A) rv_mode ^= 1;            // camera: the leader / the last one (M1b: your horse)
     rv_focus = rv_mode ? order[rn_n - 1] : order[0];
-    for (k = 0; k < rn_n; k++) place(k);
+    place_all();
     camera();
     world_update((uint8_t)(rv_x[rv_focus] >> 4), (uint8_t)(rv_y[rv_focus] >> 4), cam_cx, cam_cy);
     if (!say_s && (!(rv_t & 15) || rv_phase == RV_RUN)) commentary();

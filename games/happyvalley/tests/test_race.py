@@ -28,8 +28,10 @@ def rom_race(gb, seed, course, lo, hi, n):
     return [(ids[k], t[k], o[k]) for k in range(n) if ids[k] != 0xFF]
 
 
+@pytest.mark.parametrize("use_c", [0, 1], ids=["asm", "c"])
 @pytest.mark.parametrize("course,n", CASES)
-def test_rom_race_equals_model(gb, course, n):
+def test_rom_race_equals_model(gb, course, n, use_c):
+    gb.write_u8("race_use_c", use_c)            # race_move.s and its C reference, both == the model
     for seed in (0xBEEF, 0x1234, 0x0F0F):
         hs, w, want = M.race_from_seed(seed, course, 40, 60, n)
         got = rom_race(gb, seed, course, 40, 60, n)
