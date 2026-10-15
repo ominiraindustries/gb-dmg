@@ -36,6 +36,7 @@ class GB:
         self.pyboy = PyBoy(str(rom), window="null", sound_emulated=False, **extra)
         self.pyboy.set_emulation_speed(0)
         self.syms = load_noi(rom.with_suffix(".noi"))
+        self.game_dir = rom.parent.parent              # games/<game>/build/<game>.gb
         self.shots_dir = Path(shots_dir or rom.parent / "shots")
         self._snap, self._want_snap = None, False
         if "vsync" in self.syms:
@@ -152,6 +153,17 @@ class GB:
         return [[win[(r * 8 - wy) >> 3][(c * 8 - wx) >> 3] if on and r * 8 >= wy and c * 8 >= wx
                  else bg[((scy + r * 8) >> 3) & 31][((scx + c * 8) >> 3) & 31] for c in range(20)]
                 for r in range(18)]
+
+    def vram_errors(self, scene):
+        """What is on screen drawn with the wrong graphics: visible sprites and BG/window tiles checked
+        byte by byte against game.json vram_scenes[scene] + vram_order (harness/vramcheck.py)."""
+        import vramcheck
+        return vramcheck.vram_errors(self, self.game_dir, scene)
+
+    def mockup_errors(self, name, region=None, ignore=()):
+        """Screen cells that differ from design/screens/<name>.screen (harness/vramcheck.py)."""
+        import vramcheck
+        return vramcheck.mockup_errors(self, self.game_dir, name, region, ignore)
 
     def bg_map(self, window=False, map=None):
         """32 rows of 32 tile indices: map=0 $9800, map=1 $9C00. window=True = map 1 AND asserts the

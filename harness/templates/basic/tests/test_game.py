@@ -7,6 +7,13 @@ def test_player_starts_centered(gb):
     gb.screenshot("start")
 
 
+def test_screen_shows_its_own_graphics(gb):
+    """Every visible sprite and BG tile holds the bytes of its tileset (game.json vram_scenes):
+    declare one scene per screen of the game and check each one after entering it."""
+    gb.hold("right", 20)
+    assert gb.vram_errors("game") == []
+
+
 def test_player_moves_and_stays_on_screen(gb):
     x = gb.u8("player_x")
     gb.hold("right", 10)

@@ -72,9 +72,12 @@ Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `
 - Jugar: `python harness/gb.py run <juego>` (ventana PyBoy)
 - Las capturas de los tests van a `games/<juego>/build/shots/*.png`: mirarlas con Read
   para comprobar visualmente los cambios, no fiarse solo de los asserts.
-- Texto en tests: leer **lo que se ve** (`gb.screen_tiles()`: BG + ventana según LCDC/WX/WY), no el
-  mapa en VRAM. `gb.bg_map(window=True)` exige que la ventana esté en pantalla (games/faro: el cuadro
-  de diálogo nunca se vio en el campo por un `HIDE_WIN` y todos los tests pasaban leyendo su mapa).
+- Los tests comprueban **lo que se ve**, no variables ni mapas de VRAM (games/faro: diálogo que nunca
+  salía en pantalla y NPCs dibujados con los tiles del título, con todos los tests en verde):
+  `gb.vram_errors(escena)` (cada sprite visible y cada tile de fondo/ventana en pantalla tiene los
+  bytes de su gráfico, según game.json `vram_scenes` + `vram_order`; formato en `harness/vramcheck.py`),
+  `gb.mockup_errors(pantalla, region, ignore)` (pantalla == maqueta) y `gb.screen_tiles()` para leer
+  texto. `gb.bg_map(window=True)` exige que la ventana esté en pantalla.
 - Presupuesto de frame: el juego expone `max_frame_lines` (scanlines usadas tras `vsync()`) y un
   test con bot juega miles de frames y comprueba que no se pasa (ver `games/breakout`, `games/tetris`).
 - Cada mecánica nueva lleva un test: estado inicial → entrada → assert sobre variables.

@@ -2,5 +2,9 @@
   "title": "TEMPLATE",
   "common_res": ["font"],
   "common_src": ["gbe_frame.c", "gbe_oam.c", "gbe_video.c", "gbe_sfx.c", "gbe_sfx_asm.s"],
-  "lcc_flags": []
+  "lcc_flags": [],
+  "vram_order": ["bg", "font"],
+  "vram_scenes": {
+    "game": { "spr": [[0, "spr"]] }
+  }
 }
