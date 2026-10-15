@@ -14,3 +14,4 @@
 - [MADRIGUERA style](mazmorra_style.md) — burrow walls, Tilo bell cap, babosa; title.tiles clash with ui-designer (2026-10-15)
 - [Map lessons](map_lessons.md) — world .map generator/autotile rules, boats on sand, one object per cell, species-window lint (games/faro)
 - [Happy Valley art direction](feedback_style_happyvalley.md) — side-on TV-camera race, ambience first, no generic/noisy art
+- [Horse sprite lessons](horse_lessons.md) — happyvalley: 'childish' horses rejected; reference 30x22 stretch; hand-placed leg poses, low head
