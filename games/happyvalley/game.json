@@ -1,10 +1,16 @@
 {
   "title": "HAPPYVALLEY",
-  "common_res": ["font"],
-  "common_src": ["gbe_frame.c", "gbe_oam.c", "gbe_video.c", "gbe_sfx.c", "gbe_sfx_asm.s"],
-  "lcc_flags": [],
-  "vram_order": ["bg", "font"],
+  "common_res": ["greybox", "font_mini", "font_mini_lower", "font_mini_es"],
+  "common_src": ["gbe_frame.c", "gbe_oam.c", "gbe_video.c", "gbe_screen.c", "gbe_sfx.c", "gbe_sfx_asm.s",
+                 "gbe_bank.c", "gbe_save.c", "gbe_rng.c", "gbe_vq.c", "gbe_vq.s", "gbe_text.c",
+                 "gbe_tiles.c", "gbe_tiles.s", "gbe_vwf.c", "gbe_menu.c", "gbe_list.c"],
+  "lcc_flags": ["-autobank", "-Wm-yt0x1B", "-Wm-yo8", "-Wm-ya1"],
+  "vram_order": ["greybox", "font_mini", {"text": 200}],
+  "vwf": {"fonts": ["font_mini", "font_mini_lower", "font_mini_es"], "slot": "text"},
+  "banked_res": ["greybox", "font_mini", "font_mini_lower", "font_mini_es"],
+  "screens": [],
   "vram_scenes": {
-    "game": { "spr": [[0, "spr"]] }
+    "menu": { "spr": [[0, "greybox"]] },
+    "race": { "spr": [[0, "greybox"], [16, "font_mini", 0, 10]] }
   }
 }

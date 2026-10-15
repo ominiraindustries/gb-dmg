@@ -1,0 +1,49 @@
+; HAPPY VALLEY - constantes de reglas (GDD 2.4-2.8; calibradas en design/race_proto.py). El C las lee
+; con RULE(RULE_<ID>) y el modelo tests/hv_model.py con las mismas filas: nada de numeros en el codigo.
+@ table rules
+@ prefix RULE
+@ col v u16
+;id          v
+LEN          38     ; 1 cuerpo = 38/16 m
+V0           2720   ; vmax = V0 + KV*VEL - KW*(peso-113) + KJ*jinete + KSF*aptitud
+KV           3
+KW           2
+KJ           2
+KDS          6      ; por 100 m por debajo de dpref
+KSF          12     ; por punto de aptitud de superficie
+FAT_FROM     50
+FAT_K        2
+FORMA_K      6      ; (rng_range(7) - 3) * FORMA_K
+EB           800    ; energia = (EB + EK*RES) * 16
+EK           12
+COST0        3      ; gasto por tick (1/16) segun esfuerzo E0..E3
+COST1        5
+COST2        8
+COST3        14
+DPCT0        10     ; objetivo = vmax - ((vmax >> 4) * dpct >> 4)
+DPCT1        6
+DPCT2        3
+DPCT3        0
+DPCT_TIRED   32
+ACC_L0       24     ; aceleracion de salida = ACC_L0 + PUN >> 2
+ACC_0        2      ; aceleracion = ACC_0 + PUN >> 4
+DEC          4
+START_M      200
+START_EFF0   2      ; puntero, acecho, cerrador
+START_EFF1   1
+START_EFF2   0
+SPRINT_AT0   350    ; metros que faltan (+ rng_range(41) - 20)
+SPRINT_AT1   450
+SPRINT_AT2   650
+SPC          20     ; jinete >= 5 espera mientras energia < metros * SPC
+RES_SH       7
+PULL_BASE    4
+MISMATCH0    0
+MISMATCH1    12
+MISMATCH2    30
+PULL_TICKS   32
+FREE_BACK    19
+LANE_MASK    7
+COVER_SH     2
+LANES_MAX    13
+MAX_TICKS    8000

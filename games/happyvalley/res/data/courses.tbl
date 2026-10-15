@@ -1,0 +1,28 @@
+; HAPPY VALLEY - recorridos (GDD 2.4.1): tramos de la salida a la meta. bends: bit k = el tramo k es
+; curva. bk = factor de curva (prog -= ((spd >> 4) * (calle * bk)) >> 5).
+@ table courses
+@ prefix CRS
+@ col track enum HV ST AW
+@ col dist u16
+@ col bk u8
+@ col nseg u8
+@ col m1 u16
+@ col m2 u16
+@ col m3 u16
+@ col m4 u16
+@ col m5 u16
+@ col m6 u16
+@ col bends u8
+;id      track dist bk nseg m1   m2  m3  m4  m5  m6  bends
+HV1000   HV    1000 5  3    269  419 312 0   0   0   2
+HV1200   HV    1200 5  4    169  300 419 312 0   0   5
+HV1650   HV    1650 5  5    200  419 300 419 312 0   10
+HV1800   HV    1800 5  5    350  419 300 419 312 0   10
+ST1000   ST    1000 4  1    1000 0   0   0   0   0   0
+ST1200   ST    1200 4  3    335  435 430 0   0   0   2
+ST1400   ST    1400 4  3    535  435 430 0   0   0   2
+ST1600   ST    1600 4  4    135  600 435 430 0   0   5
+ST2000   ST    2000 4  5    100  435 600 435 430 0   10
+ST2400   ST    2400 4  6    70   430 435 600 435 430 21
+AW1200   AW    1200 5  4    38   400 397 365 0   0   5
+AW1650   AW    1650 5  5    91   397 400 397 365 0   10
