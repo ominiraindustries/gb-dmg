@@ -15,6 +15,8 @@
 
 - [Shmup patterns](shmup_bug_patterns.md) - u8 timers on >255 f screens, pause eats HUD message,
   `t&7` gates vs parity-split work, rotate-by-1 flicker, one-frame bomb bursts, lint lifetimes.
+- [Zelda/room-slide patterns](zelda_bug_patterns.md) - late exit trigger (hidden under top HUD),
+  knockback through doorways, gact mid-step dir change, static timers surviving death, fade colour.
 
 ## Harness notes
 - PyBoy tick returns at LY 0, possibly mid-update(); allow ±1 frame or require a condition for
