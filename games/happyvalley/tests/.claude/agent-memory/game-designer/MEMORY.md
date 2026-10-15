@@ -1,1 +1,0 @@
-- [View and data prefs](feedback_happyvalley_view_and_data.md) — TV side-on camera with ambience, no top view; data-only content; fictional names (no trademarks)

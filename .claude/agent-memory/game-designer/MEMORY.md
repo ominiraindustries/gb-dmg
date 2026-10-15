@@ -6,3 +6,4 @@
 - [Mazmorra project](project_mazmorra.md) — games/mazmorra Zelda-like MADRIGUERA (GDD v0.1), gbe_world map per room, bombs, M1 = 3 rooms
 - [Happy Valley project](project_happyvalley.md) — games/happyvalley HK racing stable sim (GDD v0.1), race model spec = design/race_proto.py
 - [Greybox first](feedback_greybox_first.md) — M1 = greybox tiles + font_mini (vwf) to check logic; art only after the user plays it
+- [View and data prefs](feedback_happyvalley_view_and_data.md) — TV side-on camera with ambience, no top view; data-only content; fictional names (no trademarks)
