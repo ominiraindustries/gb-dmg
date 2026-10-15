@@ -1,84 +1,151 @@
-"""HAPPY VALLEY - generate the race view's mini-map data (GDD v1.1 5.1). Every course is a straight
-(user: "solo una recta"), so the mini-map is a progress bar: the start on the left, the post on the right.
+"""HAPPY VALLEY - the race view's data: each track drawn as a small pixel oval seen from above, a dot per
+runner (user: the race is "lo de menos", the game is breeding, markets and management).
 
     python games/happyvalley/design/gen_track.py
 
-Writes src/minimap_data.c/.h (banked):
-  - one 48x32 px base image (6x4 tiles = 24 x 16 bytes, 2bpp): the track line, start and finish marks;
-  - per course mm_path: (x, y) u8 px every MM_STEP_M metres BACK from the post (index = metres to go
-    >> 4), so the ROM plots a 2x2 dot per runner without maths.
-Re-run after changing the courses table. The art pass may restyle the base image, not this layout.
+Writes
+  - src/oval_data.c/.h (banked): per track the oval image as unique tiles + a 20x14 map (screen rows
+    0-13; the HUD window starts at line 112);
+  - src/oval_path.inc (included by race_view.c, same bank): per track a point every STEP_M metres of the
+    lap BACK from the finish post: x, y (screen px of the inside rail), nx, ny (outward, -1..1, for the
+    lanes; 4 bytes: the ROM indexes with a shift, no multiply or modulo).
+Geometry: a stadium (two straights + two half circles, real metres per track), clockwise, home straight
+at the top heading east, finish post at its east end, the stands above it. Each track gets its own
+scale (fits the width): the ovals read the same size, the lap lengths stay real. Re-run after
+changing TRACKS; the art pass may restyle the image, not the geometry.
 """
+import math
 import sys
 from pathlib import Path
 
 GAME = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(GAME.parents[1] / "harness"))
 sys.path.insert(0, str(GAME / "tests"))
-import hv_model as M         # noqa: E402
 
-MM_W, MM_H = 48, 32          # px (6 x 4 tiles)
-MM_STEP_M = 16
-X0, X1, Y = 2, 45, 16        # start x, post x, track line y (dots sit on it: rows Y-2..Y-1)
+W, H = 160, 112              # oval area (px)
+FIT_W = 148                  # outer rail width on screen
+BAND = 6                     # track band (px between the rails)
+STEP_M = 4
+TRACKS = {                   # straight (m), bend radius (m); surface colour of the band
+    "HV": dict(straight=306, radius=419 / math.pi, colour=1),
+    "ST": dict(straight=515, radius=435 / math.pi, colour=1),
+    "AW": dict(straight=515, radius=110.0, colour=2),
+}
 
 
-def base_image():
-    """2D list [y][x] of colour 0-3: the track line (2), start and post marks (3)."""
-    img = [[0] * MM_W for _ in range(MM_H)]
-    for x in range(X0, X1 + 1):
-        img[Y][x] = 2
-    for dy in range(-4, 3):
-        img[Y + dy][X1] = 3
-    for dy in (-2, -1, 1, 2):
-        img[Y + dy][X0] = 2
+def geometry(tr):
+    t = TRACKS[tr]
+    s = (FIT_W - 2 * BAND) / (t["straight"] + 2 * t["radius"])   # px per metre
+    L, R = t["straight"] * s, t["radius"] * s
+    x0 = (W - L) / 2                            # straight from x0 to x0 + L
+    cy = 8 + (H - 8) / 2                        # stands strip above
+    return s, L, R, x0, cy
+
+
+def walk_back(tr, d_m):
+    """(x, y, nx, ny): inside rail point d_m metres before the post and the outward unit vector."""
+    s, L, R, x0, cy = geometry(tr)
+    per = 2 * L + 2 * math.pi * R
+    d = (d_m * s) % per
+    top, bot = cy - R, cy + R
+    if d <= L:                                  # home straight (top, heading east): post at x0 + L
+        return x0 + L - d, top, 0.0, -1.0
+    d -= L
+    if d <= math.pi * R:                        # left bend (forward: bottom -> top)
+        a = d / R
+        return x0 - R * math.sin(a), cy - R * math.cos(a), -math.sin(a), -math.cos(a)
+    d -= math.pi * R
+    if d <= L:                                  # back straight (bottom, heading west)
+        return x0 + d, bot, 0.0, 1.0
+    d -= L
+    a = d / R                                   # right bend (forward: top -> bottom)
+    return x0 + L + R * math.sin(a), cy + R * math.cos(a), math.sin(a), math.cos(a)
+
+
+def lap_m(tr):
+    t = TRACKS[tr]
+    return 2 * t["straight"] + 2 * math.pi * t["radius"]
+
+
+def image(tr):
+    s, L, R, x0, cy = geometry(tr)
+    col = TRACKS[tr]["colour"]
+    img = [[0] * W for _ in range(H)]
+    for y in range(H):
+        for x in range(W):
+            px, py = x + 0.5, y + 0.5
+            dx = max(x0 - px, 0, px - (x0 + L))
+            d = math.hypot(dx, py - cy)         # distance to the stadium's centre line
+            if R - 0.5 <= d < R + 0.5 or R + BAND - 0.5 <= d < R + BAND + 0.5:
+                img[y][x] = 3                   # rails
+            elif R < d < R + BAND:
+                img[y][x] = col
+    for y in range(1, 6):                       # the stands: a strip above the home straight
+        for x in range(int(x0), int(x0 + L)):
+            img[y][x] = 2 if (x + y) & 1 else 1
+    fx, top = int(round(x0 + L)), int(round(cy - R))
+    for y in range(top - BAND, top + 1):        # the finish post across the band
+        img[y][fx] = 3
     return img
 
 
-def tiles_of(img):
-    """24 tiles (row-major 6x4) of 16 bytes 2bpp."""
-    out = []
-    for ty in range(4):
-        for tx in range(6):
+def tiles_and_map(img):
+    tiles, index, mp = [], {}, []
+    for ty in range(H // 8):
+        for tx in range(W // 8):
+            t = []
             for r in range(8):
                 lo = hi = 0
                 for c in range(8):
                     v = img[ty * 8 + r][tx * 8 + c]
                     lo = (lo << 1) | (v & 1)
                     hi = (hi << 1) | (v >> 1)
-                out += [lo, hi]
+                t += [lo, hi]
+            k = index.setdefault(tuple(t), len(tiles))
+            if k == len(tiles):
+                tiles.append(t)
+            mp.append(k)
+    return tiles, mp
+
+
+def path(tr):
+    n = int(lap_m(tr) // STEP_M)
+    out = []
+    for k in range(n):
+        x, y, nx, ny = walk_back(tr, k * STEP_M)
+        out.append((int(round(x)), int(round(y)), int(round(nx)) & 255, int(round(ny)) & 255))
     return out
 
 
-def course_path(course):
-    dist = M.COURSES[course]["dist"]
-    pts = []
-    for k in range(dist // MM_STEP_M + 2):
-        x = X1 - 1 - round(min(k * MM_STEP_M, dist) * (X1 - 1 - X0) / dist)
-        pts.append((x, Y - 2))
-    return pts
-
-
 def main():
-    c = ["// Generated by design/gen_track.py - do not edit",
-         "#pragma bank 255", "#include <gb/gb.h>", "#include <stdint.h>", '#include "minimap_data.h"', "",
-         "BANKREF(minimap_data)"]
-    c.append("const uint8_t mm_base[24 * 16] = { " + ", ".join(str(b) for b in tiles_of(base_image())) + " };")
-    refs = []
-    for cid in M.COURSE_IDS:
-        pts = course_path(cid)
-        c.append(f"const uint8_t mm_path_{cid.lower()}[] = {{ " + ", ".join(f"{x}, {y}" for x, y in pts) + " };")
-        refs.append((cid, len(pts)))
-    c.append("const mm_ref_t mm_index[] = {")
-    c += [f"    {{ mm_base, mm_path_{cid.lower()}, {n} }}," for cid, n in refs]
-    c.append("};")
-    (GAME / "src" / "minimap_data.c").write_text("\n".join(c) + "\n", encoding="utf-8")
+    c = ["// Generated by design/gen_track.py - do not edit", "#pragma bank 255", "#include <gb/gb.h>",
+         "#include <stdint.h>", '#include "oval_data.h"', "", "BANKREF(oval_data)"]
     h = ["// Generated by design/gen_track.py - do not edit", "#pragma once", "#include <gb/gb.h>",
-         "#include <stdint.h>", "",
-         f"#define MM_STEP_SH 4          // path point every {MM_STEP_M} m (index = metres to go >> 4)",
-         "typedef struct { const uint8_t *base; const uint8_t *path; uint8_t n; } mm_ref_t;",
-         "extern const mm_ref_t mm_index[];", "BANKREF_EXTERN(minimap_data)"]
-    (GAME / "src" / "minimap_data.h").write_text("\n".join(h) + "\n", encoding="utf-8")
-    print("ok", len(refs), "courses")
+         "#include <stdint.h>", "", "BANKREF_EXTERN(oval_data)",
+         "typedef struct { const uint8_t *tiles; const uint8_t *map; uint8_t n; } oval_t;",
+         "extern const oval_t oval_index[];      // by track (HV ST AW)"]
+    inc = ["// Generated by design/gen_track.py - do not edit (included by race_view.c: same bank)",
+           f"#define OVAL_STEP_SH 2                  // a point every {STEP_M} m"]
+    most = 0
+    for tr in TRACKS:
+        tiles, mp = tiles_and_map(image(tr))
+        most = max(most, len(tiles))
+        c.append(f"const uint8_t oval_tiles_{tr.lower()}[] = {{ " + ", ".join(str(b) for t in tiles for b in t) + " };")
+        c.append(f"const uint8_t oval_map_{tr.lower()}[] = {{ " + ", ".join(str(v) for v in mp) + " };")
+        pts = path(tr)
+        inc.append(f"static const uint8_t oval_path_{tr.lower()}[] = {{ "
+                   + ", ".join(f"{x}, {y}, {a}, {b}" for x, y, a, b in pts) + " };")
+        inc.append(f"#define OVAL_N_{tr} {len(pts)}")
+    assert most <= 160, most                    # the text slot after the commentary (200 - 40)
+    c.append("const oval_t oval_index[] = {")
+    c += [f"    {{ oval_tiles_{tr.lower()}, oval_map_{tr.lower()}, {len(tiles_and_map(image(tr))[0])} }}," for tr in TRACKS]
+    c.append("};")
+    inc.append("static const uint8_t *const oval_path[] = { " + ", ".join(f"oval_path_{t.lower()}" for t in TRACKS) + " };")
+    inc.append("static const uint16_t oval_n[] = { " + ", ".join(f"OVAL_N_{t}" for t in TRACKS) + " };")
+    (GAME / "src" / "oval_data.c").write_text("\n".join(c) + "\n", encoding="utf-8")
+    (GAME / "src" / "oval_data.h").write_text("\n".join(h) + "\n", encoding="utf-8")
+    (GAME / "src" / "oval_path.inc").write_text("\n".join(inc) + "\n", encoding="utf-8")
+    print("ok, most tiles", most)
 
 
 if __name__ == "__main__":

@@ -43,7 +43,6 @@ void race_runners_range(uint8_t from, uint8_t to);   // part of a tick (split ov
 void race_tick_end(void);                       // sort, clock, end of race
 extern uint8_t rl_from, rl_to;
 void move_one(runner_t *r);                     // race_move.s (asm)
-void sprites(void);                             // race_spr.s (spec: sprites_c in race_view.c)
 void think_asm(runner_t *x, uint8_t i);         // race_think.s (asm)
 void think_c(runner_t *x, uint8_t i) BANKED;           // its C reference
 void race_runners(void);                        // race_loop.s: think + move every runner

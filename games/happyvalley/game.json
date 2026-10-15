@@ -25,8 +25,6 @@
     "gbe_vwf_blit.s",
     "gbe_menu.c",
     "gbe_list.c",
-    "gbe_raster.c",
-    "gbe_raster.s",
     "gbe_util.s"
   ],
   "lcc_flags": [
@@ -67,14 +65,7 @@
       ]
     },
     "race": {
-      "spr": [
-        [
-          0,
-          "greybox",
-          5,
-          1
-        ]
-      ]
+      "spr": []
     }
   }
 }

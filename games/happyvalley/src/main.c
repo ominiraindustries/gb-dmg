@@ -55,8 +55,6 @@ void screen_build(uint8_t which) {
     txt_blank = VRAM_GREYBOX + GREYBOX_BLANK;
     if (which == SC_RACE) rv_build();
     else {
-        raster_n = 0;                           // no SCX splits outside the race
-        raster_commit();
         scx_shadow = scy_shadow = 0;
         WY_REG = 144;
         bank_set_bkg_data(BANK(greybox), VRAM_GREYBOX, GREYBOX_COUNT, greybox_tiles);
@@ -138,7 +136,6 @@ void main(void) {
     LCDC_REG |= LCDCF_WIN9C00;
     WY_REG = 144;
     video_init(0, 0xE4, 0xE4, 0x1B);
-    raster_init();
     sound_init();
     rng_state = 0xACE1;
     show_screen_now(SC_MENU);
@@ -149,9 +146,8 @@ void main(void) {
         vsync();
         if (LY_REG < 144) vsync();
         frame_vsync_ly = LY_REG;
-        if (scene != SC_RACE) { tiles_draw_vram(); vq_draw_vram(); }
-        else if (vq_pending() && ((sys_time & 1) || !tq_staged)) vq_draw_vram();   // race: vsync() returns
-        else tiles_draw_vram();                 // at LY 149 (raster + ISR), ~5 lines: map rows and tile data
+        tiles_draw_vram();
+        vq_draw_vram();
         frame_vram_check();
         frame_begin();
         if (race_req) test_hook();
