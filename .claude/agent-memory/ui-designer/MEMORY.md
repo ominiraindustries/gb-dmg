@@ -8,5 +8,7 @@
 - [UI language across games](ui_language.md) — framed boxes, shadowed tile logo, no HUD separator, sentence-case text; own theme per game
 - [Decide UI details, commercial bar](feedback_autonomy.md) — FARO: don't ask about UI details; deliver polished, decided screens
 
+- [Proportional text mockups](proportional-text-mockups.md) — user picked font_mini (vwf); text: offsets for overlays, center: centres on the screen now (no even-letter rule)
+
 ## Working notes
 - [Screen mockup gotchas](screen_gotchas.md) — run naming, row widths, legend keys, descenders, 8x16 halves, VRAM slots, title tile budget tricks, no LYC 144

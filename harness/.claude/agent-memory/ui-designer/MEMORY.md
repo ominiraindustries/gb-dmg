@@ -1,1 +1,0 @@
-- [Proportional text mockups](proportional-text-mockups.md) — user picked font_mini (vwf); even letter counts for centring, text: offsets for overlays
