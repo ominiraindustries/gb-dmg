@@ -88,6 +88,8 @@ void screen_build(uint8_t which) {
     if (which == ST_TITLE) { field_set = 0xFF; title_build(); }   // the title overwrites the set's slot
     else if (which == ST_BATTLE) battle_enter();
     else if (which == ST_FIELD) {
+        if (field_set == 0xFF)                  // from the title: its beam was loaded over the NPC looks
+            bank_set_sprite_data(BANK(npc), SPR_NPC, NPC_COUNT, npc_tiles);
         field_enter(warp_map, warp_x, warp_y, warp_dir);
         warp_pending = 0;
         SHOW_BKG; SHOW_SPRITES; SHOW_WIN;           // the window is hidden by WY = 144 (main loop)

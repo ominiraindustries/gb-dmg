@@ -184,5 +184,10 @@
     "desmayo",
     "faro_anillo",
     "fin_demo"
-  ]
+  ],
+  "vram_scenes": {
+    "field": {
+      "spr": [[0, "leo"], [32, "npc"], [80, 32, "critters", "any"], [112, "fx", 0, 16], [252, 4, "uispr", "any"]]
+    }
+  }
 }

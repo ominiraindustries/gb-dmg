@@ -164,3 +164,10 @@ def test_perishables_go_off(gb):
     past = ITEM[past] if isinstance(past, str) else past
     assert items[meat] == 1 and items[past] == 2  # half rounded up went off
     assert gb.u8("food_age") in (20, 21)                # RULE AGE_AFTER (+1 if the walk ended past a tick)
+
+
+def test_title_screen_is_its_mockup(gb):
+    """The title on screen == design/screens/title.screen (the blinking 'Pulsa Start' aside)."""
+    gb.frames(10)
+    errs = gb.mockup_errors("title", ignore=["PULSA_START"])
+    assert errs == [], errs[:10]

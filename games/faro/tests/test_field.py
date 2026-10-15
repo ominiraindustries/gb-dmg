@@ -99,3 +99,15 @@ def test_save_and_continue(gb):
         assert g2.u16("money") == 77
     finally:
         g2.close()
+
+
+def test_field_graphics_are_their_own(gb):
+    """Every visible sprite and BG tile holds its own graphics (game.json vram_scenes 'field'):
+    the title loaded its beam over the NPC sprite tiles and nobody reloaded them."""
+    new_game(gb)
+    walk_to(gb, (7, 11))
+    settle(gb)
+    gb.frames(30)
+    errs = gb.vram_errors("field")
+    gb.screenshot("field_graphics")
+    assert errs == [], "\n".join(errs[:10])
