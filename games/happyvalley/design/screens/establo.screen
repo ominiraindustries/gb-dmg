@@ -1,0 +1,26 @@
+; ESTABLO (hub, M1 greybox, rough). Row 0: date; row 1: money and fame. Rows 3-10: gbe_list of
+; the stable (4 visible, 2 rows each: name + class/rating, then status). Rows 13-17: gbe_menu.
+tilesets: greybox font_mini font_mini_lower font_mini_es
+legend:
+> ARROW_R
+- WALL
+$ BLANK
+grid:
+Sep sem 1  Temp 1
+  600k   Fama 0
+--------------------
+>Oro Sesenta   C5 30
+  Fat 10  Galope
+ Viento Feliz  C5 25
+  Fat 20  Descanso
+ Perla Lunar   C5 30
+  Fat 0   Miercoles
+ Brisa Dorada  Yegua
+  Granja
+--------------------
+ Caballos
+ Carreras
+ Granja
+ Avanzar semana
+ Guardar
+....................

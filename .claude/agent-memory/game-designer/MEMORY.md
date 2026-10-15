@@ -4,3 +4,5 @@
 - [Commercial scope](feedback_commercial_scope.md) — faro must be a real commercial product; decide theme/story myself, ask only expensive choices
 - [Dungeon project](project_dungeon.md) — games/dungeon first-person crawler (TORRE HUNDIDA, approved v1.0), double-buffered view, E1-E16 engine list incl. banking
 - [Mazmorra project](project_mazmorra.md) — games/mazmorra Zelda-like MADRIGUERA (GDD v0.1), gbe_world map per room, bombs, M1 = 3 rooms
+- [Happy Valley project](project_happyvalley.md) — games/happyvalley HK racing stable sim (GDD v0.1), race model spec = design/race_proto.py
+- [Greybox first](feedback_greybox_first.md) — M1 = greybox tiles + font_mini (vwf) to check logic; art only after the user plays it
