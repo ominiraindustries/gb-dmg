@@ -133,8 +133,8 @@ def guess_module(text):
     """The gbe module a finding is about: 'mod:' prefix, else the most named file / API prefix / module word."""
     t = fold(text)
     m = re.match(r"^\W*`?([a-z_0-9]+)`?\s*[:(]", t)
-    if m and m.group(1) in MODULES:
-        return m.group(1)
+    if m and m.group(1).removeprefix("gbe_") in MODULES:
+        return m.group(1).removeprefix("gbe_")
     votes = {}
     for mod in MODULES:
         n = len(re.findall(r"(?<![\w/])(?:harness/common/src/|harness/)?(?:gbe_)?" + re.escape(mod) + r"\.(?:h|c|s|py)\b", t))
@@ -147,7 +147,7 @@ def guess_module(text):
     for mod in MODULES:
         if mod in GENERIC:
             continue
-        n = len(re.findall(r"(?<![\w/.])" + re.escape(mod) + r"(?![\w])", t))
+        n = len(re.findall(r"(?<![\w/.])(?:gbe_)?" + re.escape(mod) + r"(?![\w])", t))
         if n:
             votes[mod] = votes.get(mod, 0) + n
     return max(votes, key=votes.get) if votes else None
