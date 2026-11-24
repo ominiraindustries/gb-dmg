@@ -5,6 +5,9 @@ description: Pixel art for Game Boy DMG - drawing 8x8 tiles, sprites, animations
 
 # Pixel art for the DMG
 
+> Rules of the workspace (CLAUDE.md): art sources stay editable (`res/*.tiles`, `.screen`), generators only seed
+> them; text only with the harness fonts (`harness/common/font*.tiles`); paid APIs (PixelLab...) only with permission.
+
 ## The format (`res/*.tiles`, converted at build time by `harness/asciitiles.py`)
 ```
 @ HERO_IDLE_TL        <- optional label: becomes #define <STEM>_HERO_IDLE_TL <index>

@@ -10,7 +10,19 @@ You (the main session) are the producer and the programmer. The studio roles are
 with the Agent tool (`subagent_type` = the agent name); give each a self-contained brief (they do
 not see this conversation): game folder, what to deliver, decisions already taken by the user.
 
-Talk to the user in Spanish. Commit after each phase (CLAUDE.md rule).
+Talk to the user in Spanish. Commit after each phase (CLAUDE.md rule), only your own paths.
+
+## Harness flow (2026-11-24)
+- Start each phase with `python -I harness/scripts/kb.py brief --role <role> --task "<phase>"` and put the useful
+  lines (lessons, gbe API, GDD sections) in the subagent's brief instead of whole files.
+- Work is tracked in Beads (`docs/harness/beads.md`): one epic per game (`-t epic -l area:juego:<game>`), one task
+  per milestone step or bug, each with `--acceptance`. Confirm with dated evidence and `--claim` before building;
+  close only with a dated verification (`resolved` until the user or the test confirms it).
+- Before running agents in parallel: `python -I harness/scripts/board.py claim NAME --bead ID --owns PATHS`
+  (2-3 agents at most, no overlapping paths); `board.py release NAME` when it is merged.
+- Engine gaps found by a game become `area:gbe` tasks for **gb-sdk-dev** (in a worktree), not workarounds in the
+  game. Closed implementation blocks can go to **gb-game-dev**; an independent review to **gb-reviewer**.
+- Agent budget 80-120 tool calls (150 max); a new phase is a new agent with a short handoff, never the old one resumed.
 
 ## Autonomy: when to stop for the user
 The user prefers seeing a working game early over being asked: "las cositas se pueden cambiar
@@ -27,11 +39,16 @@ luego". The pipeline runs on its own from the idea to a playable, QA'd, bot-play
 - Feedback can arrive at any time: route it (Phase 6 rules) and keep going.
 
 ## Phase 0 - Setup
-- Pick a folder name (lowercase, no spaces). New game: `python harness/gb.py new <game>`.
+- Pick a folder name (lowercase, no spaces). New game: `python harness/gb.py new <game>`, plus
+  `compilar.bat` / `compilar_y_jugar.bat` in the game folder so the user can rebuild with a double click.
+- Open the game's Beads epic (`area:juego:<game>`).
 - Write down the user's idea and any constraints they gave (genre, references, length).
 
 ## Phase 1 - Design
-- Delegate to **game-designer**: idea + constraints -> `games/<game>/design/gdd.md`.
+- Delegate to **game-designer**: idea + constraints -> `games/<game>/design/gdd.md`. Design first: the designer
+  reads `docs/guias/diseno-juegos.md` and cites the rules it applies; a level is not done until it passes the
+  checklist there. The GDD fixes the text system (harness fonts only) and the "Lib check" table (need, gbe API
+  checked, why it is not enough; every real gap -> an `area:gbe` Beads task).
 - Show the user: pitch, core loop, controls, screens, M1 scope, budget verdict.
 - Resolve "Decisiones pendientes" with the user (AskUserQuestion, 2-3 options + recommendation).
   Send answers back to the designer (SendMessage) to update the GDD, or edit it yourself if tiny.

@@ -5,6 +5,10 @@ description: Game design for Game Boy DMG games - turning an idea into a scoped 
 
 # Designing games for the DMG
 
+> Design first (CLAUDE.md): read `docs/guias/diseno-juegos.md` and cite the rules applied; a level is not done until
+> it passes its checklist. `python -I harness/scripts/kb.py query "..." --kind game,study,tecnica` finds what earlier
+> GDDs, studies and technique cards already settled.
+
 The design is done when a programmer can implement it without guessing and a tester can
 check it. Every mechanic has numbers, every screen has a mockup, every asset has a budget.
 

@@ -5,6 +5,9 @@ description: GBDK-2020 4.5.0 reference for writing or reviewing Game Boy (DMG) C
 
 # GBDK-2020 for fast, polished DMG games
 
+> Knowledge base first: `python -I harness/scripts/kb.py query "..." --kind api` for gbe (harness/common/src/gbe.h) and
+> `--kind ref` for the GBDK API and Pan Docs copies in docs/ref; open the detail files below only for what kb does not answer.
+
 Verified against `tools/gbdk` 4.5.0 headers, `reference/gbdk-src/docs/pages/*.md` and test builds.
 Trust these files over memory: many web tutorials use pre-4.x APIs (`wait_vbl_done`, `gbz80`).
 

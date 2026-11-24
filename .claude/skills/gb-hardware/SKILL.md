@@ -5,6 +5,9 @@ description: Game Boy DMG hardware reference (condensed from Pan Docs). Load whe
 
 # Game Boy DMG hardware - quick reference
 
+> Full references: docs/ref (Pan Docs copy and GBDK docs; `python -I harness/scripts/kb.py query "..." --kind ref`).
+> This skill is the condensed version; cite the docs/ref section when a rule depends on a detail.
+
 Target: original DMG (monochrome). Numbers below come from Pan Docs (`reference/pandocs/src/`).
 CGB-only features, SGB, Camera, Printer, IR, Four Player Adapter and MBC2/3/6/7/HuC/MMM01/M161
 are out of scope (see `othermbc.md`, `MBC3.md` etc. in Pan Docs if ever needed).

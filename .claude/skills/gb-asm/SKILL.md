@@ -5,6 +5,9 @@ description: SM83 (Game Boy CPU) assembly for GBDK-2020 projects. Use when writi
 
 # SM83 assembly with GBDK-2020 (4.5.0, SDCC 4.5.1)
 
+> Knowledge base first: `python -I harness/scripts/kb.py query "..." --kind api,ref,tecnica` (gbe asm pieces, Pan Docs,
+> technique cards); then the detail files below. Asm only after profiling, always with its C reference and selftest.
+
 Toolchain facts in this skill were checked against the installed tools (`tools/gbdk`) by
 building and running test ROMs under PyBoy; cycle counts come from `reference/opcodes.json`.
 If a doc and the compiler disagree, **the compiler output wins** (`lcc -S file.c` shows it).
