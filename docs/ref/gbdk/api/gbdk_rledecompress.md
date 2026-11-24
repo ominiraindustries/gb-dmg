@@ -1,0 +1,53 @@
+# `gbdk/rledecompress.h` (GBDK-2020, gb target)
+
+Decompressor for RLE encoded data Decompresses data which has been compressed with @ref utility_gbcompress "gb
+
+| Name | Summary |
+|---|---|
+| `rle_init` | Initialize the RLE decompressor with RLE data at address __data__ data Pointer to start of RLE compressed data rle_decompress |
+
+## Header
+
+```c
+/** @file gbdk/rledecompress.h
+
+    Decompressor for RLE encoded data
+
+    Decompresses data which has been compressed with
+    @ref utility_gbcompress "gbcompress" using the `--alg=rle` argument.
+*/
+
+#ifndef __RLEDECOMPRESS_H_INCLUDE
+#define __RLEDECOMPRESS_H_INCLUDE
+
+#include <types.h>
+#include <stdint.h>
+
+#define RLE_STOP 0
+
+/** Initialize the RLE decompressor with RLE data at address __data__
+
+    @param data   Pointer to start of RLE compressed data
+
+    @see rle_decompress
+ */
+uint8_t rle_init(void * data);
+
+/** Decompress RLE compressed data into __dest__ for length __len__ bytes
+
+    @param dest   Pointer to destination buffer/address
+    @param len    Number of bytes to decompress
+    @return       Returns `0` if compression is complete, `1` if there is more data to decompress
+
+    Before calling this function @ref rle_init must be called
+    one time to initialize the RLE decompressor.
+
+    Decompresses data which has been compressed with
+    @ref utility_gbcompress "gbcompress" using the `--alg=rle` argument.
+
+    @see rle_init
+ */
+uint8_t rle_decompress(void * dest, uint8_t len);
+
+#endif
+```

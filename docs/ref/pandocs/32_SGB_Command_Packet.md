@@ -1,0 +1,105 @@
+<!-- Pan Docs: SGB_Command_Packet.md (gbdev/pandocs, CC0) -->
+# Command Packet Transfers
+
+Command packets are transferred from the Game Boy to the SNES by using bits 4 and 5 of of [the `JOYP` register][JOYP].
+These lines are normally used to select one of the two button groups (which [still works as usual][JOYP]).
+
+## Transferring Bits
+
+A command packet transfer must be initiated by setting [`JOYP`][JOYP] bits 4 and 5 both to 0; this will reset and start the ICD2 packet receiving circuit.
+Data is then transferred (LSB first), setting bit 4 to 0 will indicate a `0` bit, and setting bit 5 to 0 will indicate a `1` bit.
+For example:
+
+<!-- Do not put any blank lines, or Markdown parsing will break! -->
+<svg viewBox="0 0 455 120" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style type="text/css"><![CDATA[
+      text { fill: var(--fg); dominant-baseline: middle; }
+      .centered { text-anchor: middle; }
+      .right    { text-anchor: end; }
+      path { fill: none; stroke: var(--fg); }
+      line { fill: none; stroke: var(--inline-code-color); stroke-dasharray: 1 1; opacity: 50%; }
+      line:nth-child(4n+1) { opacity: 80%; }
+    ]]></style>
+  </defs>
+  <g>
+    <line x1="130" y1="0" x2="130" y2="100"/><line x1="140" y1="0" x2="140" y2="100"/>
+    <line x1="150" y1="0" x2="150" y2="100"/><line x1="160" y1="0" x2="160" y2="100"/>
+    <line x1="170" y1="0" x2="170" y2="100"/><line x1="180" y1="0" x2="180" y2="100"/>
+    <line x1="190" y1="0" x2="190" y2="100"/><line x1="200" y1="0" x2="200" y2="100"/>
+    <line x1="210" y1="0" x2="210" y2="100"/><line x1="220" y1="0" x2="220" y2="100"/>
+    <line x1="230" y1="0" x2="230" y2="100"/><line x1="240" y1="0" x2="240" y2="100"/>
+    <line x1="250" y1="0" x2="250" y2="100"/><line x1="260" y1="0" x2="260" y2="100"/>
+    <line x1="270" y1="0" x2="270" y2="100"/><line x1="280" y1="0" x2="280" y2="100"/>
+    <line x1="290" y1="0" x2="290" y2="100"/><line x1="300" y1="0" x2="300" y2="100"/>
+    <line x1="310" y1="0" x2="310" y2="100"/><line x1="320" y1="0" x2="320" y2="100"/>
+    <line x1="330" y1="0" x2="330" y2="100"/><line x1="340" y1="0" x2="340" y2="100"/>
+    <line x1="350" y1="0" x2="350" y2="100"/><line x1="360" y1="0" x2="360" y2="100"/>
+    <line x1="370" y1="0" x2="370" y2="100"/><line x1="380" y1="0" x2="380" y2="100"/>
+    <line x1="390" y1="0" x2="390" y2="100"/><line x1="400" y1="0" x2="400" y2="100"/>
+    <line x1="410" y1="0" x2="410" y2="100"/><line x1="420" y1="0" x2="420" y2="100"/>
+    <line x1="430" y1="0" x2="430" y2="100"/><line x1="440" y1="0" x2="440" y2="100"/>
+  </g>
+  <text x="90" y="10"  class="right">Transmitted</text>
+  <text x="90" y="42"  class="right">JOYP bit 4</text>
+  <text x="90" y="72"  class="right">JOYP bit 5</text>
+  <text x="90" y="110" class="right">M-cycles</text>
+  <path d="M110,30 h20 v20 h10 v-20 h30 v20 h10 v-20 h30 v20 h10 v-20 h110 v20 h10 v-20 h70 v20 h10 v-20 h20 m2,0 h2 m2,0 h2 m2,0 h2"/>
+  <path d="M110,60 h20 v20 h10 v-20 h110 v20 h10 v-20 h30 v20 h10 v-20 h70 v20 h10 v-20 h60 m2,0 h2 m2,0 h2 m2,0 h2"/>
+  <text x="130" y="110" class="centered">0</text>  <text x="130" y="10" class="centered">Start</text>
+  <text x="170" y="110" class="centered">20</text> <text x="175" y="10" class="centered">0</text>
+  <text x="210" y="110" class="centered">40</text> <text x="215" y="10" class="centered">0</text>
+  <text x="250" y="110" class="centered">60</text> <text x="255" y="10" class="centered">1</text>
+  <text x="290" y="110" class="centered">80</text> <text x="295" y="10" class="centered">1</text>
+  <text x="330" y="110" class="centered">100</text><text x="335" y="10" class="centered">0</text>
+  <text x="370" y="110" class="centered">120</text><text x="375" y="10" class="centered">1</text>
+  <text x="410" y="110" class="centered">140</text><text x="415" y="10" class="centered">0</text>
+</svg>
+
+
+[The boot ROM](<#Super Game Boy (SGB, SGB2)>) and licensed software keep data and reset pulses LOW for at least 5 M-cycles and leave bit 4 and 5 both to 1 for at least 15 M-cycles after each pulse.
+Though the hardware is capable of receiving pulses and spaces as short as 2 M-cycles (as tested using [sgb-speedtest]), following the common practice of 5 M-cycle pulses and 15 M-cycle spaces may improve reliability in some corner case that the community has not yet discovered.
+
+:::tip
+
+Obviously, it'd be no good idea to modify [the joypad register][JOYP] in the middle of a transfer.
+For example, if your VBlank interrupt procedure normally reads out button states each frame, you should disable that behavior using a variable (or disable the interrupt handler entirely).
+
+:::
+
+:::warning
+
+The GB program should wait 60 ms (4 frames) between each packet transfer and the next, as the "bomb" tool to erase a user-drawn border can cause the SGB system software not to check for packets for 4 frames.
+
+:::
+
+## Packet format
+
+Each packet transfer is started by a "Start" pulse, then 16 bytes (128 bits) of data are transferred, the LSB of each byte first; and finally, a `0` bit must be transferred as a stop bit.
+These 130 bit periods correspond to at least 2600 M-cycles at the recommended rate.
+
+The structure of the first packet in a transmission is:
+
+1. 1 pulse: Start signal
+2. 1 byte: Header byte (<var>Command Code</var> × 8 + <var>Length</var>)
+3. 15 bytes: <var>Data</var>
+4. 1 bit: Stop Bit (`0`)
+
+The above <var>Length</var> indicates the total number of packets (1-7, including the first packet) which will be sent.
+If more than 15 data bytes are used, then further packet(s) will follow, as such:
+
+1. 1 pulse: Start signal
+2. 16 bytes: <var>Data</var>
+3. 1 bit: Stop Bit (`0`)
+
+By using all 7 packets, up to 111 data bytes (15 + 16 × 6) may be sent.
+
+:::tip
+
+Bytes with no indicated purpose are simply ignored by the SGB BIOS.
+They can be set to any value (but they must still be transferred).
+
+:::
+
+[JOYP]: <#FF00 — P1/JOYP: Joypad>
+[sgb-speedtest]: https://github.com/gb-archive/sgb-speedtest
