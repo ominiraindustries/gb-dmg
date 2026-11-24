@@ -41,7 +41,8 @@ docs/
 | [`bancos.md`](guias/bancos.md) | bancos de ROM, `banked_res`, flags de MBC, guardado (antes en CLAUDE.md) |
 | [`hardware-dmg.md`](guias/hardware-dmg.md) | reglas de hardware DMG y cifras de referencia (antes en CLAUDE.md) |
 | [`sdcc-c.md`](guias/sdcc-c.md) | C rápido con SDCC, gotchas de GBDK, ensamblador sdasgb (antes en CLAUDE.md) |
-| [`pruebas.md`](guias/pruebas.md) | PyBoy para lo rápido, Mesen 2 (`harness/gbrun.py`) para lo exacto |
+| [`pruebas.md`](guias/pruebas.md) | niveles de prueba: PyBoy (tests), Mesen 2 (`gbrun.py`, timing diario), SameBoy (`sbrun.py`, firma de exactitud); tabla de exactitud medida |
+| [`depurar-emulicious.md`](guias/depurar-emulicious.md) | Emulicious (`gb.py debug`) y depuración del C en VS Code paso a paso |
 | [`diseno-juegos.md`](guias/diseno-juegos.md) | principios, antipatrones y checklists de diseño (de SNES, generalizado a DMG) |
 | [`lecciones-snes.md`](guias/lecciones-snes.md) | método aprendido en el proyecto SNES que vale aquí |
 

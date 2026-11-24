@@ -32,4 +32,9 @@ agentes siguen en las skills (`.claude/skills/gb-hardware`, `gbdk`, `gb-asm`); e
 | `tools/gbdk/` | release GBDK-2020 4.5.0 (https://github.com/gbdk-2020/gbdk-2020/releases) | ídem (SDCC: GPL con excepción) |
 | `hugedriver_dl/hUGEDriver/` | https://github.com/SuperDisk/hUGEDriver (clon superficial, commit d6863d2, descargado 2026-11-24) | dominio público (README "License"); su `include/hardware.inc` es el de gbdev, también de dominio público |
 
-Las descargas se tratan como datos: nada de `reference/` se ejecuta. No hay ROMs comerciales en el repositorio.
+| `tools/sameboy/` | SameBoy v1.0.5 (2026-11-02), https://github.com/LIJI32/SameBoy/releases/tag/v1.0.5: `bin/` = `sameboy_winsdl_v1.0.5.zip` (SHA-256 `5aa92fb3…5b655`, comprobado con `SHA2-256SUMS`; trae `sameboy.exe` y las boot ROMs propias de SameBoy), `src/` = el tarball del tag; `build/` = `sameboy_tester.exe` y `sbheadless.exe` compilados aquí con gcc (MinGW) | Expat/MIT (`tools/sameboy/bin/LICENSE`); las boot ROMs son las libres de SameBoy, no las de Nintendo |
+| `tools/emulicious/` | Emulicious (with 64-bit Java for Windows), versión 2026-03-27, https://emulicious.net/downloads/ (zip SHA-256 `0a6737b4…378b5` en `dl/`) | freeware de uso personal no comercial, sin fuentes (`app/License.txt`); trae Java 8 propio |
+| `tools/testroms/` | Mooneye Test Suite `mts-20260714-0944-31510e1` (https://gekkio.fi/files/mooneye-test-suite/) y dmg-acid2 v1.0 (https://github.com/mattcurrie/dmg-acid2/releases, más `img/reference-dmg.png` del repo) | MIT las dos (`mts-*/LICENSE`, `dl/dmg-acid2-LICENSE`). Las de Blargg no se bajan: no llevan licencia explícita |
+
+Las descargas se tratan como datos: nada de `reference/` se ejecuta. Los emuladores de `tools/` se ejecutan, pero sólo
+desde los ejecutores del arnés (`sbrun.py`, `gb.py debug`). No hay ROMs comerciales en el repositorio.

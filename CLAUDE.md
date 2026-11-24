@@ -25,7 +25,7 @@ verificables: `open` → `confirmed` (evidencia fechada) → `in_progress` (`--c
 ## Mapa mínimo
 
 - `harness/`: herramientas comunes (no meter código de un juego): `gb.py` (CLI: `setup`, `new`, `build`, `run`,
-  `test`, `preview`), `gbtest.py` (driver PyBoy de los tests), `gbrun.py` (Mesen), conversores (`screens.py`,
+  `debug`, `test`, `preview`), `gbtest.py` (driver PyBoy de los tests), `gbrun.py` (Mesen), `sbrun.py` (SameBoy), conversores (`screens.py`,
   `levels.py`, `world.py`, `tables.py`, `script.py`, `metatiles.py`, `vwf.py`), `templates/`.
 - `harness/common/`: **gbe**, la biblioteca de motor (`src/gbe*.c/.s`, `gbe.h`, `README.md`) y los recursos comunes
   (fuentes `font*.tiles`, `greybox.tiles`). Un juego nuevo parte de ella en vez de reescribirla.
@@ -96,8 +96,9 @@ hace de productor y programador. Vista previa sin compilar: `python harness/gb.p
 
 - Compilar: `python harness/gb.py build <juego>` (el build se para con funciones sin declarar, prototipos en bloques o
   registros escritos sin su sombra). Probar: `python harness/gb.py test <juego>` tras cada cambio de lógica.
-  Jugar (ventana, sólo el usuario): `python harness/gb.py run <juego>`. Mesen headless: `harness/gbrun.py`
-  (PyBoy frente a Mesen: `docs/guias/pruebas.md`).
+  Jugar (ventana, sólo el usuario): `python harness/gb.py run <juego>`. Mesen headless: `harness/gbrun.py`;
+  SameBoy (firma de exactitud antes de `resolved`): `harness/sbrun.py`; depurar a mano: `gb.py debug <juego>`
+  (niveles: `docs/guias/pruebas.md`).
 - Mira las capturas (`games/<juego>/build/shots/*.png`) antes de afirmar que algo funciona. Los tests comprueban **lo
   que se ve** (`gb.vram_errors`, `gb.mockup_errors`, `gb.screen_tiles`), no variables ni mapas de VRAM.
 - Cada mecánica nueva lleva su test (estado → entrada → assert sobre globales **no static**, `gb.u8("x")`). Las

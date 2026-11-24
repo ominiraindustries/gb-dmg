@@ -83,6 +83,8 @@ Un juego activa cada módulo con `"common_src": ["gbe_frame.c", ...]` en `game.j
 |---|---|
 | Test de lógica rápido, bots, perfil por función | PyBoy: `python -I harness/gb.py test <juego>` (`harness/gbtest.py`: `gb.hold`, `gb.u8`, `gb.run_bot`, `gb.profile`, `gb.worst_frames`) |
 | Confirmar algo de timing (raster, LYC, VBlank) en un emulador exacto | Mesen 2: `python -I harness/gbrun.py <juego> --frames N --input ... --check ...` — guía [pruebas.md](pruebas.md) |
+| Firma de exactitud antes de dar algo por hecho | SameBoy: `python -I harness/sbrun.py <juego>` con los mismos argumentos que gbrun — [pruebas.md](pruebas.md) |
+| Depurar a mano (breakpoints, VRAM, C paso a paso en VS Code) | Emulicious: `python -I harness/gb.py debug <juego> [--source]` — [depurar-emulicious.md](depurar-emulicious.md) |
 | Ver lo que hay en pantalla de verdad | `gb.vram_errors(escena)`, `gb.mockup_errors()`, `gb.screen_tiles()`; capturas en `build/shots/` |
 | Vista previa de tiles, maquetas y niveles sin compilar | `python -I harness/gb.py preview <juego>` → `build/preview/*.png` |
 | Saltos, fosos y escalones exactos | `python -I harness/physics.py --game <juego>` |

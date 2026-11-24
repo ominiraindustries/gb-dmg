@@ -4,6 +4,8 @@ Usage:
     python harness/gb.py setup              Download GBDK-2020 into tools/ and docs into reference/
     python harness/gb.py build <game>       Compile games/<game> -> games/<game>/build/<game>.gb
     python harness/gb.py run <game>         Build and open the ROM in a PyBoy window
+    python harness/gb.py debug <game> [--source]  Build and open the ROM in Emulicious (debugger) with its .sym;
+                                            --source builds with lcc -debug (.cdb) for C source debugging
     python harness/gb.py test <game> [...]  Build and run games/<game>/tests with pytest
     python harness/gb.py new <game> [type]  Create a new game from harness/templates/<type> (default basic)
     python harness/gb.py preview <game>     Render tilesets and design/screens/*.screen to PNG
@@ -26,6 +28,7 @@ GBDK_VERSION = "4.5.0"
 GBDK_URL = f"https://github.com/gbdk-2020/gbdk-2020/releases/download/{GBDK_VERSION}/gbdk-win64.zip"
 GBDK_HOME = Path(os.environ.get("GBDK_HOME", ROOT / "tools" / "gbdk"))
 LCC = GBDK_HOME / "bin" / ("lcc.exe" if os.name == "nt" else "lcc")
+EMULICIOUS = Path(os.environ.get("GB_EMULICIOUS", ROOT / "tools" / "emulicious" / "app" / "Emulicious.exe"))
 ROMUSAGE = GBDK_HOME / "bin" / ("romusage.exe" if os.name == "nt" else "romusage")
 
 
@@ -232,7 +235,7 @@ def stray_agent_memory():
 COMMON_NEEDS = {"gbe_vwf.c": ["gbe_vwf_blit.s"], "gbe_sfx.c": ["gbe_sfx_asm.s"]}
 
 
-def build(name):
+def build(name, extra_flags=()):
     if not LCC.exists():
         die("GBDK not found, run: python harness/gb.py setup")
     stray_agent_memory()
@@ -364,6 +367,7 @@ def build(name):
         "-Wf--max-allocs-per-node50000",  # better register allocation, smaller/faster code
         f"-Wm-yn{cart_title(cfg['title'])}",
         *cfg["lcc_flags"],
+        *extra_flags,
         "-o", str(out),
         *map(str, sources),
     ]
@@ -404,6 +408,21 @@ def run(name):
     pb.stop()
 
 
+def debug(name, opts):
+    """Open the ROM in Emulicious; it loads <rom>.sym (and <rom>.cdb with --source) from beside the ROM."""
+    bad = [o for o in opts if o != "--source"]
+    if bad:
+        die(f"debug: unknown option {bad[0]} (only --source)")
+    if not EMULICIOUS.exists():
+        die(f"Emulicious not found at {EMULICIOUS} (docs/guias/depurar-emulicious.md, or set GB_EMULICIOUS)")
+    out = build(name, ["-debug"] if "--source" in opts else [])
+    print(f"Emulicious: {out.name} (+ {out.with_suffix('.sym').name}"
+          + (f", {out.with_suffix('.cdb').name})" if out.with_suffix(".cdb").exists() else ")"))
+    # Emulicious.exe runs its bundled Java; detached so the terminal is free while debugging
+    flags = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+    return subprocess.Popen([str(EMULICIOUS), str(out)], cwd=EMULICIOUS.parent, creationflags=flags)
+
+
 def test(name, extra):
     build(name)
     sys.stdout.flush()
@@ -442,9 +461,10 @@ def main():
     cmd, rest = args[0], args[1:]
     if cmd == "setup":
         setup()
-    elif cmd in ("build", "run", "test", "new", "preview") and rest:
+    elif cmd in ("build", "run", "debug", "test", "new", "preview") and rest:
         {"build": lambda: build(rest[0]),
          "run": lambda: run(rest[0]),
+         "debug": lambda: debug(rest[0], rest[1:]),
          "test": lambda: test(rest[0], rest[1:]),
          "new": lambda: new(rest[0], *rest[1:2]),
          "preview": lambda: preview_cmd(rest[0])}[cmd]()
