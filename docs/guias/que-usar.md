@@ -17,7 +17,7 @@ Un juego activa cada módulo con `"common_src": ["gbe_frame.c", ...]` en `game.j
 | Escribir sprites barato | `gbe_oam`: `oam16()`, `oam8()` (shadow OAM directa) | platformer, shmup, faro | ~3x menos que `set_sprite_tile` + `move_sprite` |
 | Scroll, paletas, fundidos y temblor sin pelearme con la ISR | `gbe_video`: `video_init()`, `scx_shadow/scy_shadow/bgp_shadow`, `set_fade()`, `set_fade_dark()`, `shake_x/y` | platformer, shmup, dungeon, faro | el build **para** si un juego con gbe_video escribe `SCX_REG`/`BGP_REG` a pelo |
 | HUD arriba con ventana y juego debajo (corte por LYC) | `gbe_video` con `hud_cut = 1` y `video_init(cut_line, ...)`; `bgp_below` para destellar solo el campo | platformer (HUD de 2 filas), shmup | ficha [HR1](../tecnicas/hud-y-raster.md) |
-| Parallax o pista curva: cambiar SCX en varias líneas | `gbe_raster`: `raster_line[]/raster_scx[]/raster_n`, `raster_commit()` | ningún juego registrado todavía (happyvalley lo prueba en su rama) | no a la vez que `hud_cut`; ficha [HR4](../tecnicas/hud-y-raster.md) |
+| Parallax o pista curva: cambiar SCX en varias líneas | `gbe_raster`: `raster_line[]/raster_scx[]/raster_n`, `raster_commit()` | ningún juego versionado lo usa todavía | no a la vez que `hud_cut`; ficha [HR4](../tecnicas/hud-y-raster.md) |
 | Transición entre pantallas (fundido, construir con LCD apagado, fundido) | `gbe_screen`: `transition(next)`, `transition_update()`, el juego define `screen_build()` | platformer, shmup, dungeon, faro, happyvalley, mazmorra | |
 | Pantallas fijas (título, resultados) dibujadas por el ui-designer | maquetas `design/screens/*.screen` → `"screens"` en game.json (`harness/screens.py`) | faro, happyvalley | lo que se diseña es exactamente lo que sale |
 
