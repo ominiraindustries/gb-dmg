@@ -11,3 +11,12 @@ reference/
 .beads-credential-key
 .beads/proxieddb/
 *.gate.lock*
+
+# Harness runtime state (board, worktrees, logs, kb index)
+.cache/
+.claude/worktrees/
+.claude/board.json
+.claude/board.tmp
+.claude/kb_compliance.log
+.claude/rom_archive/
+.claude/settings.local.json
