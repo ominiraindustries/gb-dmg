@@ -13,7 +13,7 @@ if "%~1"=="" (
   exit /b 1
 )
 set "GAME=%~1"
-python -I harness\gb.py build %GAME%
+python harness\gb.py build %GAME%
 if errorlevel 1 (
   echo Fallo al compilar %GAME%.
   pause
