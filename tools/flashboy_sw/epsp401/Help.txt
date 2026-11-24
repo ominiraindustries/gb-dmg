@@ -1,0 +1,44 @@
+              GBX Driver 2.8-ARM  
+
++++++ ONLY FOR GB and GBC cart of this Version.+++++
+
+    -----CopyRight 2020   Backlight ENG.LAB-----
+
+
+Operation Guidence£º
+
+ Info button£º  Read cart title and info.
+ Read ROM:      Read ROM file from Cart to PC.
+ Read RAM:      Read SAV file from Cart to PC.
+ Write Flash:   Write ROM file from PC to Flash Cart.
+ Write RAM:     Write SAV file from PC to Cart.
+
+
+Please note that when you click Info Button,you will see Flash information of the Cart.
+
+Looks like this example below£º
+
+===============================================
+--Flash information--
+Volt: 3.3V (flash this card need switch to 3.3V£©
+Size: 4096KB
+
+--Game information--
+Title: JURASSIC PARK II
+MBC: ROM+MBC1
+ROM: 256KB
+RAM: 0KB
+
+================================================
+
+
+
+If Cart goldfinger is not clean or incorrect insert£¬you will not get anything. 
+
+Looks like this example below£º
+
+================================================
+Can not detect game info!
+================================================
+
+Please re-insert the cart and try again.

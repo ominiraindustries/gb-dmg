@@ -1,4 +1,8 @@
-tools/
+# tools/ is versioned (user 2026-11-24) except what is regenerable, too big or not ours to publish
+tools/flashboy_backup/
+tools/emulicious/app/
+tools/sameboy/build/
+tools/sameboy/headless/
 build/
 __pycache__/
 *.sav
