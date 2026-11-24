@@ -1,0 +1,98 @@
+# The Level Design Book
+
+## The Level Design Book
+
+- [The Level Design Book](https://book.leveldesignbook.com/master.md): The Level Design Book gathers level design knowledge for 3D video games in an approachable, up-to-date, and critical way. It is for designers of all experience levels and game engines.
+- [What is level design](https://book.leveldesignbook.com/introduction.md): What is a level, what is level design, and how to use this book
+- [How to make a level](https://book.leveldesignbook.com/process/overview.md): Overview of general workflow and concepts for video game level design
+- [Pre-production](https://book.leveldesignbook.com/process/preproduction.md): How to plan a game level with mechanics, experience goals, and pillars
+- [Pacing](https://book.leveldesignbook.com/process/preproduction/pacing.md): Planning various activities and events for the player to experience during a level
+- [Research](https://book.leveldesignbook.com/process/preproduction/research.md): How to study, analyze, and breakdown other levels / real world reference
+- [Worldbuilding](https://book.leveldesignbook.com/process/preproduction/worldbuilding.md): How to conceptualize and design the fictional history of the game world
+- [Scope](https://book.leveldesignbook.com/process/preproduction/scope.md): general size and complexity of a project; validated through prototyping
+- [Combat](https://book.leveldesignbook.com/process/combat.md): designing physical conflict between player(s) and/or NPCs
+- [Enemy design](https://book.leveldesignbook.com/process/combat/enemy.md): prototyping different types of NPCs with specific behaviors, strengths, and weaknesses
+- [Encounter](https://book.leveldesignbook.com/process/combat/encounter.md): Continuous sequence of open-ended challenges; usually in combat with NPCs
+- [Cover](https://book.leveldesignbook.com/process/combat/cover.md): Shapes that block sightlines, offer protection in combat and stealth games
+- [Map balance](https://book.leveldesignbook.com/process/combat/balance.md): The player's options throughout the level, the fairness of where the player can go
+- [Layout](https://book.leveldesignbook.com/process/layout.md): How to draw a top-down floor plan for a level, with flow and typology
+- [Flow](https://book.leveldesignbook.com/process/layout/flow.md): How it feels to move through the level
+- [Circulation](https://book.leveldesignbook.com/process/layout/flow/circulation.md): how areas link to other areas, the "connectivity" of a map
+- [Verticality](https://book.leveldesignbook.com/process/layout/flow/verticality.md): vertical flow, how it feels to move upwards and downwards in a level
+- [Critical path](https://book.leveldesignbook.com/process/layout/criticalpath.md): the minimum / main player path to complete a single player level
+- [Parti](https://book.leveldesignbook.com/process/layout/parti.md): the core idea / concept of a layout
+- [Typology](https://book.leveldesignbook.com/process/layout/typology.md): Abstract layout patterns for level design, with concrete examples
+- [Gates](https://book.leveldesignbook.com/process/layout/typology/gates.md)
+- [Blockout](https://book.leveldesignbook.com/process/blockout.md): How to build a basic 3D version of the level with massing, metrics, wayfinding, and playtesting.
+- [Massing](https://book.leveldesignbook.com/process/blockout/massing.md): The feel and logic of the core structural shapes
+- [Landscape](https://book.leveldesignbook.com/process/blockout/massing/landscape.md): How to plan and sculpt 3D terrain for level design; painting, planting
+- [Composition](https://book.leveldesignbook.com/process/blockout/massing/composition.md): the overall visual arrangement and organization of shapes in a level; landmarks, vistas, approaches; also, why "leading lines" aren't real
+- [Prospect-refuge](https://book.leveldesignbook.com/process/blockout/massing/prospect-refuge.md): psychological / architecture theory about how people seek vantage and safety
+- [Metrics](https://book.leveldesignbook.com/process/blockout/metrics.md): The proportions and distances of the level, how big the level feels
+- [Modular kit design](https://book.leveldesignbook.com/process/blockout/metrics/modular.md): How to measure and design modular kits, 3D tilesets for building levels
+- [Doom metrics](https://book.leveldesignbook.com/process/blockout/metrics/doom.md): health and damage values, common sizes and dimensions for Doom maps
+- [Quake metrics](https://book.leveldesignbook.com/process/blockout/metrics/quake.md): player size and speed, health and damage values, common sizes and building dimensions for designing single player Quake 1 maps
+- [Wayfinding](https://book.leveldesignbook.com/process/blockout/wayfinding.md): player navigation, how to "guide" the player through a level
+- [Playtesting](https://book.leveldesignbook.com/process/blockout/playtesting.md): How to run a playtest, and then collect / analyze data
+- [Player persona](https://book.leveldesignbook.com/process/blockout/playtesting/persona.md): Different ways of classifying players and their motivations / long-term behavior
+- [Scripting](https://book.leveldesignbook.com/process/scripting.md): Objectives, triggers, puzzles
+- [(stub) Navigation](https://book.leveldesignbook.com/process/scripting/nav.md): different ways that NPCs and AI can move and path around levels
+- [Doors](https://book.leveldesignbook.com/process/scripting/doors.md): how to script and implement sliding / rotating wall panels (aka doors)
+- [Lighting](https://book.leveldesignbook.com/process/lighting.md): How to light a game level with functional lighting strategies
+- [Three point lighting](https://book.leveldesignbook.com/process/lighting/three-point.md): Photographic / cinematic lighting theory with three light types
+- [D6 lighting](https://book.leveldesignbook.com/process/lighting/d6-lighting.md): Spatial interior design lighting theory with six lighting strategies
+- [Lighting for darkness](https://book.leveldesignbook.com/process/lighting/darkness.md): how to light night / evening scenes for dark mood while preserving readability
+- [Environment Art](https://book.leveldesignbook.com/process/env-art.md): refining shapes and adding visual detail, while maintaining clarity and functionality
+- [Shape and color psychology](https://book.leveldesignbook.com/process/env-art/psychology.md): Bullshit design theories that link abstract visual phenomena to universal human behavior
+- [Texturing](https://book.leveldesignbook.com/process/env-art/texturing.md): covering 3D surfaces with 2D images
+- [Storytelling](https://book.leveldesignbook.com/process/env-art/storytelling.md): How to tell a story with level design
+- [Optimization](https://book.leveldesignbook.com/process/env-art/optimization.md): Diagnosing a level's performance problems and tuning it to run more smoothly
+- [Release](https://book.leveldesignbook.com/process/release.md): How to document and distribute a level
+- [Level design as culture](https://book.leveldesignbook.com/culture/overview.md): Thinking about level design more broadly, as history / community
+- [History of the level designer](https://book.leveldesignbook.com/culture/history-level-designer.md): How the level designer role was invented and professionalized across the game industry, including its golden age in 1993-2002, and later its fall in prominence.
+- [Zero player level design](https://book.leveldesignbook.com/culture/zero-player.md): Essay about acrobatic community-made levels where players perform zero input
+- [(unfinished pages)](https://book.leveldesignbook.com/culture/unfinished-pages.md)
+- [History of architecture](https://book.leveldesignbook.com/culture/unfinished-pages/history-of-architecture.md): overview of 10,000+ years of building, construction, and civilization
+- [Structural engineering primer](https://book.leveldesignbook.com/culture/unfinished-pages/structural-engineering-primer.md)
+- [History of environment art](https://book.leveldesignbook.com/culture/unfinished-pages/history-of-environment-art.md): (unfinished stub)
+- [History of furniture](https://book.leveldesignbook.com/culture/unfinished-pages/history-of-furniture.md)
+- [History of encounter design](https://book.leveldesignbook.com/culture/unfinished-pages/history-encounter-design.md)
+- [How to study a level](https://book.leveldesignbook.com/studies/overview.md): Close readings and studies of influential / interesting maps and levels
+- [Single player studies](https://book.leveldesignbook.com/studies/sp.md): design analysis and commentary for single player and player vs enemy (PvE) levels
+- [Undead Burg (Dark Souls 1)](https://book.leveldesignbook.com/studies/sp/undead-burg.md): linear single player castle level about teaching exploration patterns
+- [Assassins (Thief 1)](https://book.leveldesignbook.com/studies/sp/assassins.md): open world stealth single player medieval urban storytelling
+- [(STUB) The Cradle (Thief 3)](https://book.leveldesignbook.com/studies/sp/cradle.md)
+- [(STUB) Sapienza (Hitman)](https://book.leveldesignbook.com/studies/sp/sapienza.md)
+- [(STUB) Silent Cartographer (Halo 1)](https://book.leveldesignbook.com/studies/sp/silent-cartographer.md)
+- [Multiplayer studies](https://book.leveldesignbook.com/studies/mp.md): design analysis and commentary for various multiplayer and player vs player (PvP) maps
+- [Chill Out (Halo 1)](https://book.leveldesignbook.com/studies/mp/chill-out.md): small competitive multiplayer arena
+- [(STUB) de\_dust2 (Counter-Strike)](https://book.leveldesignbook.com/studies/mp/de_dust2.md)
+- [Real world studies](https://book.leveldesignbook.com/studies/irl.md): design analysis of real world architecture, physical spaces
+- [Disneyland (California, USA)](https://book.leveldesignbook.com/studies/irl/disneyland.md): critical level design primer on theme park run by the most powerful media conglomerate on Earth
+- [(STUB) Las Vegas (Nevada, USA)](https://book.leveldesignbook.com/studies/irl/stub-las-vegas-nevada-usa.md): critical level design primer on the city that game design built
+- [Notes for educators](https://book.leveldesignbook.com/learning/notes.md): Advice for teachers using this book in the classroom
+- [Project plans](https://book.leveldesignbook.com/learning/projects.md)
+- [Classic Combat](https://book.leveldesignbook.com/learning/projects/classic-combat.md): design exercise for a classic retro shooter type game
+- [(Unfinished WIP pages)](https://book.leveldesignbook.com/learning/projects/unfinished-wip-pages.md)
+- [Modern Combat](https://book.leveldesignbook.com/learning/projects/unfinished-wip-pages/modern-combat.md): design exercise for a modern commercial action shooter game
+- [Modern Stealth](https://book.leveldesignbook.com/learning/projects/unfinished-wip-pages/modern-stealth.md): design exercise for a modern stealth game with cover and combat
+- [Exercise: Direct Lighting](https://book.leveldesignbook.com/learning/projects/unfinished-wip-pages/exercise-direct-lighting.md)
+- [Exercise: Whiteboard 2D](https://book.leveldesignbook.com/learning/projects/unfinished-wip-pages/exercise-whiteboard-2d.md)
+- [Level Design Portfolio](https://book.leveldesignbook.com/learning/projects/unfinished-wip-pages/level-design-portfolio.md)
+- [Design Test: Adaptation](https://book.leveldesignbook.com/learning/projects/unfinished-wip-pages/adaptation.md)
+- [Exercise: Layout](https://book.leveldesignbook.com/learning/projects/unfinished-wip-pages/exercise-floorplan.md)
+- [Exercise: Verticality](https://book.leveldesignbook.com/learning/projects/unfinished-wip-pages/verticality.md)
+- [Tools](https://book.leveldesignbook.com/appendix/tools.md): Links to various level editors, moddable games, engines, and art tools
+- [TrenchBroom](https://book.leveldesignbook.com/appendix/tools/trenchbroom.md): info and resources for this modern brush-based level editor tool
+- [Assets & Resources](https://book.leveldesignbook.com/appendix/resources.md): Where to get free art assets (models, textures, materials) for use in levels
+- [Recommended talks](https://book.leveldesignbook.com/appendix/resources/talks.md): List / archive of level design talks and presentations, with links to videos and slides
+- [Recommended books](https://book.leveldesignbook.com/appendix/resources/books.md): Recommended level design books... other than this one
+- [Quake resources](https://book.leveldesignbook.com/appendix/resources/quake.md): Models, textures, sounds, tutorials, and other links for Quake mapping and modding
+- [How to package a Quake map/mod](https://book.leveldesignbook.com/appendix/resources/quake/how-to-package.md): General rules and guidelines for packaging and publishing playable Quake files
+- [File formats](https://book.leveldesignbook.com/appendix/resources/formats.md): file formats / specifications for file types used in mapping and modding
+- [FGD file format](https://book.leveldesignbook.com/appendix/resources/formats/fgd.md): entity definition file / mapping aid for Quake-era level editors
+- [MAP file format](https://book.leveldesignbook.com/appendix/resources/formats/map.md): file format spec + sample parser code for Quake .MAP files ("Valve" style, mapversion 220)
+- [MDL file format](https://book.leveldesignbook.com/appendix/resources/formats/mdl.md): how to parse Quake 1 models (.MDL) and sample C source code for rendering in 3D
+- [Communities](https://book.leveldesignbook.com/appendix/communities.md): links to level design communities, websites, discords, podcasts, blogs, social media
+- [About this book / authors](https://book.leveldesignbook.com/appendix/about.md): about this book project, its authors, and any credits
+- [License / copyright](https://book.leveldesignbook.com/appendix/license.md)
