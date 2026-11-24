@@ -1,4 +1,4 @@
-<!-- GBDK-2020 manual page 05_banking_mbcs.md (gbdk-2020/docs/pages) -->
+<!-- GBDK-2020 manual page 05_banking_mbcs.md (https://github.com/gbdk-2020/gbdk-2020 docs/pages; GPLv2 with linking exception) -->
 @page docs_rombanking_mbcs ROM/SRAM Banking and MBCs
 
 

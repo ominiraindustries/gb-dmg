@@ -1,5 +1,7 @@
 # `gb/bcd.h` (GBDK-2020, gb target)
 
+Source: tools/gbdk/include/gb/bcd.h (gbdk-4.5.0, https://github.com/gbdk-2020/gbdk-2020); licence: GPLv2 with linking exception (tools/gbdk/licenses).
+
 Support for working with BCD (Binary Coded Decimal) See the example BCD project for additional details.
 
 | Name | Summary |

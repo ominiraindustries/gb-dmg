@@ -1,4 +1,4 @@
-<!-- GBDK-2020 manual page 08_faq.md (gbdk-2020/docs/pages) -->
+<!-- GBDK-2020 manual page 08_faq.md (https://github.com/gbdk-2020/gbdk-2020 docs/pages; GPLv2 with linking exception) -->
 @page docs_faq Frequently Asked Questions (FAQ)
 
 @anchor toolchain_faq 

@@ -1,5 +1,7 @@
 # `gbdk/far_ptr.h` (GBDK-2020, gb target)
 
+Source: tools/gbdk/include/gbdk/far_ptr.h (gbdk-4.5.0, https://github.com/gbdk-2020/gbdk-2020); licence: GPLv2 with linking exception (tools/gbdk/licenses).
+
 Far pointers include a segment (bank) selector so they are able to point to addresses (functions or data) outs
 
 | Name | Summary |

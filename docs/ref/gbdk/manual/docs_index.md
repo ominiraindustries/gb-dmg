@@ -1,4 +1,4 @@
-<!-- GBDK-2020 manual page docs_index.md (gbdk-2020/docs/pages) -->
+<!-- GBDK-2020 manual page docs_index.md (https://github.com/gbdk-2020/gbdk-2020 docs/pages; GPLv2 with linking exception) -->
 @mainpage General Documentation
 
 @anchor docs_index

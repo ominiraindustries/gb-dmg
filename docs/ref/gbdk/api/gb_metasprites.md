@@ -1,5 +1,7 @@
 # `gb/metasprites.h` (GBDK-2020, gb target)
 
+Source: tools/gbdk/include/gb/metasprites.h (gbdk-4.5.0, https://github.com/gbdk-2020/gbdk-2020); licence: GPLv2 with linking exception (tools/gbdk/licenses).
+
 @anchor metasprite_main_docs # Metasprite support A metasprite is a larger sprite made up from a collection of
 
 | Name | Summary |

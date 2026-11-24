@@ -1,4 +1,4 @@
-<!-- GBDK-2020 manual page 09_migrating_new_versions.md (gbdk-2020/docs/pages) -->
+<!-- GBDK-2020 manual page 09_migrating_new_versions.md (https://github.com/gbdk-2020/gbdk-2020 docs/pages; GPLv2 with linking exception) -->
 @page docs_migrating_versions Migrating to new GBDK Versions
 
 This section contains information that may be useful to know or important when upgrading to a newer GBDK release.

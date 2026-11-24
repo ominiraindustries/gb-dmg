@@ -1,3 +1,5 @@
+hUGEDriver doc/driver-format.txt (https://github.com/SuperDisk/hUGEDriver, public domain)
+
 A hUGEDriver pattern is a series of 64 rows in this format:
 
   Note     Instr    Effect

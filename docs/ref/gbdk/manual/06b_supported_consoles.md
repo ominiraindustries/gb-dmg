@@ -1,4 +1,4 @@
-<!-- GBDK-2020 manual page 06b_supported_consoles.md (gbdk-2020/docs/pages) -->
+<!-- GBDK-2020 manual page 06b_supported_consoles.md (https://github.com/gbdk-2020/gbdk-2020 docs/pages; GPLv2 with linking exception) -->
 @page docs_supported_consoles Supported Consoles & Cross Compiling
   
 @anchor docs_consoles_supported_list

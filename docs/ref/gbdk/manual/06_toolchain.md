@@ -1,4 +1,4 @@
-<!-- GBDK-2020 manual page 06_toolchain.md (gbdk-2020/docs/pages) -->
+<!-- GBDK-2020 manual page 06_toolchain.md (https://github.com/gbdk-2020/gbdk-2020 docs/pages; GPLv2 with linking exception) -->
 @page docs_toolchain GBDK Toolchain
 
 

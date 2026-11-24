@@ -1,5 +1,7 @@
 # `gbdk/console.h` (GBDK-2020, gb target)
 
+Source: tools/gbdk/include/gbdk/console.h (gbdk-4.5.0, https://github.com/gbdk-2020/gbdk-2020); licence: GPLv2 with linking exception (tools/gbdk/licenses).
+
 Console functions that work like Turbo C's. The font is 8x8, making the screen 20x18 characters.
 
 | Name | Summary |

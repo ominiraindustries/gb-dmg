@@ -1,4 +1,4 @@
-<!-- GBDK-2020 manual page 03_using_gbdk.md (gbdk-2020/docs/pages) -->
+<!-- GBDK-2020 manual page 03_using_gbdk.md (https://github.com/gbdk-2020/gbdk-2020 docs/pages; GPLv2 with linking exception) -->
 @page docs_using_gbdk Using GBDK
 
 

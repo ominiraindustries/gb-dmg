@@ -1,5 +1,7 @@
 # `gbdk/incbin.h` (GBDK-2020, gb target)
 
+Source: tools/gbdk/include/gbdk/incbin.h (gbdk-4.5.0, https://github.com/gbdk-2020/gbdk-2020); licence: GPLv2 with linking exception (tools/gbdk/licenses).
+
 Allows binary data from other files to be included into a C source file. It is implemented using asm .incbin a
 
 | Name | Summary |

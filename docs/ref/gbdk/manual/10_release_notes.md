@@ -1,4 +1,4 @@
-<!-- GBDK-2020 manual page 10_release_notes.md (gbdk-2020/docs/pages) -->
+<!-- GBDK-2020 manual page 10_release_notes.md (https://github.com/gbdk-2020/gbdk-2020 docs/pages; GPLv2 with linking exception) -->
 @page docs_releases GBDK Release Notes
 
 The GBDK-2020 releases can be found on Github:

@@ -1,3 +1,4 @@
+<!-- hUGEDriver README.md (https://github.com/SuperDisk/hUGEDriver, public domain) -->
 ![hUGEDriver](https://github.com/SuperDisk/hUGEDriver/assets/1688837/a6079751-20b5-4db3-bb48-0e748234f8ca)
 ===
 

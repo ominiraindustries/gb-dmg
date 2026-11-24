@@ -173,7 +173,9 @@ def gbdk_api():
             name = next(g for g in nm.groups() if g)
             brief = re.sub(r"\s+", " ", re.sub(r"@\w+\s*", "", doc.strip().lstrip("*"))).strip()
             items.append((name, brief.split(". ")[0][:140]))
-        lines = [f"# `{rel}` (GBDK-2020, gb target)", "", what, ""]
+        lines = [f"# `{rel}` (GBDK-2020, gb target)", "",
+                 f"Source: tools/gbdk/include/{rel} ({version()}, https://github.com/gbdk-2020/gbdk-2020); "
+                 "licence: GPLv2 with linking exception (tools/gbdk/licenses).", "", what, ""]
         if items:
             lines += ["| Name | Summary |", "|---|---|"] + [f"| `{n}` | {b.replace('|', '/')} |" for n, b in items] + [""]
         lines += ["## Header", "", "```c", text.strip(), "```"]
@@ -183,7 +185,7 @@ def gbdk_api():
     emit("gbdk/api/README.md", "\n".join(index))
     pages = REF / "gbdk-src" / "docs" / "pages"
     for p in sorted(pages.glob("*.md")):
-        emit(f"gbdk/manual/{p.name}", f"<!-- GBDK-2020 manual page {p.name} (gbdk-2020/docs/pages) -->\n"
+        emit(f"gbdk/manual/{p.name}", f"<!-- GBDK-2020 manual page {p.name} (https://github.com/gbdk-2020/gbdk-2020 docs/pages; GPLv2 with linking exception) -->\n"
              + p.read_text(encoding="utf-8", errors="replace"))
     for t in ("asmlnk_manual.txt",):
         if (GBDK / t).exists():
@@ -219,7 +221,9 @@ def hardware_inc():
                 "gbdk_example/README.md"):
         p = HUGE / rel
         if p.exists():
-            emit("hugedriver/" + rel.replace("/", "_"), p.read_text(encoding="utf-8", errors="replace"))
+            note = f"hUGEDriver {rel} (https://github.com/SuperDisk/hUGEDriver, public domain)"
+            note = {".md": f"<!-- {note} -->\n", ".h": f"/* {note} */\n"}.get(Path(rel).suffix, note + "\n\n")
+            emit("hugedriver/" + rel.replace("/", "_"), note + p.read_text(encoding="utf-8", errors="replace"))
 
 
 def main(argv):

@@ -1,4 +1,4 @@
-<!-- GBDK-2020 manual page 07_sample_programs.md (gbdk-2020/docs/pages) -->
+<!-- GBDK-2020 manual page 07_sample_programs.md (https://github.com/gbdk-2020/gbdk-2020 docs/pages; GPLv2 with linking exception) -->
 @page docs_example_programs Example Programs
 
 

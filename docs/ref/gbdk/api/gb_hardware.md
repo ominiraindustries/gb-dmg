@@ -1,5 +1,7 @@
 # `gb/hardware.h` (GBDK-2020, gb target)
 
+Source: tools/gbdk/include/gb/hardware.h (gbdk-4.5.0, https://github.com/gbdk-2020/gbdk-2020); licence: GPLv2 with linking exception (tools/gbdk/licenses).
+
 Defines that let the GB's hardware registers be accessed from C. See the @ref Pandocs for more details on each
 
 | Name | Summary |

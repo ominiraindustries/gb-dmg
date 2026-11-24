@@ -1,3 +1,4 @@
+<!-- hUGEDriver doc/internals.md (https://github.com/SuperDisk/hUGEDriver, public domain) -->
 # hUGEDriver internals
 
 ## Code style

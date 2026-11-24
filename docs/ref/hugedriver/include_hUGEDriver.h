@@ -1,3 +1,4 @@
+/* hUGEDriver include/hUGEDriver.h (https://github.com/SuperDisk/hUGEDriver, public domain) */
 #ifndef HUGEDRIVER_H_INCLUDE
 #define HUGEDRIVER_H_INCLUDE
 
