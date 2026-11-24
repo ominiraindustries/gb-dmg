@@ -51,7 +51,8 @@ def bits_table(body):
 
 def pandocs():
     src = REF / "pandocs" / "src"
-    order = re.findall(r"\]\(\./([^)]+\.md)\)", (src / "SUMMARY.md").read_text(encoding="utf-8"))
+    order = [n for n in re.findall(r"\]\(\./([^)]+\.md)\)", (src / "SUMMARY.md").read_text(encoding="utf-8"))
+             if n != "single.md"]   # mdBook's print-everything page
     index = ["# Pan Docs (local copy, text only)", "",
              "Converted by `docs/ref/mkref.py` from the mdBook source (gbdev/pandocs, CC0). `{{#bits}}` register",
              "diagrams are tables here; images are not copied (see the online version at https://gbdev.io/pandocs/).", "",
@@ -227,7 +228,7 @@ def main(argv):
     changed = []
     for rel, text in sorted(FILES.items()):
         p = OUT / rel
-        old = p.read_text(encoding="utf-8") if p.exists() else None
+        old = p.read_text(encoding="utf-8").replace("\r\n", "\n") if p.exists() else None   # git autocrlf
         if old != text:
             changed.append(rel)
             if not check:

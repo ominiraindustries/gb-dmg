@@ -76,4 +76,3 @@ diagrams are tables here; images are not copied (see the online version at https
 | 69 | External Connectors | [69_External_Connectors.md](69_External_Connectors.md) |
 | 70 | GBC Approval Process | [70_GBC_Approval_Process.md](70_GBC_Approval_Process.md) |
 | 71 | References | [71_References.md](71_References.md) |
-| 72 | single | [72_single.md](72_single.md) |
