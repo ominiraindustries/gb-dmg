@@ -19,6 +19,7 @@ nada de código, datos ni gráficos de juegos comerciales. Los estudios de juego
 | [Cartucho: bancos y guardado](cartucho.md) | 3 | patrones de banco, datos en banco, SRAM con MBC |
 | [Texto](texto.md) | 2 | VWF, fuente común y números |
 | [Audio](audio.md) | 2 | prioridad de SFX por canal, música con hUGEDriver |
+| [CPU y muchos objetos](cpu.md) | 4 | registros frente a SoA, colisiones en 8 bits relativas a cámara, repartir entre frames, listas de activos |
 
 ## Todas las fichas
 
@@ -44,3 +45,7 @@ nada de código, datos ni gráficos de juegos comerciales. Los estudios de juego
 | TX2 | Fuente común en tiles y números sin componer cadenas | [Texto](texto.md) | hecho | gbe_text, bcd, tetris |
 | AU1 | Prioridad de efectos de sonido por canal | [Audio](audio.md) | hecho | Pan Docs Audio, gbe_sfx, shmup |
 | AU2 | Música con un driver de tracker (hUGEDriver) | [Audio](audio.md) | pendiente | hUGEDriver, Pan Docs Audio |
+| CP1 | Registros recorridos con un puntero (mejor que arrays por campo) | [CPU y muchos objetos](cpu.md) | hecho | gbe_pool, shmup, gbe_lab |
+| CP2 | Colisiones y dibujo en 8 bits relativos a la cámara | [CPU y muchos objetos](cpu.md) | hecho | GBE_WITHIN, gbe_actors, platformer |
+| CP3 | Repartir el trabajo entre frames | [CPU y muchos objetos](cpu.md) | patrón | shmup, platformer, gbe_gact |
+| CP4 | Listas compactas de lo activo y comprobar que lo creado se crea | [CPU y muchos objetos](cpu.md) | patrón | faro |

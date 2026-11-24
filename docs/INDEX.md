@@ -63,13 +63,13 @@ docs/
 
 2026-11-24, base de conocimiento técnico creada: referencias locales (Pan Docs entera por tema, GB CTR en texto, 512
 opcodes SM83, 47 cabeceras de GBDK, manual de GBDK, hardware.inc con equivalencias de GBDK, hUGEDriver), API de gbe
-generada (33 páginas con los juegos que usan cada módulo), 8 guías, 20 fichas de técnica en 6 capítulos, 1 estudio
+generada (33 páginas con los juegos que usan cada módulo), 8 guías, 24 fichas de técnica en 7 capítulos, 1 estudio
 (PyBoy frente a Mesen) y `harness/gbrun.py` probado en hello y platformer.
 
 Huecos conocidos:
 - Sin estudios de juegos comerciales todavía (hace falta una ROM que aporte el usuario; nunca se descargan).
-- Fichas por escribir: multiplexado de enemigos por frames alternos (CPU), paralaje con la ventana, tiles animados,
-  scroll en 4 direcciones (gbe_world), colisiones en 8 bits relativas a cámara, OAM corruption en detalle.
+- Fichas por escribir: paralaje con la ventana, tiles animados, scroll en 4 direcciones (gbe_world), mapa con
+  streaming de columnas (gbe_map), OAM corruption en detalle, timer y serie (enlace).
 - `harness/gb.py` no tiene todavía una orden `mesen`: `gbrun.py` acepta el nombre del juego directamente.
 - No hay ROM de prueba propia que fuerce las diferencias de timing entre PyBoy y Mesen (estudio pyboy-vs-mesen, "Sin medir").
 - Música: hUGEDriver documentado pero sin integrar (ficha AU2).
