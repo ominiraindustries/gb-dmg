@@ -75,3 +75,5 @@ export:
     auto: true
     path: issues.jsonl
     git-add: false
+sync:
+    remote: "git+https://github.com/ominiraindustries/gb-dmg.git"
