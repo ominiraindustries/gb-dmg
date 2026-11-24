@@ -1,228 +1,137 @@
-# GBDMG — harness para juegos de Game Boy DMG
+# GBDMG: juegos de Game Boy DMG, instrucciones de trabajo
 
-Juegos en C con GBDK-2020 (SDCC). Las partes críticas se pasan a ensamblador solo cuando
-el profiling lo justifica y con una prueba de equivalencia contra la versión C.
+Juegos en C con GBDK-2020 (SDCC 4.5) sobre la biblioteca de motor **gbe** (`harness/common`), probados en PyBoy.
+Las partes críticas pasan a ensamblador sólo cuando el profiling lo justifica y con prueba de equivalencia contra C.
+Cliente: Claude Code. El usuario habla español: responde en español. Código, comentarios e identificadores en inglés.
 
-## Estructura
-- `harness/` — herramientas comunes a todos los juegos (no meter código de un juego aquí)
-  - `gb.py` — CLI: `setup`, `new`, `build`, `run`, `test`
-  - `gbtest.py` — driver headless (PyBoy) para tests: botones, frames, leer variables, capturas
-  - `templates/<tipo>/` — plantillas de `gb.py new <juego> [tipo]` (hoy: `basic`, sobre gbe)
-- `games/<juego>/` — `src/` (.c/.s), `res/` (assets), `tests/` (pytest), `game.json` (título, flags de lcc)
-  - `res/*.tiles`: tiles en arte ASCII 8x8 (`.` `-` `+` `#` = colores 0-3, `@ NOMBRE` etiqueta el
-    siguiente tile). Se convierten al compilar a `build/gen/<nombre>.c/.h` (`#include "bg.h"`).
-  - Assets compartidos en `harness/common/*.tiles` (p. ej. la fuente): `"common_res": ["font"]` en game.json.
-    Texto en mayúscula y minúscula: `font_lower` (a..z) + `txt_lower`; en tests `GB.tile_text(tiles, font, lower)`.
-  - Pantallas fijas (título, resultados...): las maquetas `design/screens/<nombre>.screen` del
-    ui-designer se convierten al compilar en mapas de tiles (`screen_<nombre>_map[360]` + sprites) con
-    `"screens": [...]` y `"vram_order": ["bg", "font", "ui"]` (bases de VRAM; `["a", "b"]` = dos tilesets
-    que se turnan en el mismo hueco) en game.json. El build genera `vram.h` (`VRAM_<TILESET>`) y
-    `@ base auto` en `metatiles.mt`/`view.pcs`: nada de bases escritas a mano
-    (`harness/screens.py`). Lo que diseña el agente es exactamente lo que sale en el juego.
-  - **Librería de motor `gbe`** (`harness/common/src/gbe*.c/.s`, ver `harness/common/README.md`):
-    bucle de frame y medición, OAM directo, fundidos/transiciones, HUD con corte LYC, actores con
-    `act_move` asm, mapa con scroll y consultas asm, SFX con prioridad, autoprueba asm-vs-C
-    (`gb.selftest()`). Juegos nuevos parten de ella en vez de reescribirla.
-  - Código compartido en `harness/common/src/` (p. ej. `bcd.s` + `bcd.h`, suma BCD con `daa`):
-    `"common_src": ["bcd.s"]` en game.json; sus headers están en el include path.
-  - `res/*.lvl`: niveles en ASCII (rejilla + `@ clave valor`), convertidos a `build/gen/<nivel>.c/.h`
-    (mapa por columnas + lista de objetos). Qué significa cada carácter va en game.json `"levels"`
-    con nombres simbólicos que define el C del juego (formato al principio de `harness/levels.py`;
-    `levels.parse()` sirve para tests de lint en Python puro). Niveles verticales (shmup):
-    `"order": "rows"` + capa de objetos al lado de la rejilla (games/shmup/res/stage1.lvl).
-  - `res/maps/*.map`: mundos con scroll en 4 direcciones (sectores de 16x16 casillas, `harness/world.py`)
-    para `gbe_world`; banco de pruebas `games/world_lab` (pantalla == modelo en cada frame).
-  - `res/data/*.tbl`: tablas de datos (columnas con tipo: texto, enum, flags, ref a otra tabla) →
-    `tbl_<nombre>[]` en un banco + ids `<PREFIJO>_<ID>` para guiones y mapas (`harness/tables.py`, con
-    cargador Python para tests y bots). Los números de equilibrio van ahí, no en C.
-  - `res/scripts/*.evs`: guiones y diálogos (`harness/script.py`: texto partido en líneas/páginas al compilar,
-    lint de banderas/etiquetas/longitudes) para `gbe_script` + `gbe_tbox`.
-  - `res/metatiles.mt`: tabla de metatiles como datos (nombre, 4 tiles, atributos) → `build/gen/metatiles.c/.h`
-    (`harness/metatiles.py`); la usan el ROM, la vista previa del nivel y los tests en Python.
-- `tools/gbdk/` — SDK, no versionado (`python harness/gb.py setup`)
+## Inicio de una tarea
+
+1. Ejecuta una sola vez: `python -I harness/scripts/kb.py brief --role <rol> --task "<tarea>"`.
+2. Lee sólo las rutas y secciones que indique el brief. Para técnicas, cifras, hardware o API usa
+   `kb.py query "..." [--kind api|ref|tecnica|game]` antes de buscar por todo el repositorio.
+3. Carga sólo la skill necesaria. No leas todas las skills, toda la documentación ni ficheros enteros si basta una sección.
+4. Resume logs y resultados; nunca vuelques al contexto logs grandes, transcritos, JSONL, binarios ni árboles completos.
+
+Mapa de la documentación: `docs/INDEX.md`. Qué usar para cada necesidad: `docs/guias/que-usar.md`. API de gbe:
+`docs/api/` (generada desde `harness/common/src/gbe.h` con `python -I harness/scripts/apidoc.py`; `--check` comprueba
+que está al día). Referencias de hardware: `docs/ref/` (regenerables con `docs/ref/mkref.py`). Convenciones para que
+`kb.py` encuentre lo que se escribe: `docs/harness/kb.md`.
+
+Trabajo pendiente: Beads, mediante `python -I harness/scripts/beads.py` (`prime`, `ready --json`, `show ID`). Estados
+verificables: `open` → `confirmed` (evidencia fechada) → `in_progress` (`--claim`) → `resolved` (hecho, sin validar)
+→ `closed` (prueba y fecha, o descarte razonado). Toda tarea lleva `--acceptance` y una etiqueta `area:`
+(`gbe`, `harness`, `docs`, `juego:<nombre>`); no se cierra sólo con un commit. Flujo: `docs/harness/beads.md`.
+
+## Mapa mínimo
+
+- `harness/`: herramientas comunes (no meter código de un juego): `gb.py` (CLI: `setup`, `new`, `build`, `run`,
+  `test`, `preview`), `gbtest.py` (driver PyBoy de los tests), `gbrun.py` (Mesen), conversores (`screens.py`,
+  `levels.py`, `world.py`, `tables.py`, `script.py`, `metatiles.py`, `vwf.py`), `templates/`.
+- `harness/common/`: **gbe**, la biblioteca de motor (`src/gbe*.c/.s`, `gbe.h`, `README.md`) y los recursos comunes
+  (fuentes `font*.tiles`, `greybox.tiles`). Un juego nuevo parte de ella en vez de reescribirla.
+- `harness/scripts/`: arnés de trabajo (`kb.py`, `beads.py`, `lessons.py`, `board.py`, `worktree.py`, `bgwatch.py`,
+  hooks). Python siempre con `-I`.
+- `games/<juego>/`: `src/`, `res/`, `tests/`, `design/` (GDD, ui, maquetas), `game.json`. `games/urbe` es trabajo del
+  usuario sin versionar: no se toca, no se commitea, no se borra.
+- `docs/`: guías, técnicas, estudios, API, referencias, datos (lecciones, buzón) y arnés.
+- `tools/` (GBDK, `python harness/gb.py setup`) y `reference/` no se versionan.
+
+Formatos de `res/` (`.tiles`, `.screen`, `.lvl`, `.map`, `.tbl`, `.evs`, `metatiles.mt`) y claves de `game.json`
+(`common_src`, `common_res`, `screens`, `vram_order`, `vram_scenes`, `banked_res`, `levels`): `docs/harness/estructura.md`.
 
 ## Commits
-Hacer commit automáticamente (sin preguntar) al terminar cada cosa: un juego o hito, cambios en
-skills/agentes/CLAUDE.md, mejoras del arnés. Mensajes en español, agrupados por tema.
+
+Commit automático (sin preguntar) al terminar cada cosa: un juego o hito, cambios en skills/agentes/CLAUDE.md, mejoras
+del arnés. Mensajes en español, agrupados por tema. Sólo tus rutas: `git add <rutas>` y commit en el mismo paso, nunca
+`git add -A` (te llevarías el trabajo de otros agentes y `games/urbe`).
 
 ## Estudio (diseño + programación)
-Para juegos nuevos o partes grandes: skill `/game-studio <idea>` (fases autónomas: tema, tono, nombres y
-detalles los decido yo; solo pregunto lo caro de cambiar, como la mecánica central o la vista, y paro en la prueba
-del usuario al final). **Primero el juego con cuadros** (`harness/common/greybox.tiles`, toda la lógica, sin
-agentes de arte) y el arte y la UI al final, cuando el usuario ya lo ha jugado.
-Roles (subagentes en `.claude/agents/`, cada uno con memoria propia):
-- `game-designer` → `design/gdd.md` (mecánicas con números, controles, pantallas, presupuestos, hitos, plan de pruebas)
-- `pixel-artist` → `res/*.tiles` + maquetas; revisa sus PNG de preview
-- `ui-designer` → `design/screens/*.screen`, `design/ui.md`, `res/ui.tiles`
-- `qa-tester` → tests que faltan, rendimiento/VRAM, revisión visual y de código, informe de bugs
-- `playtester` → bots con reflejos humanos (`GB.human`, experto/medio/novato) → `design/playtest.md`:
-  dificultad por tramo, ritmo, atascos, trucos, números de feel y ajustes propuestos con cifras
-- La sesión principal hace de productor y programador (skills `gbdk`, `gb-asm`).
-Skills de diseño: `gb-game-design` (GDD, feel, UI, presupuestos, géneros), `gb-pixel-art`.
-Vista previa sin compilar el juego: `python harness/gb.py preview <juego>` → `build/preview/*.png`
-(hojas de tiles, maquetas `design/screens/*.screen` y, con `metatiles.mt`, el nivel vertical entero
-`level_<nivel>.png` con los objetos marcados; formato al principio de `harness/preview.py`).
 
-## Flujo de trabajo
-- Compilar: `python harness/gb.py build <juego>` (muestra uso de ROM/RAM). El build se para a propósito
-  si hay funciones sin declarar (dice qué `#include` falta), prototipos dentro de bloques, o si un juego
-  con `gbe_video` escribe `SCX/SCY/BGP/OBP*_REG` sin su sombra (la ISR de VBlank lo pisaría).
-- Helpers de tests en `games/<juego>/tests/<nombre>.py` (p. ej. `stage_model.py`): importables desde los
-  tests (conftest añade la carpeta); el nombre debe ser único entre juegos.
-- Tests: `python harness/gb.py test <juego>`. Ejecutarlos tras cada cambio de lógica.
-- Jugar: `python harness/gb.py run <juego>` (ventana PyBoy)
-- Las capturas de los tests van a `games/<juego>/build/shots/*.png`: mirarlas con Read
-  para comprobar visualmente los cambios, no fiarse solo de los asserts.
-- Los tests comprueban **lo que se ve**, no variables ni mapas de VRAM (games/faro: diálogo que nunca
-  salía en pantalla y NPCs dibujados con los tiles del título, con todos los tests en verde):
-  `gb.vram_errors(escena)` (cada sprite visible y cada tile de fondo/ventana en pantalla tiene los
-  bytes de su gráfico, según game.json `vram_scenes` + `vram_order`; formato en `harness/vramcheck.py`),
-  `gb.mockup_errors(pantalla, region, ignore)` (pantalla == maqueta) y `gb.screen_tiles()` para leer
-  texto. `gb.bg_map(window=True)` exige que la ventana esté en pantalla.
-- Presupuesto de frame: el juego expone `max_frame_lines` (scanlines usadas tras `vsync()`) y un
-  test con bot juega miles de frames y comprueba que no se pasa (ver `games/breakout`, `games/tetris`).
-- Cada mecánica nueva lleva un test: estado inicial → entrada → assert sobre variables.
-  Los tests leen globales **no static** por nombre (`gb.u8("player_x")`), vía el fichero .noi.
-- Lecturas coherentes en tests: el tick de PyBoy acaba en LY 0, a mitad del `update()` del juego.
-  `gbtest` lo resuelve con un hook en `vsync()` que fotografía la WRAM en el último frame de cada
-  `frames()`: `gb.u8/u16/bytes` leen esa foto (estado completo del frame). Leer WRAM con
-  `gb.pyboy.memory` directamente salta esa protección. Hay 1 frame de latencia de entrada: un botón
-  pulsado antes de `frames(1)` se procesa en la lógica que termina en el frame siguiente.
-- No dar algo por "fino" sin que el usuario lo haya probado (el feel y el hardware real no se testean aquí).
-- Bugs conocidos que aún no se arreglan: test con `@pytest.mark.xfail(strict=True, reason="BUG: ...")`
-  (al arreglarlo pasa a XPASS y falla, así se quita la marca). Un juego que arranca en el título
-  puede sobreescribir el fixture `gb` en su `tests/conftest.py` (ver games/shmup).
+Juegos nuevos o partes grandes: skill `/game-studio <idea>`. Decido yo lo barato de cambiar (tema, tono, nombres,
+detalles); sólo pregunto lo caro (mecánica central, vista) y paro en la prueba del usuario al final. **Primero el juego
+con cuadros** (`harness/common/greybox.tiles`, toda la lógica, sin agentes de arte); arte y UI al final, cuando el
+usuario ya lo ha jugado. Roles en `.claude/agents/`: `game-designer` (`design/gdd.md`), `pixel-artist` (`res/*.tiles`),
+`ui-designer` (`design/screens/*.screen`, `ui.md`), `qa-tester`, `playtester` (bots con `GB.human`); la sesión principal
+hace de productor y programador. Vista previa sin compilar: `python harness/gb.py preview <juego>` → `build/preview/`.
 
-## Rendimiento y VRAM (aprendido en games/tetris, medido)
-- Bucle: `vsync()` → `draw_vram()` (solo copiar a VRAM) → input → `update()` → sprites → `measure_frame()`.
-  `vsync()` vuelve en LY≈146: quedan ~3600 T de VBlank para `draw_vram()`.
-- **Preparar tiles fuera del VBlank, dentro solo copiar**: convertir números/textos a tiles en `update()`
-  (buffers), y en `draw_vram()` copiar con un presupuesto fijo por frame (colas FIFO, nada de recorrer
-  arrays buscando trabajo: recorrer 18 filas costaba más que copiarlas).
-- `set_bkg_tiles` es lento (~520 T/tile y espera STAT fuera de VBlank); en VBlank escribir directo a
-  VRAM. Bucle C de copia ~76 T/tile; asm desenrollado 20 T/tile (`games/tetris/src/vram.s`).
-- Guardia obligatoria: contador `vram_late` (LY < 144 al acabar `draw_vram()`) y un test que exige 0;
-  los tiles escritos fuera de VBlank se pierden en silencio. Para saber por qué: el juego pone
-  `frame_vsync_ly = LY_REG` tras `vsync()` y gbe guarda `vram_late_ly0` (dónde empezaron las copias) y
-  `vram_late_ly` (dónde acabaron). Instrumentar con más código cambia el timing y el fallo desaparece.
-- Cola de VRAM (`vq`): cada entrada cuesta ~90 T además de ~20 T/tile: filas enteras, nunca columnas
-  de 1 tile (faro: 18 entradas por frame perdían tiles). Para en LY 150 (con 152, 32 tiles acababan en
-  la línea 1).
-- Herramientas del arnés para tests: `gb.run_bot(step, progress, frames, on_stuck)` (bot que debe
-  avanzar; devuelve peor frame y vram_late), `gb.selftest()` (asm de gbe == referencias C),
-  `python harness/physics.py --game <juego>` (saltos/fosos/escalones exactos en 8.8, verificado
-  contra la ROM: el diseño y el lint de niveles salen de ahí).
-- Medir antes de optimizar: `p = gb.profile(["update", "draw_vram", ...])` en un test/script y
-  `print(p.report())` da T-cycles máximos/medios por función (1 frame = 70224 T, 1 línea = 456 T).
-  `gb.worst_frames(funcs, frames, step)` desglosa los peores frames: en games/shmup el pico eran 4
-  costes medianos a la vez, no una función caliente. Regla propia < 120 líneas; el límite real es
-  154 (por encima se pierde un frame).
-- Librería de GBDK: `memcpy`/`memset` son asm (~10 T/byte en copias largas, pero ~30 T/byte en copias cortas
-  o con banco: 16 B por tile ~480 T, 128 B con `bank_memcpy` 4.2k; en VBlank usar copias asm desenrolladas como
-  `tile_copy16` de gbe_tiles.s, ~20 T/byte); `memmove` (~190 T/byte) y `strncpy`
-  (~290 T/byte) son C: evitarlos en el juego (games/dungeon: 11k T por un scroll de 60 bytes).
-- SDCC 4.5 compila mal `(uint16_t)y << 4` si `y` es un `uint8_t` local cuya dirección se pasó a una
-  función (`get(&x, &y)`): lo hace en 8 bits. Copiar antes a un u16 (`v = y; v <<= 4;`); detalle en gbdk
-  `gotchas.md`.
-- Trampas medidas de SDCC: indexar con `int8_t` (`board[row_off[r] + i]`) ~466 T por acceso → usar
-  punteros/`memcpy`; recalcular datos de una forma en cada llamada → cachear; `memcpy`/`memset` de
-  GBDK son asm y rápidos.
-- Objetos con arrays (struct of arrays), medido en games/platformer:
-  - `arr[i]` con `i` variable recalcula la dirección en cada acceso (16 bits); con índice constante
-    es una dirección fija. Bucles cortos sobre huecos fijos → desenrollar (spawn de 4 trozos: 8900 → 5300 T).
-  - La suma posición += velocidad 8.8 en C cuesta ~1500 T; en asm ~240 T (`act_move` en
-    `games/platformer/src/vram.s`, reutilizable). Igual para consultas al mapa (`mt_at`/`solid_at`).
-  - Enemigos lentos: física a medio ritmo (mitad de ellos cada frame, paso doble); colisiones con el
-    jugador sí cada frame. Como mucho 1 aparición de enemigo por frame (evita picos al reaparecer).
-  - Sprites: escribir directo en `shadow_OAM` (`oam16`) y vaciar rangos con `memset`, no
-    `set_sprite_tile/prop + move_sprite` por sprite.
-- Interacciones entre muchos objetos (games/platformer, 5 enemigos de 150 → ~100 líneas): una vez por
-  frame calcular la x **relativa a la cámara en 8 bits** (`x - camera_x + 32`; los objetos solo existen
-  cerca de la pantalla) y hacer todas las colisiones y el dibujado en 8 bits. Solape simétrico
-  |d| < N: `(uint8_t)(d + N - 1) < 2N - 1` (con `+N < 2N` el lado negativo choca y el positivo no).
-  Pares una sola vez (`j > i`) y en frames alternos si los objetos son lentos.
-- Bots de rendimiento: deben **comprobar que avanzan** (un bot atascado en la columna 45 dio un "85
-  líneas" falso). El peor caso real está en las zonas con más enemigos y al cargar columnas.
-- Números de diseño vs. realidad: medir la física (altura real de salto 62 px, no los 64 del GDD) y que
-  el lint de niveles use lo medido; si no, el nivel puede ser imposible de terminar.
-- `y` en u8 con sesgo: un salto alto puede pasar por debajo de 0 (0xC0-0xFF = encima de la pantalla);
-  ninguna comprobación (fosos, filas) debe interpretar eso como "abajo".
-- Profiler (`gb.profile`): solo ve funciones **no static**; una función que acaba con llamada final
-  (`jp`) se atribuye a la llamada. Para perfilar el interior de un módulo, quitar `static`. Entiende
-  código en bancos (empareja la vuelta por SP: todas las BANKED vuelven por el mismo trampolín).
-  Ante cifras raras, la verdad son las **líneas reales con y sin cada parte** (bits de depuración que
-  apagan módulos, A/B de `frame_lines`): en games/faro el profiler viejo culpaba a quien no era.
-- Lo medido en games/faro (campo con 16 actores): un bucle de SDCC sobre 16 huecos cuesta 150-300 T por
-  vuelta **aunque el hueco esté vacío** → listas compactas de los activos (`cr_ids`), no recorrer todos;
-  una consulta a una tabla en banco por llamada BANKED ~500 T → copiar a WRAM lo que se lee cada frame;
-  un objeto que aparece y desaparece en bucle (aparición más lejos que la distancia de borrado) o dos
-  especies robándose un hueco de sprites se comen 25 líneas sin que nada se vea: comprobar que lo
-  que se crea **se crea** (contadores) antes de optimizar.
-- WRAM: la pila crece desde $E000 hacia los globales; el build para si quedan < 512 bytes. Búferes
-  grandes que solo usa una cosa (autoprueba, guardado) → zona compartida o lectura a trozos.
-- `vsync()` tras un frame largo vuelve en mitad de la pantalla: `if (LY_REG < 144) vsync();` justo
-  después (pierde un frame pero ninguna copia a VRAM sale fuera de VBlank).
+## Reglas de implementación
 
-## Bancos de ROM
-- `"banked_res": ["walls", "level1", "screen_title"]` en game.json mete esos assets generados en bancos
-  conmutables (`#pragma bank 255` + `BANKREF(<stem>)`); con flags MBC5 + `-autobank`
-  (`["-autobank", "-Wm-yt0x1B", "-Wm-yo8", "-Wm-ya1"]`). Se leen con `gbe_bank.c`
-  (`bank_set_bkg_data(BANK(walls), ...)`, `bank_memcpy`), que vive en el banco 0. Probado en games/gbe_lab.
-- El build **para** si un fichero con `#pragma bank N` llama a `SWITCH_ROM` (se desmapearía a sí mismo),
-  y si con bancos algo del banco 0 (código, `_HOME`, `_GSINIT`...) pasa de 0x4000
-  (SWITCH_ROM lo desmapearía), y **avisa** de las builds planas que lo pasan sin bancos
-  (platformer y shmup hoy: funcionan mientras no se conmute). Código grande: funciones `BANKED`.
-  Detalle: skill `gbdk` `banking.md`.
+- **Lib primero**: antes de escribir a mano física, menús, input, texto, guardado, scroll, actores, HUD, colas de VRAM o
+  sonido, consulta `docs/guias/que-usar.md` y `kb.py query --kind api`, y anota en el README del juego una tabla
+  "Lib check" (necesidad, API revisada, por qué no basta). Si gbe cubre casi todo, úsala y pide sólo el hueco. Si
+  falta de verdad, NO lo resuelvas en el juego: abre una tarea `area:gbe` con `--acceptance`, hazla en un worktree con
+  su prueba (`gb.selftest()`, `games/gbe_lab`) y migra el juego después.
+- **Texto y fuentes**: ningún juego dibuja texto con una fuente hecha a mano ni con un motor de texto propio. Todo el
+  texto usa las fuentes del arnés (`harness/common/font*.tiles`, `font_lower`, `font_mini*`, `font_es`) con `gbe_text`
+  o `gbe_vwf`. Se decide al crear el armazón, antes de la primera pantalla, y el encargo de cualquier agente de interfaz
+  lo dice. Un glifo nuevo va a la fuente común, para todos los juegos.
+- **Arte editable**: los fuentes de arte (`res/*.tiles`, `design/screens/*.screen`) son la fuente de verdad que lee el
+  build; los scripts generadores sólo los siembran y nunca los sobrescriben al compilar. Cada juego lleva
+  `compilar.bat` y `compilar_y_jugar.bat` para recompilar con doble clic (tarea pendiente en Beads para los existentes).
+- **Diseño primero**: todo agente que diseñe juego, niveles, enemigos o jefes lee antes `docs/guias/diseno-juegos.md`
+  y cita qué reglas aplica; un nivel no se da por bueno sin pasar su checklist.
+- Los cambios de diseño visual, controles, dificultad o dirección artística son decisiones del usuario.
+- PixelLab y otras APIs de pago requieren permiso previo del usuario.
+- Un cambio en `harness/common` o `harness/*.py` tiene rigor alto y se hace en un worktree
+  (`python -I harness/scripts/worktree.py add NOMBRE --base RAMA`; se quita con `worktree.py remove`, nunca a mano).
+  Un cambio dentro de `games/<juego>` tiene rigor medio.
+- Respeta la propiedad de archivos que indique el coordinador; no edites archivos compartidos fuera del encargo.
+- Lecciones del workspace de SNES aplicables aquí: `docs/guias/lecciones-snes.md`.
 
-## Reglas de hardware DMG
-Detalle completo: skill `gb-hardware`. Lo imprescindible:
-- 70224 dots (T-cycles) por frame = **17556 M-cycles** (las tablas de instrucciones van en M-cycles).
-  59.73 Hz, 154 líneas (144 visibles + 10 de VBlank), 456 dots por línea.
-- VRAM inaccesible solo en modo 3; OAM inaccesible en modos 2 y 3 (usar DMA desde HRAM).
-  Con GBDK: escribir tiles/mapas grandes con la pantalla apagada (`DISPLAY_OFF`) o
-  repartir en varios frames; `move_sprite` escribe en shadow OAM (seguro en cualquier momento).
-- Nunca escribir OAM directamente desde C (bug de corrupción de OAM en DMG).
-- Apagar el LCD solo en VBlank (`DISPLAY_OFF` lo hace bien; escribir `LCDC_REG` a pelo no).
-- 40 sprites, máx. 10 por línea. Ocultar sprites con Y=0 / Y≥160, **no** con X fuera de pantalla
-  (siguen contando para el límite de 10). Sprites 8x8 u 8x16.
-- 384 tiles en VRAM. Con LCDC bit4=1 fondo y sprites comparten los 256 de $8000-$8FFF;
-  con bit4=0 el fondo usa $8800-$97FF y comparte 128 con los sprites.
-- Mapa de fondo 32x32 tiles, pantalla 20x18. Una paleta de fondo, dos de sprites (color 0 transparente).
-  OBP0/OBP1 no se inicializan al arrancar: fijarlas siempre. WRAM y SRAM arrancan con basura.
-- WRAM 8 KB, HRAM 127 bytes. ROM 32 KB sin MBC; más con MBC5 (preferible a MBC1).
-- Saves: habilitar SRAM solo durante el acceso y validar con firma + checksum: `gbe_save.c` ya lo hace;
-  los tests apagan y encienden con la SRAM (`ram = gb.power_off(); GB(rom, ram=ram)`).
-- Los tests en PyBoy no detectan bugs exclusivos del hardware real ni de timing a mitad de frame.
+## Reglas técnicas imprescindibles (detalle en las guías)
 
-## Reglas de C con SDCC (para que sea rápido)
-Detalle y mediciones: skill `gbdk` (`performance.md`). Lo imprescindible:
-- `uint8_t` por defecto; 16 bits solo cuando haga falta. Evitar `int` (16 bits con signo).
-- División por potencia de 2: escribir el shift a mano (`x >> 3`); `x / 8` genera un bucle de 16 bits
-  aunque sea `uint8_t`. `% 8` y multiplicar por constante sí salen bien. Nada de mul/div por variable en el bucle.
-- Acceso más barato: global/struct global fijo (13 instr.) < puntero a struct (21) < array de structs por índice (34).
-- Evitar recursión, `printf` en el juego, floats, y funciones con muchos parámetros.
-- Datos constantes como `const` (van a ROM, no gastan RAM).
-- Ante la duda, **medir**: mirar el asm generado (`.lst` con ciclos) en vez de suponer.
+- **Rendimiento y VRAM** (`docs/guias/rendimiento-vram.md`): bucle `vsync()` → `draw_vram()` (sólo copiar) → input →
+  `update()` → sprites → `measure_frame()`; preparar tiles fuera del VBlank y dentro sólo copiar con presupuesto fijo;
+  `vram_late` debe ser 0 en los tests; regla propia < 120 líneas de 154; medir con `gb.profile` antes de optimizar.
+- **Bancos de ROM** (`docs/guias/bancos.md`): `banked_res` + `-autobank` con MBC5; un fichero con `#pragma bank N`
+  no llama a `SWITCH_ROM`; el banco 0 no pasa de 0x4000; saves con firma + checksum (`gbe_save.c`).
+- **Hardware DMG** (`docs/guias/hardware-dmg.md`, skill `gb-hardware`): 70224 T por frame (17556 M-cycles), VRAM
+  inaccesible en modo 3, OAM en modos 2 y 3; nunca escribir OAM desde C; apagar el LCD sólo en VBlank; 10 sprites por
+  línea (ocultar con Y, no con X); fijar siempre BGP/OBP0/OBP1; WRAM y SRAM arrancan con basura.
+- **C con SDCC, GBDK y asm** (`docs/guias/sdcc-c.md`, skills `gbdk`, `gb-asm`): `uint8_t` por defecto, shifts a mano,
+  nada de `int8_t` como índice ni `/` por variable; el bug de `(uint16_t)y << 4`; convención `__sdcccall(1)`; asm
+  `sdasgb` sólo tras medir y con test de equivalencia C vs asm.
 
-## Gotchas de GBDK
-- Al entrar en `main()` el LCD ya está encendido pero BG y sprites apagados (`SHOW_BKG`/`SHOW_SPRITES`).
-- `OBP1_REG` arranca a 0x1B (sombras invertidas): fijar paletas siempre.
-- `gb/gb.h` no incluye `gb/metasprites.h`.
-- png2asset: sprites 8x16 por defecto (`-spr8x8` si no); usar PNG indexado + `-keep_palette_order`
-  para controlar qué color es cada índice.
-- Banking: `-autobank` exige `-Wm-yt<tipo>`; sin `-Wm-ya<N>` la cabecera dice "sin RAM".
-  Receta 64 KB MBC1 + save: `["-autobank", "-Wm-yt0x03", "-Wm-yo4", "-Wm-ya1"]`.
+## Verificación
 
-## Ensamblador
-Detalle: skill `gb-asm` (opcodes con ciclos, sintaxis, convención de llamada verificada, optimización,
-test de equivalencia C vs asm, medición exacta de ciclos con PyBoy). Lo imprescindible:
-- GBDK usa sintaxis `sdasgb` (no RGBDS): `#` delante de inmediatos, símbolos C con `_` (`_player_x`),
-  `ld a,(hl+)`, `ldh`, `ldhl sp,#n`. El apéndice ASGB del asmlnk manual está desfasado (`ldi`/`ldd` no existen).
-- Ficheros `.s` en `src/` se compilan automáticamente.
-- Convención `__sdcccall(1)` (verificada en GBDK 4.5.0, el manual de SDCC se equivoca en parte):
-  1er arg en A (8 bits) o DE (16 bits), 2º en E o DE; retorno 8 bits en A, 16 bits en BC.
-  Ningún registro se preserva; los args en pila los retira el callee.
-- `.bndry` se pierde al enlazar: tablas alineadas a 256 necesitan su propia área con `-Wl-b_AREA=0x..00`.
-- Ciclos estáticos: `lcc -Wa-l` genera `.lst` con ciclos por instrucción.
-- Antes de portar a asm: medir, y tener un test que compare salida C vs asm con las mismas entradas.
-- Presupuesto VBlank: ~4560 T totales, GBDK usa ~1136 en su ISR → ~3400 T para código propio.
+- Compilar: `python harness/gb.py build <juego>` (el build se para con funciones sin declarar, prototipos en bloques o
+  registros escritos sin su sombra). Probar: `python harness/gb.py test <juego>` tras cada cambio de lógica.
+  Jugar (ventana, sólo el usuario): `python harness/gb.py run <juego>`. Mesen headless: `harness/gbrun.py`
+  (PyBoy frente a Mesen: `docs/guias/pruebas.md`).
+- Mira las capturas (`games/<juego>/build/shots/*.png`) antes de afirmar que algo funciona. Los tests comprueban **lo
+  que se ve** (`gb.vram_errors`, `gb.mockup_errors`, `gb.screen_tiles`), no variables ni mapas de VRAM.
+- Cada mecánica nueva lleva su test (estado → entrada → assert sobre globales **no static**, `gb.u8("x")`). Las
+  lecturas usan la foto de WRAM del último frame (no `gb.pyboy.memory`); hay 1 frame de latencia de entrada. Helpers
+  en `games/<juego>/tests/<nombre>.py` con nombre único entre juegos. Bugs conocidos: `xfail(strict=True)` + tarea. Un juego que arranca en el
+  título puede sobreescribir el fixture `gb` en su `tests/conftest.py` (games/shmup).
+- Prueba proporcional al cambio: el implementador ejecuta la suite de su juego (y `gb.selftest()` si tocó asm de
+  gbe). La batería de todos los juegos, una vez al día o al integrar cambios de gbe; nunca un bucle de suites.
+- No dar algo por "fino" sin que el usuario lo haya probado: el feel y el hardware real no se testean aquí.
+- Un script de reemplazo comprueba que encontró el patrón esperado.
+
+## Agentes y presupuesto de contexto
+
+Trabaja directamente en búsquedas, cambios de un fichero, tareas secuenciales y pruebas rutinarias. Usa subagentes sólo
+con líneas de trabajo independientes, aislamiento necesario o una especialidad clara.
+
+Agentes de ingeniería: `gb-sdk-dev` (gbe y arnés, en worktree), `gb-game-dev` (un bloque de un juego), `gb-reviewer`
+(revisión independiente) y `gb-docs-writer` (documentación y triaje); los del estudio, arriba. Reparto de modelos y
+reglas de coste: `docs/harness/coste-tokens.md`.
+
+- Objetivo 80–120 llamadas por agente; máximo 150. A las ~130 se termina el bloque y se escribe un handoff corto
+  (README del juego, notas de la tarea o `docs/harness/estado.md`). Una fase nueva la empieza otro agente con el handoff.
+- Máximo 2–3 agentes simultáneos, con rutas no solapadas. Antes de lanzarlos:
+  `python -I harness/scripts/board.py claim NOMBRE --bead ID --task "..." --owns RUTAS --uses MODULOS`;
+  al integrar, `board.py release NOMBRE [--remove-worktree]`. `board.py doctor` revisa reservas y worktrees.
+- Mensajes a agentes en marcha: pocos y agrupados. Si esperas a un agente, avanza trabajo que no se solape.
+- Todo bucle de espera lleva límite (`timeout 1800 bash -c ...`). Procesos colgados: `python -I harness/scripts/bgwatch.py`.
+
+## Hallazgos y cierre
+
+Los informes finales de los subagentes pueden llevar `## Lecciones para mi rol`, `## Huecos de gbe` y
+`## Bugs encontrados`; son opcionales y sólo con evidencia nueva y reutilizable (compruébalo antes con `kb.py query`).
+El hook `SubagentStop` los archiva en `docs/datos/inbox.jsonl`; el aviso de inicio de sesión pide cribar con 20 o más
+o más de 2 días (`kb.py inbox apply FICHERO`). Lo vigente va a Beads o a lecciones (`lessons.py add`).
+
+Antes del informe final ejecuta las comprobaciones de las rutas modificadas (`kb.py check` si tocaste docs, lecciones
+o Beads). Informa de archivos cambiados, pruebas realizadas, resultado y riesgos pendientes; sin logs completos.

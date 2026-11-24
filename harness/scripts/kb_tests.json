@@ -1,0 +1,24 @@
+{
+ "about": "Real Game Boy queries and the hits that must appear in kb.py's top 3 (regex over 'path:line title'). Run: python -I harness/scripts/kb.py test",
+ "cases": [
+  {"q": "limite de 10 sprites por linea", "expect": ["SP1 ·"]},
+  {"q": "parpadeo rotar OAM por grupos", "expect": ["SP2 ·"]},
+  {"q": "OAM DMA desde HRAM", "expect": ["SP3 ·", "OAM DMA"]},
+  {"q": "corte LYC para el HUD", "expect": ["HR1 ·"]},
+  {"q": "ventana como HUD", "expect": ["HR2 ·"]},
+  {"q": "fundido con BGP", "expect": ["HR3 ·", "set_fade"]},
+  {"q": "presupuesto del VBlank", "expect": ["VB1 ·"]},
+  {"q": "cola de VRAM copiar en VBlank", "expect": ["VB2 ·", "gbe_vq"]},
+  {"q": "vram_late guardia", "expect": ["VB4 ·", "vram_late"]},
+  {"q": "guardado en SRAM con checksum", "expect": ["CA3 ·", "gbe_save", "save_"]},
+  {"q": "texto proporcional VWF", "expect": ["TX1 ·", "vwf"]},
+  {"q": "musica hUGEDriver", "expect": ["AU2 ·"]},
+  {"q": "colisiones en 8 bits relativas a la camara", "expect": ["CP2 ·"]},
+  {"q": "act_move", "expect": ["act_move"]},
+  {"q": "scroll vertical por filas", "kind": "api", "expect": ["vmap_", "gbe_vmap"]},
+  {"q": "confirmar tarea con evidencia antes de claim", "expect": ["beads", "lesson beads-confirm"]},
+  {"q": "worktree junction borrar", "expect": ["worktree"]},
+  {"q": "STAT mode 3 VRAM access", "kind": "ref", "expect": ["pandocs", "docs/ref"]},
+  {"q": "MBC5 bank switching", "kind": "ref", "expect": ["MBC5", "pandocs", "docs/ref"]}
+ ]
+}

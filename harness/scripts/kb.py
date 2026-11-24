@@ -34,7 +34,7 @@ import argparse, glob, hashlib, json, math, os, pathlib, re, sqlite3, sys, time,
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 CACHE_DIR = ROOT / ".cache" / "kb"
 DB_PATH = CACHE_DIR / "kb.sqlite"
-CACHE_VERSION = 1
+CACHE_VERSION = 2
 TEC_DIR = ROOT / "docs" / "tecnicas"
 TESTS = ROOT / "harness" / "scripts" / "kb_tests.json"
 BEADS_REL = ".beads/metadata.json"   # stands for the live Beads backlog in the file list
@@ -391,6 +391,8 @@ def chunk_file(path, kind):
         return chunk_tecnica(lines), []
     if kind == "api" and path.suffix == ".h":
         return chunk_header(lines, rel)
+    if kind == "api":      # docs/api/gbe_x.md: the module name in every title
+        return [(s_, f"{path.stem}: {t}", x, m) for (s_, t, x, m) in chunk_markdown(lines, 3)], []
     if kind == "ref":
         if path.suffix == ".txt":
             return chunk_window(lines, path.stem.replace("_", " ")), []

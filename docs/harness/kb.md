@@ -27,7 +27,7 @@ fichero a fichero, cuando cambia una fuente; no se versiona.
 | `backlog` | Beads vivo (`bd list --all --json`) | una por tarea |
 
 `docs/INDEX.md` es el mapa de la documentación y no se indexa. `reference/` está fuera de git: si falta, sólo
-se pierden esos resultados.
+se pierden esos resultados. Si existe `docs/ref/pandocs/` (la copia versionada), `reference/pandocs/` no se indexa para no duplicar.
 
 ## Convenciones para escribir documentación que `kb.py` encuentre
 
@@ -67,8 +67,8 @@ función lleva su comentario en la misma línea o en las líneas `//` justo enci
 
 Una por línea: `id`, `text`, `evidence` (de dónde sale, con fecha), `roles`, `topics`, `created` y, si se puede,
 un `check` automático (`forbid`/`require`/`unique`/`cmd`, formato en `harness/scripts/lessons.py`).
-Se añaden con `lessons.py add`; `lessons.py check` ejecuta los automáticos. Roles válidos: `all`,
-`gb-sdk-dev`, `gb-game-dev`, `gb-reviewer`, `gb-docs-writer`, `game-designer`, `pixel-artist`, `ui-designer`,
+Se añaden con `lessons.py add`; `lessons.py check` ejecuta los automáticos. Roles válidos (el prefijo `gb-` es
+opcional: `gb-game-dev` y `game-dev` son el mismo rol): `all`, `sdk-dev`, `game-dev`, `reviewer`, `docs-writer`, `game-designer`, `pixel-artist`, `ui-designer`,
 `qa-tester`, `playtester`, `coordinator`.
 
 ## Buzón de hallazgos (`docs/datos/inbox.jsonl`)
